@@ -12,8 +12,8 @@ from plugins.rag.schemas import Meta, Window
 CACHE_VERSION = 2
 
 
-def process_document(pdf: pathlib.Path, client: GeminiClient, cache_dir: pathlib.Path, force: bool,
-                     window: int, pdf_mode: str) -> tuple[bool, str]:
+def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: pathlib.Path, force: bool,
+                     window: int, pdf_mode: str, skip_scans: bool = False) -> tuple[bool | None, str]:
     """Return (ok, message). Only successful model responses are cached; a document is
     'complete' only when the meta pass and every page window succeeded."""
     doc_id = pdf.stem
@@ -29,6 +29,10 @@ def process_document(pdf: pathlib.Path, client: GeminiClient, cache_dir: pathlib
         return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
     if info.n_pages == 0:
         return False, "PDF has 0 pages"
+    if info.is_scan and skip_scans:
+        return None, "SKIPPED_SCAN (no text layer)"
+    if client is None:
+        return False, "GEMINI_API_KEY not set and no complete cache"
     use_pdf = pdf_mode == "pdf" or (pdf_mode == "auto" and info.is_scan)
     if not use_pdf and info.is_scan:
         return False, "no text layer and --pdf-mode text forbids multimodal upload"

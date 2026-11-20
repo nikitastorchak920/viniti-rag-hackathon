@@ -27,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--window", type=int, default=3, help="pages per result-extraction request (default 3)")
     ap.add_argument("--pdf-mode", choices=["auto", "text", "pdf"], default="auto",
                     help="auto: text layer, scans sent as PDF; pdf: always send PDF; text: text layer only")
+    ap.add_argument("--skip-scans", action="store_true",
+                    help="skip image-only PDFs (status SKIPPED_SCAN); enabled automatically when GEMINI_API_KEY is not set")
     a = ap.parse_args(argv)
 
     from core.llm_client import log
@@ -47,28 +49,42 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     failed: list[str] = []
+    skipped: list[str] = []
     if not a.rebuild_csv_only:
-        from core.llm_client import GeminiClient, LLMError
+        import gc
+        import os
+        from core.llm_client import GeminiClient, LLMError, load_env
 
-        try:
-            client = GeminiClient()
-        except (LLMError, ImportError) as exc:
-            log(f"ERROR: {exc}")
-            return 1
-        log(f"model={client.model} docs={len(pdfs)}")
+        load_env()
+        client = None
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+            try:
+                client = GeminiClient()
+            except (LLMError, ImportError) as exc:
+                log(f"ERROR: {exc}")
+                return 1
+            log(f"model={client.model} docs={len(pdfs)}")
+        else:
+            a.skip_scans = True
+            log("WARN: GEMINI_API_KEY not set: --skip-scans enabled automatically; only cached documents can be exported")
         from plugins.rag.pipeline import process_document
 
         for pdf in pdfs:
-            ok, msg = process_document(pdf, client, a.cache, a.force, max(1, a.window), a.pdf_mode)
-            log(f"{pdf.stem}: {'OK' if ok else 'FAIL'} - {msg}")
-            if not ok:
+            ok, msg = process_document(pdf, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans)
+            log(f"{pdf.stem}: {'SKIP' if ok is None else 'OK' if ok else 'FAIL'} - {msg}")
+            if ok is None:
+                skipped.append(pdf.stem)
+            elif not ok:
                 failed.append(pdf.stem)
+            gc.collect()
 
     tables = {t: [] for t in exporter.TABLES}
     built = 0
     for pdf in pdfs:
         cache = load_cache(a.cache, pdf.stem)
         if not cache.get("complete"):
+            if pdf.stem in skipped:
+                continue
             if pdf.stem not in failed:
                 log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
                 failed.append(pdf.stem)
@@ -94,6 +110,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     exporter.write_tables(a.output, tables)
     log(f"wrote {a.output}/ docs={built} " + " ".join(f"{t}={len(tables[t])}" for t in exporter.TABLES))
+    if skipped:
+        log(f"SKIPPED_SCAN: {len(skipped)} document(s): {', '.join(skipped)}")
     if failed:
         log(f"INCOMPLETE: {len(failed)} document(s) failed and are missing from CSV: {', '.join(failed)}")
         return 1

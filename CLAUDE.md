@@ -26,3 +26,12 @@
 - NEVER install heavy libraries (e.g., `pandas`, `torch`, `tensorflow`, `scipy`, local OCR engines like `tesseract`/`easyocr`, or heavy PDF/image suites). Use Python stdlib (`csv`, `json`, `re`, `sqlite3`) and lightweight parsers only.
 - Process files strictly ONE by one in streaming/sequential mode; never load the full dataset or multiple PDFs into memory at once.
 - Immediately delete any temporary files, caches, and intermediate artifacts after processing.
+
+## Safe Testing on This VPS (MANDATORY)
+- Before any test run: `free -m && df -h /`. If free RAM < 300 MB or free disk < 1 GB, clean caches/temp files first.
+- Wrap every test execution with limits, e.g. `timeout 60s python3 <script>`.
+- Run in stages: (1) 1-2 PDFs from `dev/`, inspect output; (2) only after Stage 1 succeeds within memory limits, full `dev/` (21 files) validated against `dev_gold/`; (3) NEVER run on `test/` (90 files) until `dev/` fully passes and the user explicitly confirms.
+- Per PDF: open -> extract -> write output to disk -> explicitly close document -> `gc.collect()`.
+- Image-only scans without a text layer: skip immediately and log with a separate status (e.g. `SKIPPED_SCAN`). No OCR or heavy image rendering on this server.
+- Do not keep text dumps or debug artifacts in the repository; clean `/tmp` and caches right after testing.
+- After every test run report concisely: files processed, files skipped, peak RAM, errors, validation mismatches.
