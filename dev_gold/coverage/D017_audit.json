@@ -1,0 +1,53 @@
+{
+  "publication_id": "D017",
+  "source_sha256": "3959f6c54864feda6c1919810d78bd0246f584101b10e17d451bc96aead60062",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 12,
+    "datasets": 21,
+    "tasks": 5,
+    "experiments": 8,
+    "results": 290,
+    "issues": 7
+  },
+  "numeric_tables": [
+    "2:36",
+    "3:96",
+    "4:10",
+    "5:32",
+    "6:6",
+    "7:32",
+    "8:40"
+  ],
+  "formula_table": "1 massfunctions, notmeasurement",
+  "nonempirical_figures": [
+    "1architecture",
+    "2/3/6/7/8qualitativeQAexamples",
+    "4/5prompttemplates"
+  ],
+  "scope_notes": "All17pagesread; tablesvisuallychecked, tableblockregexextractionverifiedcountsandallrepeatvalues. NoanswercontentfromexamplesmistakenfornewRAGbenchmarkmetrics. Alltablecells, numericproseerrorattribution,judgeagreement,explicitgains,timingandrepeatedmentionscovered. Metadataonlytheoretical512cubetuples/rangeconstants anddatasetdescriptions. Noindependentsecondreview.",
+  "validation_report": "D017_validation.json"
+}

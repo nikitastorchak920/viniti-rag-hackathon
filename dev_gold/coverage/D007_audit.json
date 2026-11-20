@@ -1,0 +1,50 @@
+{
+  "publication_id": "D007",
+  "source_sha256": "1e5abee712c5d8552416b2fd456bcf2c37a0ba518372e64302db2b7b7bdf643f",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 28,
+    "datasets": 11,
+    "tasks": 3,
+    "experiments": 5,
+    "results": 832,
+    "issues": 6
+  },
+  "tables": {
+    "1": "all105 cells; actualSelf-RAG model and denominator-sensitive time handling",
+    "2,7,8": "all630 per-dataset cells; duplicateSelf-RAG13B quality/step links across two tables",
+    "3": "all6 conditional latency/distribution cells, exactseconds-to-ms conversion",
+    "4,6": "all36 diagnostic cells, Large/full row duplicates linked; Step aggregation unresolved explicitly",
+    "5": "two qualitative examples; dates/logo changes and answer narratives are content, not evaluation scores"
+  },
+  "figures": {
+    "1,4,5": "15scatter points,30repeated metric appearances linked toTable1; graph raw values marked approximate",
+    "2": "conceptual workflow only",
+    "3": "six repeated F1bars, sixdigitized classifier bars, nineprinted confusion entries and fourprose repeats"
+  },
+  "other_numbers": "All numerical outcome tables/plots/prose covered. Sample500each, classifier training sample statements, model sizes60M/223M/770M and3B/11B/7B/13B, learning rate3e-5, max100trainingiterations andA10080GB captured as protocol/model metadata. No cited numerical results beyond evaluated comparator methods, which are primary here. Dataset hop counts and qualitative dates not outcomes.",
+  "scope_notes": "Full15page review; bibliography and examples treated as data, no independent second annotator. All84QA/step aggregates checked against rounded per-dataset means within0.011; five of21relative-time aggregates differ and are explicitly flagged. Exact top_k/chunking/index/temperature not supplied and not imported from cited code.",
+  "digitization_provenance": "work/D007_numeric.json; original vector bars calibrated to printed axes",
+  "validation_quotes_matched": 838
+}

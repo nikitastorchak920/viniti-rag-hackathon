@@ -1,0 +1,76 @@
+{
+  "publication_id": "D014",
+  "source_sha256": "3024cfb478f8c334441beb3db351e374551b31e8304a4d98b2c5e5f8073612d8",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 3335,
+    "datasets": 4,
+    "tasks": 5,
+    "experiments": 7,
+    "results": 28649,
+    "issues": 8
+  },
+  "numeric_tables": [
+    "1:54cells",
+    "2:54cells"
+  ],
+  "prompt_tables": [
+    "3",
+    "4"
+  ],
+  "figures_covered": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "nonempirical_figures": [
+    "1:simulation schematic, no empirical score"
+  ],
+  "primary_plot_entries": 1749,
+  "figures_10_11_12_alignment": "Same entry count/order and identical answer-F1 y coordinate; native-vector coordinates, not OCR guesses",
+  "figure2_entries": 1749,
+  "figure3_entries": 2112,
+  "figure4_vertices": 1620,
+  "noisy_cloud_entries": 352,
+  "noisy_contour_vertices": 330,
+  "length_cloud_entries": 583,
+  "capped_cloud_entries": 583,
+  "histogram_bins": 50,
+  "baseline_mentions": 62,
+  "digitization_audit": "D014_numeric.json",
+  "graph_precision": "Vectorcoordinates±.0001fraction; color-only F1±.004, mean sentencecount±.06; raw_value ~ marker. Geometry not validated by caption quote alone.",
+  "scope_notes": "All source pages reviewed, numeric content incl tables, plots, summaries, costs. Citation bibliography and generic background model-context capacities not new experimental results. Unreported CoT metrics not fabricated. Exact per-dot sampling probability absent. Source issues retained, no independent second annotator.",
+  "validation_report": "D014_validation.json"
+}

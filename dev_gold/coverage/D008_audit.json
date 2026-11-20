@@ -1,0 +1,51 @@
+{
+  "publication_id": "D008",
+  "source_sha256": "a5f80dd3f8432157c4e3e94675729244656673a55c6163bba653df56f06bc225",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 25,
+    "datasets": 11,
+    "tasks": 4,
+    "experiments": 6,
+    "results": 386,
+    "issues": 8
+  },
+  "tables": {
+    "1": "all66ConR values; two best-on-all exceptions flagged",
+    "2": "all24latency/increment/overhead values plus four summary-bound mentions; exactseconds-to-ms",
+    "3": "all8sample counts captured as dataset metadata, not model outcomes",
+    "4": "all10latencies versus5input lengths; no unreported overhead scores fabricated"
+  },
+  "figures": {
+    "1,2": "schematic architecture/method, not experimental results",
+    "3": "all96raster line vertices; estimated0.2index units or0.5at three obscured red extrema",
+    "4": "all64raster bar values, estimated0.1index units; sub-resolution0flagged",
+    "5": "all36printed pairwise counts plus five conflicting prose rate/range claims",
+    "6": "all60MemR points;30printed exact and30vector perspective reconstructions estimated0.2percentage point; held-outlabelerror<0.065",
+    "7": "all18printed noise-drop values read from native raster"
+  },
+  "other_numbers": "TwoConRimprovement range bounds captured. Model sizes and8dataset sample counts metadata; Eq1–13constants/hyperparameter definitions not outcomes. FFNtwo-thirds parameter share is architectural background, not a RAG evaluation metric. AppendixDfiveexamples,years/indexIDs/53%dietaryrisk are content, not evaluation scores. MR definition has explicit absent record. No cited numerical RAG outcomes outside comparisons evaluated here.",
+  "scope_notes": "All14pages reviewed. Missing model/protocol parameters left unknown. Numerical contradictions retained with issues. Single source-grounded pass, not independent second annotation. Values from images are explicitly approximate where unlabeled; automatic caption matching cannot certify their magnitude.",
+  "digitization_provenance": "work/D008_digitization.json; original image pixel axes and vector paths, calibrated projection withleave-one-label-out audit",
+  "validation_report": "D008_validation.json"
+}

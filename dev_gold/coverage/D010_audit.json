@@ -1,0 +1,50 @@
+{
+  "publication_id": "D010",
+  "source_sha256": "e61881ab048b7b32cffcfa25c93f53d480166225f3e804bfa09a605e04e9e34a",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 20,
+    "datasets": 10,
+    "tasks": 4,
+    "experiments": 4,
+    "results": 193,
+    "issues": 6
+  },
+  "tables": {
+    "1": "all15classificationmetrics withprose repeats",
+    "2": "all6featureablationrecalls;full-feature repeatslinked"
+  },
+  "figures": {
+    "1": "all20corpus/querysetbars plusMedQAStatPearls89.32prose; top15versushiddenTop32flagged",
+    "2": "workflowdiagram, numberedstages notmetrics",
+    "3": "all9mean-sourcebars; exactprosemeans andMMLUcontacttotals preserved",
+    "4": "all9communicationbars,8accuracybars,50availablecomponentrectangles and11totalstackheights; exactprosecanonicalwherecompatible, discrepantvaluesseparate"
+  },
+  "other_numbers": "Allreportedpercentagegains, summaries, standalonebatch32routerlatencies, submsbound,inputtokenratio,counts andlatencysharescovered. Datasetcounts/splits/sourcecounts/modelarchitecture/LR/hardware/cutoffsrecordedasmetadata. Noquantitativecitedperformance beyondbackgrounddefinitions. FeBmissingQA/generationexplicitabsent. MissingnoneDocSelectionrectanglesnotfabricated; explicitprosezero recorded.",
+  "scope_notes": "All17pagesread, relevantplotsvisuallyinspected andoriginalgeometrycalibrated. Chunklength, someembeddingidentities, LLMjudge andthresholdnotprovided. Approximategeometryvaluesidentified, captionmatchingdoesnotcertifymagnitudes. Single source-grounded annotation, noindependentsecondreview.",
+  "digitization_provenance": "work/D010_digitization.json, originalvectorrectangles/gridticks; plot/prosecontradictionsretained",
+  "validation_report": "D010_validation.json"
+}

@@ -1,0 +1,63 @@
+{
+  "publication_id": "D012",
+  "source_sha256": "3b47982c7f0556ddaf608ba8ad3a7554d29687b701e040cc132c1ce31a461871",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 104,
+    "datasets": 17,
+    "tasks": 5,
+    "experiments": 6,
+    "results": 892,
+    "issues": 5
+  },
+  "tables": {
+    "1": "All156 numeric cells including repeated TrustRAG row;12duplicates linked; prose numeric rates and ranges covered",
+    "2": "All ablation range endpoints and injection macro means; ranges notCI",
+    "3": "All robustness/utility range endpoints and Trust values; all9judge kappas linked to detailedaudit",
+    "4": "All16 macro failure/valid-response cells; individualmodel rates and11errorcounts in prose",
+    "5": "All12method/risk cells, linked to B5 endpoints where same",
+    "A1": "All6set sizes and meanings captured as datasets metadata",
+    "A2": "All11method definitions represented in configs; no empirical scores",
+    "B1": "All27 statistical rows: means, both95%CIbounds for eachmethod, absoluteppreduction, exactMcNemarp; omittedzero rows notinvented",
+    "B2": "All54supplementary governance/retrieval failure cells; one-run retrieval separate from fixed-pool tests",
+    "B3": "All57per-model/pooled/macro failure cells; matchedTrust duplicates andTable2repeats linked",
+    "B4": "All12superseded-retention rates; prescribed states in metadata; inaccessible-superseder accessrates fromprose",
+    "B5": "All32corruption endpoints and16retrieval boundaryrates; N/Nsup preserved",
+    "B6": "All60utilitycells including12NA; all24primaryjudge confusion/reliabilitycells",
+    "B7": "All72judge confusion/reliabilitycells and9generator-stratified agreements, primaryrows repeatB6"
+  },
+  "figures": {
+    "1": "Method architecture, no empirical numeric outcomes",
+    "2": "All15vector risk points across0/5/10/20/30%noise,3exactprinted roundedendpoint repeats; inferreddataset flagged",
+    "B1": "All4logicalmatrixcells, includingN/A; conceptual notmeasured"
+  },
+  "other_numbers": "Construction audit20/20, postrouting25.24mean documents, unsupportederrorcounts11/9/2, permodel50doc outcomes, pbound4.8e-7, observedoverrefusalzero, detailedprose ranges included. Samplingtemperature, bootstrapcounts, candidatepool and datasetN retained asmetadata. No latency/tokens/resource measurements reported. Reference bibliography and algorithm stepnumbers notmetrics.",
+  "scope_notes": "All19pages read; pages7/8/9/14/17/18/19 rendered and visually inspected. Nativevector graph digitized. No independent second annotator. Sourceprompt blocks treated as research content only.",
+  "digitization_provenance": "work/D012_digitization.json",
+  "validation_report": "D012_validation.json"
+}

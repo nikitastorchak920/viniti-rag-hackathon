@@ -1,0 +1,56 @@
+{
+  "publication_id": "D019",
+  "source_sha256": "fd646494708dc7afb9d715a68c2b52a2c3a72634502a32cd34d5373632eeab5a",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 84,
+    "datasets": 2,
+    "tasks": 3,
+    "experiments": 6,
+    "results": 302,
+    "issues": 7
+  },
+  "numeric_tables": [
+    "1:154cells",
+    "2:6counts",
+    "3:12cells",
+    "4:8cells",
+    "5:40cells including17duplicate links and3conflicting cells"
+  ],
+  "numeric_figures": [
+    "1:24distribution summary coordinates",
+    "3:32sweep values"
+  ],
+  "nonempirical_figures": [
+    "2pipeline",
+    "4–6prompts",
+    "7context-classification example"
+  ],
+  "coverage_notes": "All19pages reviewed including references and appendix; tables1/4/5 visually checked, figures1/3 rendered and native coordinates calibrated. All corpus counts, score cells and20prose improvements retained. No hardware/latency/cost metrics present. No test gold added to participant package.",
+  "validation_report": "D019_validation.json"
+}

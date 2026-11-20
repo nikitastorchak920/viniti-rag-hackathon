@@ -1,0 +1,56 @@
+{
+  "publication_id": "D002",
+  "source_sha256": "39b4372dfbcf52f133fbede9b525d43638783e14111c798c7d297e68a63ccd7f",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 18,
+    "datasets": 17,
+    "tasks": 5,
+    "experiments": 10,
+    "results": 386,
+    "issues": 7
+  },
+  "tables": {
+    "I": "symbol-to-model mapping captured in configurations, including NER conflict",
+    "II": "60 scalar mean/SD results, all numerical prose repeats; sample-size conflict flagged",
+    "III": "8 mean/SD results + 2 accuracies + prose repeats; explicitly uncomputed general/multi-hop accuracy",
+    "IV": "20 non-dash pairwise win fractions; structural triangular/self-comparison dashes not observations",
+    "V": "45 rating/median values + 30 CI endpoints; numerical prose repeats and bounds retained",
+    "VI": "12 numerical rubric scores + 3 explicitly dashed CVE outcomes; aggregation not guessed",
+    "VII": "all 48 time mean/SD values across CPU/GPU, failure counts/rates, dense sizes and approximate document counts; parameter columns in configurations; prose repeats"
+  },
+  "figures": {
+    "1–5": "architecture/workflow diagrams visually reviewed; no numerical evaluation results",
+    "6": "21 labelled impact values + numerical prose repeats and range statements"
+  },
+  "other_numbers": "Cohen kappa and its repeat; collective failure estimate and rounded repeat/95% bound; summary gain claims and inequalities; nine cited quantitative model/context results. Background data-breach growth, CVE identifiers, researcher experience years, equation constants, rubric anchors, bibliographic years/page ranges excluded from metric outcomes. Configuration thresholds, question counts and protocol constants preserved in entities/notes.",
+  "scope_notes": "Cited contextual NER/CTI metrics labelled cited and not compared with primary RAG results. No accuracy invented for three dashed CVE cells. No CPU model, vector-store implementation, language or document splitting overlap inferred.",
+  "validation_quotes_matched": 393,
+  "participant_pdf_sha256": "45f2ec4057f4f22570c6fdb31cc3ecff671987c9dc6e9178b1472e911198cc81",
+  "participant_pdf_is_synthetic": true,
+  "source_pages_preserved": true,
+  "citation_validation_basis": "Unchanged original PDF; participant scan requires OCR or visual same-page verification. Gold values and original source_sha256 remain unchanged."
+}

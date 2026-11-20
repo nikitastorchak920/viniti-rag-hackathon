@@ -1,0 +1,57 @@
+{
+  "publication_id": "D021",
+  "source_sha256": "c810dfbf9bc7ec5d20b7164a4e453d31cba7ad5c7b6c680a1e21756985fb7deb",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 9,
+    "datasets": 12,
+    "tasks": 5,
+    "experiments": 5,
+    "results": 64,
+    "issues": 5
+  },
+  "numeric_tables": [
+    "1:9ROC-AUCscores",
+    "2:15binaryevaluatoraccuracies"
+  ],
+  "numeric_figures": [
+    "2:17visibleUIlabels/threshold",
+    "3:8timeseriespoints+Average reference"
+  ],
+  "cited_results": [
+    "reference5:0.81Spearman",
+    "reference1:92%and78%precision"
+  ],
+  "nonempirical_figures": [
+    "1RAGpipeline",
+    "4groundednesspipeline"
+  ],
+  "coverage_notes": "All16pagesread; tables1/2 and rasterfigures2/3 visually inspected.11samplecompositioncounts, all24benchmarkcells and3citednumbers included. Imageonlyvaluescaptionanchored with rasterprovenance. UI timings in exampleanswer not systemlatency. No fictional architecture or unreportedCI/cost/hardware.",
+  "validation_report": "D021_validation.json",
+  "participant_pdf_sha256": "3968b5e6c80ec3a90fbd54360bf9a329034b3fe2278b87e7a73a167ce31645f9",
+  "participant_pdf_is_synthetic": true,
+  "source_pages_preserved": true,
+  "citation_validation_basis": "Unchanged original PDF; participant scan requires OCR or visual same-page verification. Gold values and original source_sha256 remain unchanged."
+}

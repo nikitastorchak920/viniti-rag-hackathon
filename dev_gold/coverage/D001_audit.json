@@ -1,0 +1,474 @@
+{
+  "publication_id": "D001",
+  "source_sha256": "7fcbb21b0bdf5bb222b347d0b5e8d6587aa8af5c5f855f62322d0d7ad5427d3c",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "tables": {
+    "1": "252 main metric values + 4 prose repeats",
+    "2": "15 EM values, 12 explicit decreases + 3 prose repeats",
+    "3": "18 token costs + 2 cost repeats, 2 ratios + abstract repeat",
+    "4": "4 diagnostic counts + 1 repeat",
+    "5": "prompt template; no evaluation metrics",
+    "6": "6 EM values + 3 explicit decreases",
+    "7": "4 EM values, 3 signed differences, 1 explicit absent reference delta + 3 prose decreases",
+    "8": "3 intrinsic metrics + 3 prose repeats",
+    "9": "prompt template; no evaluation metrics",
+    "10": "prompt template; no evaluation metrics"
+  },
+  "figures": {
+    "1": "conceptual diagram; dates and entity examples excluded",
+    "2": "pipeline example; contextual sports ranking/date not RAG metrics",
+    "3": "30 coordinates; four identical optimum configurations, remaining points digitized to 0.001",
+    "4": "6 labelled EM values + prose repeats and explicit gains",
+    "5": "12 labelled EM values + introduction repeat",
+    "6": "3 counts and 3 shares, all prose repeats plus 95.5% combined share"
+  },
+  "other_numbers": "Hyperparameters/training counts stored in configurations.note; document/sample counts stored in datasets/experiments; bibliography years/page ranges, example content dates and equations are not metric results. No quantitative cited results were found. No external supplementary file needed for values annotated here.",
+  "digitization": {
+    "y_at_0_500": 153.05999755859375,
+    "y_at_0_575": 95.71923828125,
+    "rounding": 0.001,
+    "comparison_tolerance": 0.001,
+    "points": [
+      {
+        "result_id": "R310",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 1,
+        "pdf_point": [
+          108.43977355957031,
+          131.6527862548828
+        ],
+        "value_before_rounding": 0.5279999928151056,
+        "value": 0.528,
+        "printed_label": false
+      },
+      {
+        "result_id": "R311",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 2,
+        "pdf_point": [
+          121.6944580078125,
+          111.0101089477539
+        ],
+        "value_before_rounding": 0.554999998004196,
+        "value": 0.555,
+        "printed_label": false
+      },
+      {
+        "result_id": "R312",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 3,
+        "pdf_point": [
+          134.9491424560547,
+          96.48377990722656
+        ],
+        "value_before_rounding": 0.5740000023949648,
+        "value": 0.574,
+        "printed_label": true
+      },
+      {
+        "result_id": "R313",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 4,
+        "pdf_point": [
+          148.20382690429688,
+          98.01287078857422
+        ],
+        "value_before_rounding": 0.5719999972058744,
+        "value": 0.572,
+        "printed_label": false
+      },
+      {
+        "result_id": "R314",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 5,
+        "pdf_point": [
+          161.45851135253906,
+          100.30650329589844
+        ],
+        "value_before_rounding": 0.5689999944117488,
+        "value": 0.569,
+        "printed_label": false
+      },
+      {
+        "result_id": "R315",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 6,
+        "pdf_point": [
+          174.71319580078125,
+          101.8355941772461
+        ],
+        "value_before_rounding": 0.5669999892226583,
+        "value": 0.567,
+        "printed_label": false
+      },
+      {
+        "result_id": "R316",
+        "panel": "a",
+        "parameter": "anchors",
+        "x": 7,
+        "pdf_point": [
+          187.96788024902344,
+          103.36466979980469
+        ],
+        "value_before_rounding": 0.565000003991608,
+        "value": 0.565,
+        "printed_label": false
+      },
+      {
+        "result_id": "R317",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 1,
+        "pdf_point": [
+          217.79092407226562,
+          143.88548278808594
+        ],
+        "value_before_rounding": 0.5119999912184623,
+        "value": 0.512,
+        "printed_label": false
+      },
+      {
+        "result_id": "R318",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 2,
+        "pdf_point": [
+          227.73193359375,
+          126.30097961425781
+        ],
+        "value_before_rounding": 0.534999996008392,
+        "value": 0.535,
+        "printed_label": false
+      },
+      {
+        "result_id": "R319",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 3,
+        "pdf_point": [
+          237.67294311523438,
+          113.30374145507812
+        ],
+        "value_before_rounding": 0.5519999952100704,
+        "value": 0.552,
+        "printed_label": false
+      },
+      {
+        "result_id": "R320",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 4,
+        "pdf_point": [
+          247.6139678955078,
+          103.36466979980469
+        ],
+        "value_before_rounding": 0.565000003991608,
+        "value": 0.565,
+        "printed_label": false
+      },
+      {
+        "result_id": "R321",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 5,
+        "pdf_point": [
+          257.55499267578125,
+          96.48377990722656
+        ],
+        "value_before_rounding": 0.5740000023949648,
+        "value": 0.574,
+        "printed_label": true
+      },
+      {
+        "result_id": "R322",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 6,
+        "pdf_point": [
+          267.4959716796875,
+          97.24832153320312
+        ],
+        "value_before_rounding": 0.5730000047899296,
+        "value": 0.573,
+        "printed_label": false
+      },
+      {
+        "result_id": "R323",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 7,
+        "pdf_point": [
+          277.43701171875,
+          99.54196166992188
+        ],
+        "value_before_rounding": 0.5699999920167839,
+        "value": 0.57,
+        "printed_label": false
+      },
+      {
+        "result_id": "R324",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 8,
+        "pdf_point": [
+          287.37799072265625,
+          101.07103729248047
+        ],
+        "value_before_rounding": 0.5680000067857337,
+        "value": 0.568,
+        "printed_label": false
+      },
+      {
+        "result_id": "R325",
+        "panel": "b",
+        "parameter": "retrieved_documents",
+        "x": 9,
+        "pdf_point": [
+          297.31903076171875,
+          102.60012817382812
+        ],
+        "value_before_rounding": 0.5660000015966432,
+        "value": 0.566,
+        "printed_label": false
+      },
+      {
+        "result_id": "R326",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 1,
+        "pdf_point": [
+          327.1420593261719,
+          130.12368774414062
+        ],
+        "value_before_rounding": 0.5300000079832161,
+        "value": 0.53,
+        "printed_label": false
+      },
+      {
+        "result_id": "R327",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 2,
+        "pdf_point": [
+          340.3967590332031,
+          108.71648406982422
+        ],
+        "value_before_rounding": 0.5579999908193015,
+        "value": 0.558,
+        "printed_label": false
+      },
+      {
+        "result_id": "R328",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 3,
+        "pdf_point": [
+          353.65142822265625,
+          96.48377990722656
+        ],
+        "value_before_rounding": 0.5740000023949648,
+        "value": 0.574,
+        "printed_label": true
+      },
+      {
+        "result_id": "R329",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 4,
+        "pdf_point": [
+          366.9060974121094,
+          97.24832153320312
+        ],
+        "value_before_rounding": 0.5730000047899296,
+        "value": 0.573,
+        "printed_label": false
+      },
+      {
+        "result_id": "R330",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 5,
+        "pdf_point": [
+          380.1607971191406,
+          98.77741241455078
+        ],
+        "value_before_rounding": 0.5709999996008392,
+        "value": 0.571,
+        "printed_label": false
+      },
+      {
+        "result_id": "R331",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 6,
+        "pdf_point": [
+          393.41546630859375,
+          100.30650329589844
+        ],
+        "value_before_rounding": 0.5689999944117488,
+        "value": 0.569,
+        "printed_label": false
+      },
+      {
+        "result_id": "R332",
+        "panel": "c",
+        "parameter": "iterations",
+        "x": 7,
+        "pdf_point": [
+          406.6701354980469,
+          101.07103729248047
+        ],
+        "value_before_rounding": 0.5680000067857337,
+        "value": 0.568,
+        "printed_label": false
+      },
+      {
+        "result_id": "R333",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.001,
+        "pdf_point": [
+          436.4931945800781,
+          122.47826385498047
+        ],
+        "value_before_rounding": 0.5399999940125879,
+        "value": 0.54,
+        "printed_label": false
+      },
+      {
+        "result_id": "R334",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.003,
+        "pdf_point": [
+          449.7478942871094,
+          111.0101089477539
+        ],
+        "value_before_rounding": 0.554999998004196,
+        "value": 0.555,
+        "printed_label": false
+      },
+      {
+        "result_id": "R335",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.006,
+        "pdf_point": [
+          463.0025634765625,
+          101.07103729248047
+        ],
+        "value_before_rounding": 0.5680000067857337,
+        "value": 0.568,
+        "printed_label": false
+      },
+      {
+        "result_id": "R336",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.01,
+        "pdf_point": [
+          476.2572326660156,
+          96.48377990722656
+        ],
+        "value_before_rounding": 0.5740000023949648,
+        "value": 0.574,
+        "printed_label": true
+      },
+      {
+        "result_id": "R337",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.02,
+        "pdf_point": [
+          489.511962890625,
+          102.60012817382812
+        ],
+        "value_before_rounding": 0.5660000015966432,
+        "value": 0.566,
+        "printed_label": false
+      },
+      {
+        "result_id": "R338",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.05,
+        "pdf_point": [
+          502.7666015625,
+          118.65554809570312
+        ],
+        "value_before_rounding": 0.544999992016784,
+        "value": 0.545,
+        "printed_label": false
+      },
+      {
+        "result_id": "R339",
+        "panel": "d",
+        "parameter": "energy_threshold",
+        "x": 0.1,
+        "pdf_point": [
+          516.0213623046875,
+          136.24005126953125
+        ],
+        "value_before_rounding": 0.5219999872268543,
+        "value": 0.522,
+        "printed_label": false
+      }
+    ]
+  },
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 92,
+    "datasets": 4,
+    "tasks": 2,
+    "experiments": 11,
+    "results": 416,
+    "issues": 5
+  },
+  "pending_validation": false,
+  "gold_ready": true,
+  "validation": {
+    "errors": [],
+    "warnings": [],
+    "rows": {
+      "publications": 1,
+      "configurations": 92,
+      "datasets": 4,
+      "tasks": 2,
+      "experiments": 11,
+      "results": 416,
+      "issues": 5
+    },
+    "quotes": {
+      "requested": 421,
+      "matched": 421,
+      "unresolved": 0
+    },
+    "semantic_completeness_certified": false,
+    "exit_code": 0
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "publication_id": "D006",
+  "source_sha256": "1485c60033984f9e86695fcef555587ca6fac69b031f5d64826bf49a2cfcbd76",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 163,
+    "datasets": 11,
+    "tasks": 2,
+    "experiments": 8,
+    "results": 598,
+    "issues": 6
+  },
+  "tables": {
+    "1": "method/model/fine-tuning metadata, no outcome cells",
+    "2": "all140 NDCG cells, seven methods x two variants x ten dataset/mean columns",
+    "3": "all210 cells including noQT degradations"
+  },
+  "figures": {
+    "1,2": "illustrative ranking/confidence examples, not empirical benchmark outcomes",
+    "3": "all40 curve points and four repeated baseline lines; approximate1e-5 NDCG",
+    "4": "all53 labeled heatmap cells, including equality boundary",
+    "5": "all24 labeled model-comparison bars",
+    "6": "all28 labeled confidence-method bars",
+    "7": "all60 relevance-fraction points and six explicit unextractable bubble distributions"
+  },
+  "other_numbers": "All numerical benchmark claims, cited bound and prose repeats captured. Confidence samplingK10/temp1, retrieval candidate depth10, cutoff5 and threshold grids retained in configuration/protocol. Abstract parameter counts7–9B are model metadata. Figure2 fictional/illustrative presidency facts and fractions are examples, not factual claims to adopt. References18–21 contain no additional experiment results.",
+  "scope_notes": "RAG reranking component with quantitative primary retrieval results is in scope; no downstream answer-quality or runtime measurements supplied despite efficiency/hallucination claims. Unknown metadata blank. Full21page source review, single annotator.",
+  "digitization_provenance": "work/D006_digitization.json; source vector paths and grid calibrations",
+  "validation_quotes_matched": 604
+}

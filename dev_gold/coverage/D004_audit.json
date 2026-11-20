@@ -1,0 +1,56 @@
+{
+  "publication_id": "D004",
+  "source_sha256": "2a3656f16b79dc97491ce2f2e418af59609240604cfe8e209a305436d2d37d1c",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 24,
+    "datasets": 14,
+    "tasks": 5,
+    "experiments": 9,
+    "results": 297,
+    "issues": 5
+  },
+  "tables": {
+    "1,13": "Survey catalog; quantitative counts in narrative captured, benchmark names/years/metric names are not fabricated outcome values",
+    "2": "all 21 values, meaningful significance bounds, repeated prose values",
+    "3": "12 values; significance at other retrieval depths kept separate; aggregate reduction range and reversed prose claim",
+    "4": "six absolute changes, source sample counts in dataset metadata",
+    "5": "18 relative deltas, Sonnet duplicates linked",
+    "6": "56 values; k20 duplicates linked",
+    "7,8": "18 ablation values plus explicit significance and all numerical prose repeats",
+    "9": "qualitative responses; 17-day story wait is content, not system latency",
+    "10": "18 question-type values, three prose repeats",
+    "11": "36 values, signature bounds and prose repeats; hybrid duplicates linked",
+    "12": "21 entity-matched subset values, no automatic duplicate merge solely from numeric equality"
+  },
+  "figures": {
+    "1": "architecture diagram, no quantitative evaluation points"
+  },
+  "other_numbers": "Human preference, bootstrap endpoints and p-bound with repeats; annotation agreement and CI; API cost; two cited quantitative retrieval results. Token chunk parameters, entropy selection threshold, embedding size, corpus/question counts in entities. Equation weights/constants, taxonomy levels, prompt examples, tax-policy amounts, bibliography dates excluded from outcome metrics.",
+  "scope_notes": "Position paper has primary quantitative O-RAG experiments and is in scope. Theory W2 objective distinguished from empirical W1. Unknown hotel retrieval depth/method/extractor and query count remain blank.",
+  "validation_quotes_matched": 302
+}

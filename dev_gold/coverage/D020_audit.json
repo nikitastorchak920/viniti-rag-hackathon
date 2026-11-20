@@ -1,0 +1,49 @@
+{
+  "publication_id": "D020",
+  "source_sha256": "29f92a872d546e0f0ea28724af1617d68779f9eec280135e716f7260e5e14b78",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 3,
+    "datasets": 13,
+    "tasks": 3,
+    "experiments": 3,
+    "results": 408,
+    "issues": 8
+  },
+  "numeric_tables": [
+    "2:10counts",
+    "3:16cells includingrepeat overallN",
+    "4:100cells",
+    "5:24cells",
+    "6:16cells including2notapplicable",
+    "7:3repeat reductions",
+    "8:56scores+8N",
+    "9:98scores+14N",
+    "10:14scores+2N"
+  ],
+  "nonempirical_tables": [
+    "1:15qualitative categorical comparisons recorded in configuration notes"
+  ],
+  "numeric_figures": [],
+  "coverage_notes": "All13pagesread. Dense tables2–10 visually verified onpages4–7; no empiricalfigures. All numericcells, workloadcounts,prose repeats/improvements, pricing,costs,cache absence retained. Ingestionmilliseconds not querylatency. Configpromptexamples treated as data, never executed.",
+  "validation_report": "D020_validation.json"
+}

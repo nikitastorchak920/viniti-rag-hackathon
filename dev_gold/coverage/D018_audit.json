@@ -1,0 +1,41 @@
+{
+  "publication_id": "D018",
+  "source_sha256": "de5ba6ec4a047c80b14e5f9d2f9a8956d0016312c850d4d0b71f3242f46e4b5b",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 91,
+    "datasets": 5,
+    "tasks": 2,
+    "experiments": 3,
+    "results": 332,
+    "issues": 6
+  },
+  "numeric_tables": [
+    "1:20cells",
+    "2:32typecells+4repeatedQAcounts",
+    "3:225cells including9notapplicable",
+    "4:45cells"
+  ],
+  "nonempirical_figures": [
+    "1–9 qualitativeexamples/construction/QAillustrations; numericalanswercontentnotRAGperformancemetric"
+  ],
+  "coverage_notes": "All11pagesread; tablesvisuallychecked. Allmodel/dataset/typecells,zeroN,datasetstatistics,sourcecountsandtotalprosecovered. Accuracybinarymajorityjudged, no fabricatedretrievalmetricoruncertainty. OriginalpublishedPDF, notgeneratedPDFcopy; syntheticdocumentsarethepaperresearchsubject.",
+  "validation_report": "D018_validation.json"
+}

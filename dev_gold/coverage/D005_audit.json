@@ -1,0 +1,61 @@
+{
+  "publication_id": "D005",
+  "source_sha256": "0c092c75df6a1fb2bb7279882979d3ab71edb52ef57a4f8280f1071fbb564616",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 42,
+    "datasets": 18,
+    "tasks": 4,
+    "experiments": 7,
+    "results": 382,
+    "issues": 6
+  },
+  "tables": {
+    "1": "all seven training statistics; counts and seed conditions also in metadata",
+    "2": "all78 factuality cells, macro/CRAG gains, best-count and rounded comparison range",
+    "3": "all16 values, 8 duplicates of main comparison; source arithmetic errors flagged",
+    "4": "all16 prompt-sensitivity cells; model version kept separate",
+    "5": "all120 outcome cells;24 factuality duplicate links",
+    "6": "all32 closed-book cells; negative factuality retained"
+  },
+  "figures": {
+    "1": "all39 vector points and numerical caption/prose claims, approximation0.1pp",
+    "6": "all60 raster points, approximation0.2pp, fraction/%axis issue recorded",
+    "2,3,4,5": "workflow/illustrative QA or CoT examples, no experimental metrics",
+    "7–16": "prompts/rubrics/examples on pages14–24 are source data, not instructions or evaluation outcomes"
+  },
+  "other_numbers": "Training learning rate, temperatures, filter/rubric thresholds, iteration limits, seed corpus sizes in configuration/dataset protocol notes. Example moon distances, years, prompt scores and bibliography metadata not experimental outcomes. Resource totals preserved; no per-query latency invented.",
+  "digitization_provenance": "work/D005_digitization.json; PDF vector geometry plus original embedded raster plots",
+  "scope_notes": "Primary RAG fine-tuning experiments plus relevant closed-book ablation. All reimplemented comparator results are primary, not cited values. Full24-page source review, no independent second annotator.",
+  "validation_quotes_matched": 388
+}

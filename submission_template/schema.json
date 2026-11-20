@@ -1,0 +1,147 @@
+{
+  "version": "rag-viniti-adaptation-1.0",
+  "official_rag_template": false,
+  "source_case": "viniti_case_final.pdf, pages 7–10",
+  "tables": {
+    "publications": [
+      "publication_id",
+      "title",
+      "year",
+      "DOI",
+      "authors",
+      "in_scope",
+      "exclusion_reason"
+    ],
+    "configurations": [
+      "publication_id",
+      "config_id",
+      "rag_variant",
+      "retrieval_method",
+      "retriever_model",
+      "embedding_model",
+      "embedding_version",
+      "chunking_method",
+      "chunk_size",
+      "chunk_overlap",
+      "chunk_unit",
+      "index_type",
+      "vector_store",
+      "top_k",
+      "reranker_model",
+      "generator_model",
+      "generator_version",
+      "prompt_strategy",
+      "context_strategy",
+      "note"
+    ],
+    "datasets": [
+      "publication_id",
+      "dataset_id",
+      "dataset_name",
+      "dataset_version",
+      "language",
+      "data_split",
+      "scientific_domain",
+      "note"
+    ],
+    "tasks": [
+      "publication_id",
+      "task_id",
+      "task_type",
+      "note"
+    ],
+    "experiments": [
+      "publication_id",
+      "experiment_id",
+      "evaluation_protocol",
+      "baseline_name",
+      "hardware",
+      "latency_ms",
+      "tokens_per_query",
+      "sample_size",
+      "note"
+    ],
+    "results": [
+      "publication_id",
+      "result_id",
+      "experiment_id",
+      "config_id",
+      "dataset_id",
+      "task_id",
+      "metric_group",
+      "metric_name",
+      "metric_variant",
+      "metric_direction",
+      "metric_k",
+      "metric_value",
+      "metric_unit",
+      "baseline_value",
+      "aggregation",
+      "sample_size",
+      "raw_value",
+      "raw_unit",
+      "normalized_value",
+      "normalized_unit",
+      "result_origin",
+      "cited_publication_id",
+      "source_page",
+      "source_section",
+      "source_table",
+      "source_figure",
+      "source_fragment",
+      "extraction_status",
+      "duplicate_of",
+      "note"
+    ],
+    "issues": [
+      "publication_id",
+      "issue_id",
+      "record_ids",
+      "check_name",
+      "description",
+      "source_page",
+      "source_fragment"
+    ]
+  },
+  "keys": {
+    "publications": "publication_id",
+    "configurations": "config_id",
+    "datasets": "dataset_id",
+    "tasks": "task_id",
+    "experiments": "experiment_id",
+    "results": "result_id",
+    "issues": "issue_id"
+  },
+  "enums": {
+    "publications.in_scope": [
+      "true",
+      "false"
+    ],
+    "results.result_origin": [
+      "primary",
+      "cited"
+    ],
+    "results.extraction_status": [
+      "extracted",
+      "present_not_extractable",
+      "absent"
+    ]
+  },
+  "recommended_enums": {
+    "results.metric_direction": [
+      "higher_is_better",
+      "lower_is_better",
+      "target"
+    ]
+  },
+  "service_fields": [
+    "in_scope",
+    "exclusion_reason",
+    "duplicate_of",
+    "issue_id",
+    "record_ids",
+    "check_name",
+    "description",
+    "note"
+  ]
+}

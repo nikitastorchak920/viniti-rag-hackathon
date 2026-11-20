@@ -1,0 +1,41 @@
+{
+  "publication_id": "D016",
+  "source_sha256": "40a9cebd8b5ae63abfd12a8c62477ebbed8dde46237521ecc75cd1a660949a9a",
+  "reviewed_pdf_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "review_level": "single-pass source-grounded annotation; no independent second annotator",
+  "completeness_reviewed": true,
+  "pending_validation": false,
+  "gold_ready": true,
+  "counts": {
+    "publications": 1,
+    "configurations": 3,
+    "datasets": 5,
+    "tasks": 4,
+    "experiments": 4,
+    "results": 78,
+    "issues": 5
+  },
+  "numeric_tables": [
+    "I:25clusters×2numericmeasures=50cells"
+  ],
+  "numeric_figures": [
+    "7:8exactbarlabels",
+    "6:3explicitprosenodecounts"
+  ],
+  "nonempirical_figures": [
+    "1–5 architecture/schema"
+  ],
+  "source_pages": 8,
+  "conditional_accuracy": true,
+  "coverage_notes": "All8pagesread; tableandFig7visuallychecked. AllprimaryquantitativeQA,corpus/KGstats,topicdistribution,decompositiontimecovered;proseresultrepeatslinkedexceptscopeconflict. Formulareferences/ranksearchmetadata notnewQAmetrics. FourqualitativeanswersandDOIsnotfabricatedasaccuracy. Exactprintedvalues, no graphdigitization.",
+  "validation_report": "D016_validation.json"
+}
