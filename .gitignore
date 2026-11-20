@@ -1,2 +1,13 @@
 dev/
 test/
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+cache/
+out_*/
+submission/
+*.json
+!submission_template/schema.json
+!app/*.json
