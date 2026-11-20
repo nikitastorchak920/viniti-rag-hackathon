@@ -1,4 +1,4 @@
-# Паспорт данных — RAG (кейс ВИНИТИ РАН + ЮФУ)
+# Паспорт датасета — RAG (кейс ВИНИТИ РАН + ЮФУ)
 
 Формат: UTF-8, запятая, десятичная точка, 7 CSV (колонки и порядок — `submission_template/schema.json`). Пустая ячейка = в статье нет сведений (не 0). Ноль пишется `0`. Везде есть `publication_id` (имя PDF без расширения); остальные ключи уникальны внутри публикации. Номер страницы — страница PDF с 1.
 
@@ -31,9 +31,31 @@
 ## Правила валидации (issues.csv; строки не удаляются)
 | check_name | Условие |
 |---|---|
-| metric_scale | метрика из ограниченного набора вне [0,1] при `fraction` / вне [0,100] при `%`; либо значение >1 без указанной единицы (шкала не заявлена) |
+| metric_scale | любая метрика (кроме разностей) вне [0,1] при `fraction` / вне [0,100] при `%`; либо значение >1 без указанной единицы (шкала не заявлена) |
 | metric_k | в названии `@k`, но целое k не определено |
 | percentage_vs_percentage_point | метрики-разности (Δ, improvement, gain…) в `%`: относительные проценты или п.п. — не установлено |
+| metric_k_gt_top_k | `metric_k` больше `top_k` конфигурации (проверить, к какой стадии — поиск или reranker — относится k) |
 | contradiction | расхождение значений одного ключа или противоречия в параметрах внутри статьи |
 
 Дополнительно экспортёр: неизвестные ссылки на id обнуляются (с пометкой в `note`); строки без допустимой страницы PDF или без локатора источника исключаются с записью в лог; исключённая статья (`in_scope=false`) имеет строку только в publications.csv. Структурная проверка — `tools/check_submission.py` (код 1 — ошибка, 2 — требуется проверка источников); полнота и научная точность отдельно оцениваются `scripts/evaluate.py` по `dev_gold/`.
+
+## Источники данных и режимы (поле `mode` в `cache/<id>.json`)
+| mode | Источник | Приоритет при слиянии |
+|---|---|---|
+| `text` / `pdf` | LLM (Gemini или DeepSeek), текстовый слой / PDF целиком | 3 |
+| `ocr_json` | OCR-JSON с ПК тиммейта для сканов + правила (без OCR на сервере) | 2 |
+| `local` | только PyMuPDF + регулярные выражения (эвристика, не для сдачи) | 1 |
+
+Формат OCR-JSON: `{"publication_id":"D002","pages":[{"source_page":1,"is_scanned":true,"raw_text":"","normalized_text":"","primary_section":"","tables":[{"caption":"Table 1: ...","rows":[["Method","EM"],["X",".31"]]}]}]}`. Цитаты из OCR на сервере не проверяются по PDF (код 2 у `check_submission.py`, либо `--ocr`).
+
+## Воспроизведение
+```powershell
+python -m pip install -r requirements.txt -r tools/requirements.txt
+python main.py --input dev --output out_dev                         # LLM (ключ в .env)
+python main.py --input dev --output out_dev --local --skip-scans    # без API, эвристика
+python main.py --input dev --output out_dev --ocr-json ocr_dev      # + OCR-JSON для сканов
+python scripts/merge_cache.py incoming.zip --input dev --output out_dev   # слияние чужих кэшей + пересборка + проверка
+python tools/check_submission.py out_dev dev --json-report report.json
+python scripts/evaluate.py out_dev dev_gold
+python scripts/serve_ui.py out_dev                                  # UI: http://127.0.0.1:8000/
+```

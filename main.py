@@ -29,6 +29,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="auto: text layer, scans sent as PDF; pdf: always send PDF; text: text layer only")
     ap.add_argument("--skip-scans", action="store_true",
                     help="skip image-only PDFs (status SKIPPED_SCAN); enabled automatically when GEMINI_API_KEY is not set")
+    ap.add_argument("--ocr-json", type=pathlib.Path, default=None, metavar="DIR",
+                    help="folder with <id>.json OCR files from the teammate's PC (scanned PDFs); no OCR is run here")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
     a = ap.parse_args(argv)
     if a.cache is None:
@@ -53,11 +55,25 @@ def main(argv: list[str] | None = None) -> int:
 
     failed: list[str] = []
     skipped: list[str] = []
+    ocr_done: set[str] = set()
+    if a.ocr_json:
+        from plugins.rag.ocr_adapter import ingest_file
+
+        for pdf in pdfs:
+            j = a.ocr_json / f"{pdf.stem}.json"
+            if j.exists():
+                ok, msg = ingest_file(j, a.cache, a.input, a.force)
+                log(f"{pdf.stem}: {'OK' if ok else 'FAIL'} - OCR-JSON: {msg}")
+                if ok:
+                    ocr_done.add(pdf.stem)
+                else:
+                    failed.append(pdf.stem)
+    pdfs_todo = [p for p in pdfs if p.stem not in ocr_done and p.stem not in failed]
     if a.local and not a.rebuild_csv_only:
         import gc
         from plugins.rag.local_extract import process_local
 
-        for pdf in pdfs:
+        for pdf in pdfs_todo:
             ok, msg = process_local(pdf, a.cache, a.force, True)
             log(f"{pdf.stem}: {'SKIP' if ok is None else 'OK' if ok else 'FAIL'} - {msg}")
             if ok is None:
@@ -89,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
             log("WARN: no GEMINI_API_KEY / DEEPSEEK_API_KEY: --skip-scans enabled automatically; only cached documents can be exported")
         from plugins.rag.pipeline import process_document
 
-        for pdf in pdfs:
+        for pdf in pdfs_todo:
             ok, msg = process_document(pdf, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans)
             log(f"{pdf.stem}: {'SKIP' if ok is None else 'OK' if ok else 'FAIL'} - {msg}")
             if ok is None:

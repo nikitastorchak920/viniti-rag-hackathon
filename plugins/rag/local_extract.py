@@ -21,7 +21,7 @@ DATASET = re.compile(r"(?i)hotpot|2wiki|wikimulti|musique|nq\b|natural questions
                      r"asqa|eli5|squad|webq|bamboogle|strategyqa|\w+qa\b")
 CAPTION = re.compile(r"^((?:Table|Таблица)\s+\d+)\s*[:.]")
 SECTION = re.compile(r"^(?:\d+(?:\.\d+)*\.?\s+)?(Abstract|Introduction|Related Work|Methods?|Methodology|Experiments?|Results?|"
-                     r"Discussion|Conclusions?|References|Appendix)\b", re.I)
+                     r"Discussion|Conclusions?|References|Appendix)\s*$", re.I)
 SCOPE_KW = ["rag", "retrieval-augmented generation", "dense retrieval", "sparse retrieval", "hybrid retrieval", "bm25",
             "vector database", "vector db", "vector store", "vector index", "embedding", "reranker", "re-ranker", "chunking",
             "top-k", "faiss", "chromadb", "weaviate", "qdrant", "milvus", "colbert", "splade", "graph rag", "graphrag",
@@ -89,6 +89,8 @@ def _headers(lines: list[dict], start: int, k: int) -> tuple[list[str], list[str
         if _data_row(ln) or CAPTION.match(ln["text"]) or len(ln["words"]) > 40:
             break
         cells = ln["cells"]
+        if len(cells) == k + 1:  # leading row-label header cell ("Method")
+            cells = cells[1:]
         n = len(cells)
         if n >= 2 and k % n == 0 and not any(NUMTOK.match(c) for c in cells):
             cols = [cells[c // (k // n)] for c in range(k)]
@@ -104,14 +106,18 @@ def _headers(lines: list[dict], start: int, k: int) -> tuple[list[str], list[str
 
 def extract_pages(pages) -> dict:
     """pages: iterable of pymupdf pages (consumed one at a time)."""
+    return extract_lines((_lines(p) for p in pages))
+
+
+def extract_lines(pages_lines) -> dict:
+    """pages_lines: iterable (per page) of line dicts {y, words, cells, text}."""
     configs: dict[tuple, str] = {}
     datasets: dict[str, str] = {}
     exps: dict[str, str] = {}
     caps_text: dict[str, str] = {}
     results: list[dict] = []
     section = ""
-    for pno, page in enumerate(pages, 1):
-        lines = _lines(page)
+    for pno, lines in enumerate(pages_lines, 1):
         caps = [(ln["y"], CAPTION.match(ln["text"]).group(1), ln["text"]) for ln in lines if CAPTION.match(ln["text"])]
         prev_row = -10
         hdr = None
@@ -150,29 +156,7 @@ def extract_pages(pages) -> dict:
     return {"configs": configs, "datasets": datasets, "exps": exps, "caps": caps_text, "results": results}
 
 
-def process_local(pdf: pathlib.Path, cache_dir: pathlib.Path, force: bool, skip_scans: bool) -> tuple[bool | None, str]:
-    import pymupdf
-
-    doc_id = pdf.stem
-    old = {} if force else load_cache(cache_dir, doc_id)
-    if old.get("complete") and old.get("mode") == "local" and old.get("version") == CACHE_VERSION:
-        return True, "cached"
-    t0 = time.time()
-    try:
-        with pymupdf.open(pdf) as doc:
-            n = len(doc)
-            texts = [p.get_text() or "" for p in doc]
-            with_text = sum(len(t.strip()) >= MIN_CHARS_PER_TEXT_PAGE for t in texts)
-            if n == 0:
-                return False, "PDF has 0 pages"
-            if with_text < max(1, int(0.9 * n)):
-                return None, "SKIPPED_SCAN (no text layer; local mode never uses OCR)"
-            first = texts[0]
-            full = "\n".join(texts)
-            ex = extract_pages(doc)
-        del texts
-    except Exception as exc:  # noqa: BLE001
-        return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
+def build_cache(n: int, first: str, full: str, ex: dict, mode: str, is_scan: bool) -> dict:
     lines = [x.strip() for x in first.splitlines() if x.strip()]
     doi = re.search(r"10\.\d{4,9}/[^\s,;]+", first)
     year = re.search(r"\b(?:19|20)\d{2}\b", first)
@@ -215,8 +199,35 @@ def process_local(pdf: pathlib.Path, cache_dir: pathlib.Path, force: bool, skip_
             meta["experiments"].append({"experiment_id": eid, "evaluation_protocol": ex["caps"].get(tab, ""), "baseline_name": "",
                                         "hardware": "", "latency_ms": latency, "tokens_per_query": tpq, "sample_size": "",
                                         "note": tab})
-    cache = {"version": CACHE_VERSION, "n_pages": n, "is_scan": False, "mode": "local", "window": n, "complete": True,
+    cache = {"version": CACHE_VERSION, "n_pages": n, "is_scan": is_scan, "mode": mode, "window": n, "complete": True,
              "meta": meta, "windows": {f"1-{n}": {"results": ex["results"] if in_scope else []}}}
+    return cache
+
+
+def process_local(pdf: pathlib.Path, cache_dir: pathlib.Path, force: bool, skip_scans: bool) -> tuple[bool | None, str]:
+    import pymupdf
+
+    doc_id = pdf.stem
+    old = {} if force else load_cache(cache_dir, doc_id)
+    if old.get("complete") and old.get("mode") in ("local", "ocr_json") and old.get("version") == CACHE_VERSION:
+        return True, "cached"
+    t0 = time.time()
+    try:
+        with pymupdf.open(pdf) as doc:
+            n = len(doc)
+            texts = [p.get_text() or "" for p in doc]
+            with_text = sum(len(t.strip()) >= MIN_CHARS_PER_TEXT_PAGE for t in texts)
+            if n == 0:
+                return False, "PDF has 0 pages"
+            if with_text < max(1, int(0.9 * n)):
+                return None, "SKIPPED_SCAN (no text layer; local mode never uses OCR)"
+            first = texts[0]
+            full = "\n".join(texts)
+            ex = extract_pages(doc)
+        del texts
+    except Exception as exc:  # noqa: BLE001
+        return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
+    cache = build_cache(n, first, full, ex, "local", False)
     save_cache(cache_dir, doc_id, cache)
     gc.collect()
-    return True, f"{len(ex['results'])} raw result rows, in_scope={in_scope}, {time.time() - t0:.1f}s"
+    return True, f"{len(ex['results'])} raw result rows, in_scope={cache['meta']['publication']['in_scope']}, {time.time() - t0:.1f}s"

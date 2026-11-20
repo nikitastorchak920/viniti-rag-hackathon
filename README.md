@@ -51,3 +51,8 @@ python main.py --input dev --output out_dev --rebuild-csv-only
 - Нормализация: `.204`→`0.204` (`fraction` для ограниченных метрик), `%` сохраняется как `%`, секунды→мс, диапазоны не усредняются, `@k`→`metric_k`; цитаты сверяются с текстом страницы (исправление страницы/дословной цитаты при расхождении).
 - Правила проверки (issues.csv): `metric_scale`, `metric_k`, `percentage_vs_percentage_point`, `contradiction`; повторы → `duplicate_of`.
 - Просмотр результата: откройте `app/index.html` в браузере и выберите папку с CSV (`out_dev`).
+
+## Дополнительно
+- Без API: `--local --skip-scans` (эвристика), сканы — через `--ocr-json DIR` (готовые `<id>.json` с ПК, формат в `DATASET_PASSPORT.md`).
+- Слияние кэшей/OCR-JSON тиммейта (папка или .zip): `python scripts/merge_cache.py incoming.zip --input dev --output out_dev` — пересобирает CSV и запускает `check_submission.py`.
+- UI: `python scripts/serve_ui.py out_dev` → http://127.0.0.1:8000/ (поиск, фильтры in_scope/датасет/модель/метрика, источник: страница/таблица/цитата, вкладка issues). Паспорт: `DATASET_PASSPORT.md`.
