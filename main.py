@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", type=pathlib.Path, required=True, help="folder with PDFs (e.g. dev or test)")
     ap.add_argument("--output", type=pathlib.Path, required=True, help="folder for the 7 CSV files (e.g. out_dev)")
-    ap.add_argument("--cache", type=pathlib.Path, default=pathlib.Path("cache"), help="raw LLM JSON cache folder")
+    ap.add_argument("--cache", type=pathlib.Path, default=None, help="raw JSON cache folder (default cache; cache_local with --local)")
     ap.add_argument("--only", nargs="+", metavar="ID", help="document ids to process, e.g. D001 D002")
     ap.add_argument("--force", action="store_true", help="ignore cache and re-query the API")
     ap.add_argument("--rebuild-csv-only", action="store_true", help="no API calls: rebuild CSV from cache")
@@ -29,7 +29,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="auto: text layer, scans sent as PDF; pdf: always send PDF; text: text layer only")
     ap.add_argument("--skip-scans", action="store_true",
                     help="skip image-only PDFs (status SKIPPED_SCAN); enabled automatically when GEMINI_API_KEY is not set")
+    ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
     a = ap.parse_args(argv)
+    if a.cache is None:
+        a.cache = pathlib.Path("cache_local" if a.local else "cache")
 
     from core.llm_client import log
     from core.pdf_processor import inspect_pdf
@@ -50,7 +53,19 @@ def main(argv: list[str] | None = None) -> int:
 
     failed: list[str] = []
     skipped: list[str] = []
-    if not a.rebuild_csv_only:
+    if a.local and not a.rebuild_csv_only:
+        import gc
+        from plugins.rag.local_extract import process_local
+
+        for pdf in pdfs:
+            ok, msg = process_local(pdf, a.cache, a.force, True)
+            log(f"{pdf.stem}: {'SKIP' if ok is None else 'OK' if ok else 'FAIL'} - {msg}")
+            if ok is None:
+                skipped.append(pdf.stem)
+            elif not ok:
+                failed.append(pdf.stem)
+            gc.collect()
+    elif not a.rebuild_csv_only:
         import gc
         import os
         from core.llm_client import GeminiClient, LLMError, load_env
@@ -90,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
                 failed.append(pdf.stem)
             continue
         pages_norm = None
-        if not cache.get("is_scan") and cache.get("mode") == "text":
+        if not cache.get("is_scan") and cache.get("mode") in ("text", "local"):
             try:
                 pages_norm = [exporter.norm(t) for t in inspect_pdf(pdf).pages]
             except Exception as exc:  # noqa: BLE001

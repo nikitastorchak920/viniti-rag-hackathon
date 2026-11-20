@@ -35,3 +35,8 @@
 - Image-only scans without a text layer: skip immediately and log with a separate status (e.g. `SKIPPED_SCAN`). No OCR or heavy image rendering on this server.
 - Do not keep text dumps or debug artifacts in the repository; clean `/tmp` and caches right after testing.
 - After every test run report concisely: files processed, files skipped, peak RAM, errors, validation mismatches.
+
+## Autonomy & Package Policy
+- Pre-approved: installing lightweight system/Python packages (e.g. `python3-pymupdf`, `pypdf`, `pydantic`) via `apt install -y` or `pip --no-cache-dir`; run `apt clean` / clear pip caches afterwards.
+- Still banned: heavy ML/OCR packages (`torch`, `tensorflow`, `pandas`, `scipy`, `tesseract`, `easyocr`) and running the full 90-file `test/` set without explicit user approval.
+- Do small technical fixes and Stage 1-2 tests autonomously; do not pause to ask for minor confirmations.
