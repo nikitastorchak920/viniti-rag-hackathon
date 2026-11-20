@@ -78,6 +78,7 @@ def main() -> int:
     ap.add_argument("result", type=pathlib.Path)
     ap.add_argument("gold", type=pathlib.Path, nargs="?", default=pathlib.Path("dev_gold"))
     ap.add_argument("--only", nargs="+")
+    ap.add_argument("--exclude", default="D014", help="publication reported separately (dominates gold rows)")
     a = ap.parse_args()
 
     pr = {r["publication_id"]: r for r in read(a.result, "publications")}
@@ -85,18 +86,20 @@ def main() -> int:
     if not pr:
         print(f"ERROR: no publications in {a.result}")
         return 1
-    pubs = set(pr) & set(gd)
+    pubs = set(gd)  # every gold publication is scored; absent ones count as recall = 0
     if a.only:
         pubs &= {x.upper() for x in a.only}
+    missing = sorted(pubs - set(pr))
     print(f"Scored publications: {len(pubs)} ({', '.join(sorted(pubs))})")
+    print(f"MISSING from result (recall=0): {len(missing)} {', '.join(missing) or '-'}")
     for pid in sorted(set(pr) - set(gd)):
         print(f"  note: {pid} not in gold, skipped")
 
     print("\n== publications.csv: scope decision")
-    ok = sum(1 for p in pubs if pr[p]["in_scope"] == gd[p]["in_scope"])
+    ok = sum(1 for p in pubs if p in pr and pr[p]["in_scope"] == gd[p]["in_scope"])
     print(f"in_scope agreement: {ok}/{len(pubs)} = {ok / max(1, len(pubs)):.1%}")
     inc_g = {p for p in pubs if gd[p]["in_scope"] == "true"}
-    inc_p = {p for p in pubs if pr[p]["in_scope"] == "true"}
+    inc_p = {p for p in pubs if p in pr and pr[p]["in_scope"] == "true"}
     print(f"included: pred {len(inc_p)} vs gold {len(inc_g)}; wrong: {', '.join(sorted(inc_p ^ inc_g)) or '-'}")
 
     print("\n== row counts (result vs gold, scored pubs only)")
@@ -112,6 +115,12 @@ def main() -> int:
                         ("value_loose", "metric values (loose: metric name+value)")):
         p, r, f, tp, pn, gn = prf(kp[name], kg[name])
         print(f"{label:58} P={p:.3f} R={r:.3f} F1={f:.3f}  (tp={tp}, pred={pn}, gold={gn})")
+
+    print(f"\n== without {a.exclude}")
+    for name in ("value", "value_loose"):
+        p, r, f, tp, pn, gn = prf(Counter({k: v for k, v in kp[name].items() if k[0] != a.exclude}),
+                                  Counter({k: v for k, v in kg[name].items() if k[0] != a.exclude}))
+        print(f"{name:12} P={p:.3f} R={r:.3f} F1={f:.3f}  (tp={tp}, pred={pn}, gold={gn})")
 
     print("\n== per publication (strict value F1)")
     rows = []

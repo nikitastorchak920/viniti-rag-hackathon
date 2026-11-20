@@ -9,7 +9,7 @@ import json
 import pathlib
 import re
 
-from core.llm_client import load_cache, save_cache
+from core.llm_client import SAFE_ID, load_cache, save_cache
 from plugins.rag.local_extract import build_cache, extract_lines
 
 EMPTY = {"cells": [], "words": [], "text": ""}
@@ -38,8 +38,8 @@ def _page_lines(page: dict) -> tuple[list[dict], str]:
 
 def validate_ocr_json(doc: dict, n_pages: int | None) -> str | None:
     """Return error text or None."""
-    if not isinstance(doc, dict) or not doc.get("publication_id") or not isinstance(doc.get("pages"), list):
-        return "not an OCR-JSON (need publication_id and pages[])"
+    if not isinstance(doc, dict) or not isinstance(doc.get("pages"), list):
+        return "not an OCR-JSON (need pages[])"
     nums = [p.get("source_page") for p in doc["pages"] if isinstance(p, dict)]
     if not nums or any(not isinstance(x, int) or x < 1 for x in nums):
         return "pages[].source_page must be integers >= 1"
@@ -50,13 +50,17 @@ def validate_ocr_json(doc: dict, n_pages: int | None) -> str | None:
     return None
 
 
-def ingest(doc: dict, cache_dir: pathlib.Path, n_pages: int | None = None, force: bool = False) -> tuple[bool, str]:
+def ingest(doc: dict, cache_dir: pathlib.Path, n_pages: int | None = None, force: bool = False,
+           pid: str | None = None) -> tuple[bool, str]:
     err = validate_ocr_json(doc, n_pages)
     if err:
         return False, err
-    pid = str(doc["publication_id"])
+    pid = str(pid or doc.get("publication_id") or "")
+    if not SAFE_ID.match(pid):
+        return False, f"unsafe or missing publication id {pid!r}"
     old = load_cache(cache_dir, pid)
-    if old.get("complete") and not force and old.get("mode") != "local":
+    # an LLM cache (text/pdf) is never replaced without --force; local and older ocr_json are overwritten
+    if old.get("complete") and not force and old.get("mode") not in ("local", "ocr_json"):
         return True, f"kept existing {old.get('mode')} cache"
     n = n_pages or max(p["source_page"] for p in doc["pages"])
     by_page = {p["source_page"]: p for p in doc["pages"]}
@@ -86,7 +90,11 @@ def ingest_file(path: pathlib.Path, cache_dir: pathlib.Path, pdf_dir: pathlib.Pa
     except (OSError, json.JSONDecodeError) as exc:
         return False, f"unreadable JSON: {exc}"
     n = None
-    pid = doc.get("publication_id") if isinstance(doc, dict) else None
+    pid = pathlib.Path(path).stem  # id comes from the file name, not from the JSON content
+    if not SAFE_ID.match(pid):
+        return False, f"unsafe file name id {pid!r}"
+    if isinstance(doc, dict) and doc.get("publication_id") and str(doc["publication_id"]) != pid:
+        print(f"WARN: {pid}.json has publication_id={doc['publication_id']!r}; using file name")
     if pdf_dir and pid and (pathlib.Path(pdf_dir) / f"{pid}.pdf").exists():
         try:
             import pymupdf
@@ -95,4 +103,4 @@ def ingest_file(path: pathlib.Path, cache_dir: pathlib.Path, pdf_dir: pathlib.Pa
                 n = len(d)
         except Exception:  # noqa: BLE001
             n = None
-    return ingest(doc, cache_dir, n, force)
+    return ingest(doc, cache_dir, n, force, pid)

@@ -4,11 +4,42 @@ from __future__ import annotations
 import pathlib
 import time
 
-from core.llm_client import GeminiClient, LLMError, load_cache, log, save_cache
+from core.llm_client import GeminiClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
 from core.pdf_processor import inspect_pdf
 from plugins.rag.prompts import META_USER, SYSTEM, window_user
 
 CACHE_VERSION = 2
+
+
+def _gen(client, contents, schema, tag: str) -> dict:
+    """generate_json + strict validation (coerces "3"->3, "false"->False). Never returns unvalidated data."""
+    from pydantic import ValidationError
+
+    last = ""
+    for _ in range(3):
+        data = client.generate_json(contents, SYSTEM, schema, tag=tag)
+        try:
+            return schema.model_validate(data).model_dump()
+        except ValidationError as exc:
+            last = str(exc).splitlines()[0][:200] + " " + (str(exc.errors()[0].get("loc")) if exc.errors() else "")
+            log(f"  [{tag}] schema validation failed ({last}); retrying")
+    raise LLMError(f"model output failed schema validation 3x: {last}")
+
+
+def _window(client, contents_fn, meta: dict, first: int, last: int, doc_id: str) -> dict:
+    """Extract pages first..last; on truncation split the range in half (down to one page)."""
+    from plugins.rag.schemas import Window
+
+    try:
+        return _gen(client, contents_fn(window_user(meta, first, last), first, last), Window, f"{doc_id}:{first}-{last}")
+    except TruncatedResponseError:
+        if first >= last:
+            raise
+        mid = (first + last) // 2
+        log(f"  [{doc_id}] truncated at pages {first}-{last}: splitting into {first}-{mid} and {mid + 1}-{last}")
+        a = _window(client, contents_fn, meta, first, mid, doc_id)
+        b = _window(client, contents_fn, meta, mid + 1, last, doc_id)
+        return {"results": a["results"] + b["results"]}
 
 
 def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: pathlib.Path, force: bool,
@@ -43,7 +74,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         cache = {}
     cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan,
                  mode="pdf" if use_pdf else "text", window=window, windows=cache.get("windows", {}), complete=False)
-    from plugins.rag.schemas import Meta, Window  # lazy: needs pydantic
+    from plugins.rag.schemas import Meta  # lazy: needs pydantic
 
     uploaded = None
     try:
@@ -58,7 +89,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
 
         if "meta" not in cache:
             log(f"  [{doc_id}] meta pass ({info.n_pages} pages)")
-            cache["meta"] = client.generate_json(contents(META_USER, 1, info.n_pages), SYSTEM, Meta, tag=doc_id)
+            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages), Meta, doc_id)
             save_cache(cache_dir, doc_id, cache)
         if cache["meta"]["publication"].get("in_scope"):
             for first in range(1, info.n_pages + 1, window):
@@ -67,8 +98,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                 if key in cache["windows"]:
                     continue
                 log(f"  [{doc_id}] results pass pages {key}")
-                cache["windows"][key] = client.generate_json(
-                    contents(window_user(cache["meta"], first, last), first, last), SYSTEM, Window, tag=f"{doc_id}:{key}")
+                cache["windows"][key] = _window(client, contents, cache["meta"], first, last, doc_id)
                 save_cache(cache_dir, doc_id, cache)
         cache["complete"] = True
         save_cache(cache_dir, doc_id, cache)

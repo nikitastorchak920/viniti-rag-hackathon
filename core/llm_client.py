@@ -38,6 +38,13 @@ class LLMError(RuntimeError):
     """Raised when a call fails permanently (non-retryable or retries exhausted)."""
 
 
+class TruncatedResponseError(LLMError):
+    """Model output hit the token limit; retrying the same request is pointless."""
+
+
+SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\Z")
+
+
 def _status_code(exc: Exception) -> int | None:
     for attr in ("code", "status_code"):
         v = getattr(exc, attr, None)
@@ -78,6 +85,16 @@ class GeminiClient:
         timeout_ms = int(_f("GEMINI_TIMEOUT_S", 300) * 1000)
         self.client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=timeout_ms))
 
+    def preflight(self) -> None:
+        """Cheap availability check of the chosen model; clear error on 404/401/403."""
+        try:
+            self.client.models.get(model=self.model)
+        except Exception as exc:  # noqa: BLE001
+            code = _status_code(exc)
+            if code in (400, 401, 403, 404):
+                raise LLMError(f"Gemini model '{self.model}' unavailable (HTTP {code}): check GEMINI_MODEL / GEMINI_API_KEY") from exc
+            log(f"  WARN: preflight skipped ({type(exc).__name__}: {str(exc)[:120]})")
+
     def _sleep(self, attempt: int, tag: str, reason: str) -> None:
         delay = min(self.cap, self.base * (2 ** attempt)) * random.uniform(0.5, 1.5)
         log(f"  [{tag}] retry {attempt + 1}/{self.max_retries} in {delay:.1f}s: {reason}")
@@ -97,6 +114,12 @@ class GeminiClient:
             try:
                 resp = self.client.models.generate_content(
                     model=self.model, contents=contents, config=cfg)
+                try:
+                    fr = getattr(resp.candidates[0].finish_reason, "name", str(resp.candidates[0].finish_reason))
+                except (TypeError, IndexError, AttributeError):
+                    fr = ""
+                if fr == "MAX_TOKENS":
+                    raise TruncatedResponseError("output truncated (finish_reason=MAX_TOKENS): window will be split")
                 text = (resp.text or "").strip()
                 if not text:
                     raise ValueError("empty response (blocked or no candidates)")
@@ -104,6 +127,8 @@ class GeminiClient:
                 if not isinstance(data, dict):
                     raise ValueError("response is not a JSON object")
                 return data
+            except LLMError:
+                raise
             except Exception as exc:  # noqa: BLE001
                 last = f"{type(exc).__name__}: {str(exc)[:300]}"
                 retry = is_transient(exc) or isinstance(exc, (ValueError, json.JSONDecodeError))
@@ -147,6 +172,8 @@ class GeminiClient:
 
 # ---- cache: cache/<doc_id>.json (only successful responses are ever written) ----
 def cache_path(cache_dir: pathlib.Path, doc_id: str) -> pathlib.Path:
+    if not SAFE_ID.match(str(doc_id)):
+        raise ValueError(f"unsafe document id: {doc_id!r}")
     return pathlib.Path(cache_dir) / f"{doc_id}.json"
 
 
@@ -190,6 +217,25 @@ class DeepSeekClient:
         self.tokens_in = 0
         self.tokens_out = 0
 
+    def preflight(self) -> None:
+        import urllib.error
+        import urllib.request
+
+        req = urllib.request.Request("https://api.deepseek.com/models", headers={"Authorization": f"Bearer {self.key}"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                ids = [m.get("id") for m in json.loads(r.read().decode("utf-8")).get("data", [])]
+        except urllib.error.HTTPError as exc:
+            if exc.code in (401, 403, 404):
+                raise LLMError(f"DeepSeek preflight failed (HTTP {exc.code}): check DEEPSEEK_API_KEY") from exc
+            log(f"  WARN: preflight skipped (HTTP {exc.code})")
+            return
+        except Exception as exc:  # noqa: BLE001
+            log(f"  WARN: preflight skipped ({type(exc).__name__}: {str(exc)[:120]})")
+            return
+        if ids and self.model not in ids:
+            raise LLMError(f"DeepSeek model '{self.model}' not found (HTTP 404); available: {', '.join(map(str, ids))}")
+
     def _post(self, payload: dict) -> dict:
         import urllib.request
 
@@ -224,7 +270,7 @@ class DeepSeekClient:
                     f"(total in={self.tokens_in} out={self.tokens_out})")
                 ch = (resp.get("choices") or [{}])[0]
                 if ch.get("finish_reason") == "length":
-                    raise LLMError("output truncated (finish_reason=length): rerun with a smaller --window or raise DEEPSEEK_MAX_TOKENS")
+                    raise TruncatedResponseError("output truncated (finish_reason=length): window will be split")
                 text = ((ch.get("message") or {}).get("content") or "").strip()
                 if not text:
                     raise ValueError("empty response")

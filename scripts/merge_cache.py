@@ -26,6 +26,31 @@ def rank(c: dict) -> tuple[int, int]:
     return (RANK.get(c.get("mode"), 1), n)
 
 
+def validate_llm_cache(doc: dict, stem: str, pdf_dir: pathlib.Path) -> str | None:
+    from core.llm_client import SAFE_ID
+
+    if not SAFE_ID.match(stem):
+        return "unsafe id"
+    if doc.get("version") != 2:
+        return f"version {doc.get('version')!r} != 2"
+    if not isinstance((doc.get("meta") or {}).get("publication"), dict):
+        return "meta.publication missing"
+    if not isinstance(doc.get("windows"), dict):
+        return "windows missing"
+    pdf = pdf_dir / f"{stem}.pdf"
+    if pdf.exists():
+        try:
+            import pymupdf
+
+            with pymupdf.open(pdf) as d:
+                n = len(d)
+        except Exception:  # noqa: BLE001
+            n = None
+        if n is not None and doc.get("n_pages") != n:
+            return f"n_pages {doc.get('n_pages')} != PDF pages {n}"
+    return None
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -63,13 +88,18 @@ def main() -> int:
             print(f"BAD  {f.name}: {exc}")
             stats["bad"] += 1
             continue
-        if isinstance(doc, dict) and "pages" in doc and "publication_id" in doc:
+        if isinstance(doc, dict) and "pages" in doc and "meta" not in doc:
             ok, msg = ingest_file(f, a.cache, a.input, force=False)
-            print(f"{'OCR ' if ok else 'BAD '} {doc.get('publication_id')}: {msg}")
+            print(f"{'OCR ' if ok else 'BAD '} {f.stem}: {msg}")
             stats["ocr" if ok else "bad"] += 1
             continue
         if not (isinstance(doc, dict) and "meta" in doc and "windows" in doc and f.stem.replace("_", "").isalnum()):
             print(f"BAD  {f.name}: neither LLM cache nor OCR-JSON")
+            stats["bad"] += 1
+            continue
+        err = validate_llm_cache(doc, f.stem, a.input)
+        if err:
+            print(f"BAD  {f.name}: {err}")
             stats["bad"] += 1
             continue
         old = load_cache(a.cache, f.stem)

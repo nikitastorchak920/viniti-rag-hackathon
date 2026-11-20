@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import pathlib
 import sys
 
@@ -70,7 +71,6 @@ def main(argv: list[str] | None = None) -> int:
                     failed.append(pdf.stem)
     pdfs_todo = [p for p in pdfs if p.stem not in ocr_done and p.stem not in failed]
     if a.local and not a.rebuild_csv_only:
-        import gc
         from plugins.rag.local_extract import process_local
 
         for pdf in pdfs_todo:
@@ -82,7 +82,6 @@ def main(argv: list[str] | None = None) -> int:
                 failed.append(pdf.stem)
             gc.collect()
     elif not a.rebuild_csv_only:
-        import gc
         import os
         from core.llm_client import GeminiClient, LLMError, load_env
 
@@ -99,6 +98,11 @@ def main(argv: list[str] | None = None) -> int:
             log(f"ERROR: {exc}")
             return 1
         if client is not None:
+            try:
+                client.preflight()
+            except LLMError as exc:
+                log(f"ERROR: {exc}")
+                return 1
             log(f"backend={type(client).__name__} model={client.model} docs={len(pdfs)}")
         else:
             a.skip_scans = True
@@ -116,38 +120,49 @@ def main(argv: list[str] | None = None) -> int:
 
     if getattr(locals().get("client"), "tokens_in", 0):
         log(f"TOKENS total in={client.tokens_in} out={client.tokens_out}")
-    tables = {t: [] for t in exporter.TABLES}
+    writer = exporter.TableWriter(a.output)
     built = 0
-    for pdf in pdfs:
-        cache = load_cache(a.cache, pdf.stem)
-        if not cache.get("complete"):
-            if pdf.stem in skipped:
+    stubs: list[str] = []
+
+    def stub(pid: str) -> None:
+        stubs.append(pid)
+        writer.write_doc({"publications": [exporter.stub_publication(pid)]})
+
+    try:
+        for pdf in pdfs:
+            cache = load_cache(a.cache, pdf.stem)
+            if not cache.get("complete"):
+                if pdf.stem not in skipped and pdf.stem not in failed:
+                    log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
+                    failed.append(pdf.stem)
+                stub(pdf.stem)
                 continue
-            if pdf.stem not in failed:
-                log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
-                failed.append(pdf.stem)
-            continue
-        pages_norm = None
-        if not cache.get("is_scan") and cache.get("mode") in ("text", "local"):
+            pages_norm = None
+            if not cache.get("is_scan") and cache.get("mode") in ("text", "local"):
+                try:
+                    pages_norm = [exporter.norm(t) for t in inspect_pdf(pdf).pages]
+                except Exception as exc:  # noqa: BLE001
+                    log(f"  {pdf.stem}: WARN quote check skipped ({exc})")
             try:
-                pages_norm = [exporter.norm(t) for t in inspect_pdf(pdf).pages]
+                doc = exporter.build_doc(pdf.stem, cache, pages_norm, log)
             except Exception as exc:  # noqa: BLE001
-                log(f"  {pdf.stem}: WARN quote check skipped ({exc})")
-        try:
-            doc = exporter.build_doc(pdf.stem, cache, pages_norm, log)
-        except Exception as exc:  # noqa: BLE001
-            log(f"{pdf.stem}: FAIL - export error {type(exc).__name__}: {exc}")
-            failed.append(pdf.stem)
-            continue
-        for t in exporter.TABLES:
-            tables[t].extend(doc[t])
-        built += 1
+                log(f"{pdf.stem}: FAIL - export error {type(exc).__name__}: {exc}")
+                failed.append(pdf.stem)
+                stub(pdf.stem)
+                continue
+            writer.write_doc(doc)
+            built += 1
+            del doc, cache, pages_norm
+            gc.collect()
+    finally:
+        writer.close(built > 0)
 
     if built == 0:
         log("ERROR: nothing to export, CSV files not written")
         return 1
-    exporter.write_tables(a.output, tables)
-    log(f"wrote {a.output}/ docs={built} " + " ".join(f"{t}={len(tables[t])}" for t in exporter.TABLES))
+    log(f"wrote {a.output}/ docs={built} stubs={len(stubs)} " + " ".join(f"{t}={writer.counts[t]}" for t in exporter.TABLES))
+    if stubs:
+        log(f"NOT PROCESSED (stub rows in publications.csv): {', '.join(stubs)}")
     if skipped:
         log(f"SKIPPED_SCAN: {len(skipped)} document(s): {', '.join(skipped)}")
     if failed:

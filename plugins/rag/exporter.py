@@ -52,6 +52,26 @@ def parse_num(raw: str) -> str | None:
     return n
 
 
+def to_bool(v) -> bool:
+    if isinstance(v, str):
+        return v.strip().lower() in {"true", "1", "yes", "y"}
+    return bool(v)
+
+
+def to_page(v) -> int:
+    if isinstance(v, bool):
+        return 0
+    if isinstance(v, int):
+        return v
+    m = re.fullmatch(r"\s*(\d+)\s*", str(v or ""))
+    return int(m.group(1)) if m else 0
+
+
+def stub_publication(doc_id: str) -> dict:
+    return {"publication_id": doc_id, "title": doc_id, "year": "", "DOI": "", "authors": "", "in_scope": "false",
+            "exclusion_reason": "NOT PROCESSED: scan/failed"}
+
+
 def as_int(v: str) -> str | None:
     v = (v or "").strip().replace(",", "")
     return v if re.fullmatch(r"\d+", v) else None
@@ -90,7 +110,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     p = meta["publication"]
     year = (re.search(r"(?:19|20)\d{2}", p.get("year", "")) or [""])[0]
     doi = re.sub(r"(?i)^(https?://(dx\.)?doi\.org/|doi:\s*)", "", p.get("doi", "").strip())
-    in_scope = bool(p.get("in_scope"))
+    in_scope = to_bool(p.get("in_scope"))
     out["publications"].append({
         "publication_id": doc_id, "title": p.get("title", "").strip(), "year": year, "DOI": doi,
         "authors": p.get("authors", "").strip(), "in_scope": "true" if in_scope else "false",
@@ -99,14 +119,22 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     if not in_scope:
         return out
 
+    dup_ids: set[str] = set()
+
     def uniq_ids(items: list[dict], key: str, prefix: str) -> set[str]:
+        """Duplicates/empty ids get fresh ids that collide with NO declared id; the first holder keeps
+        the original id, so references in results keep pointing at it (ambiguous ones are noted)."""
+        declared = {(it.get(key) or "").strip() for it in items}
         seen: set[str] = set()
+        n = 0
         for it in items:
             v = (it.get(key) or "").strip()
             if not v or v in seen:
-                n = 1
-                while f"{prefix}{n}" in seen:
+                if v:
+                    dup_ids.add(f"{key}:{v}")
+                while f"{prefix}{n + 1}" in declared or f"{prefix}{n + 1}" in seen:
                     n += 1
+                n += 1
                 v = f"{prefix}{n}"
             it[key] = v
             seen.add(v)
@@ -155,8 +183,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
             if not name:
                 drops["no metric_name"] += 1
                 continue
-            page = r.get("source_page") or 0
-            if not isinstance(page, int) or not 1 <= page <= n_pages:
+            page = to_page(r.get("source_page"))
+            if not 1 <= page <= n_pages:
                 drops["invalid source_page"] += 1
                 continue
             row = {c: "" for c in columns()["results"]}
@@ -166,6 +194,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                 row[k] = (r.get(k) or "").strip()
             for k, valid in (("experiment_id", eset), ("config_id", cset), ("dataset_id", dset), ("task_id", tset)):
                 v = (r.get(k) or "").strip()
+                if v and f"{k}:{v}" in dup_ids:
+                    note = (note + " | " if note else "") + f"ambiguous {k} '{v}' (duplicated in paper entities)"
                 if v and v not in valid:
                     note = (note + " | " if note else "") + f"unresolved {k} '{v}' removed"
                     v = ""
@@ -300,8 +330,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                                       "percent or percentage points. Original unit retained, no conversion.",
                        "source_page": page, "source_fragment": rs[0]["source_fragment"]})
     for mi in meta.get("issues", []):
-        pg = mi.get("source_page") or 0
-        pg = str(pg) if isinstance(pg, int) and 1 <= pg <= n_pages else ""
+        pg = to_page(mi.get("source_page"))
+        pg = str(pg) if 1 <= pg <= n_pages else ""
         issues.append({"check_name": (mi.get("check_name") or "contradiction").strip(), "record_ids": "",
                        "description": (mi.get("description") or "").strip(), "source_page": pg,
                        "source_fragment": (mi.get("source_fragment") or "").strip() if pg else ""})
@@ -315,12 +345,32 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     return out
 
 
-def write_tables(out_dir: pathlib.Path, tables: dict[str, list[dict]]) -> None:
-    out_dir = pathlib.Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    cols = columns()
-    for t in TABLES:
-        with (out_dir / f"{t}.csv").open("w", encoding="utf-8", newline="") as f:
+class TableWriter:
+    """Streaming CSV writer: one document at a time, files written as *.tmp and committed on close(True)."""
+
+    def __init__(self, out_dir: pathlib.Path) -> None:
+        self.dir = pathlib.Path(out_dir)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        cols = columns()
+        self.files, self.writers, self.counts = {}, {}, {t: 0 for t in TABLES}
+        for t in TABLES:
+            f = (self.dir / f"{t}.csv.tmp").open("w", encoding="utf-8", newline="")
             w = csv.DictWriter(f, fieldnames=cols[t], lineterminator="\n", extrasaction="ignore")
             w.writeheader()
-            w.writerows(tables.get(t, []))
+            self.files[t], self.writers[t] = f, w
+
+    def write_doc(self, doc: dict[str, list[dict]]) -> None:
+        for t in TABLES:
+            self.writers[t].writerows(doc.get(t, []))
+            self.counts[t] += len(doc.get(t, []))
+
+    def close(self, commit: bool) -> None:
+        import os
+
+        for t in TABLES:
+            self.files[t].close()
+            tmp = self.dir / f"{t}.csv.tmp"
+            if commit:
+                os.replace(tmp, self.dir / f"{t}.csv")
+            else:
+                tmp.unlink(missing_ok=True)
