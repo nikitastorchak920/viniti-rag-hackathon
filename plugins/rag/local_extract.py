@@ -19,7 +19,23 @@ METRIC = re.compile(r"(?i)^(em|f1|f-?score|acc(?:uracy)?\.?|precision|recall|p|r
                     r"(?:\s*@\s*\d+)?$")
 DATASET = re.compile(r"(?i)hotpot|2wiki|wikimulti|musique|nq\b|natural questions|triviaqa|popqa|ms ?marco|beir|fever|"
                      r"asqa|eli5|squad|webq|bamboogle|strategyqa|\w+qa\b")
-CAPTION = re.compile(r"^(Table\s+\d+)\s*[:.]")
+CAPTION = re.compile(r"^((?:Table|Таблица)\s+\d+)\s*[:.]")
+SECTION = re.compile(r"^(?:\d+(?:\.\d+)*\.?\s+)?(Abstract|Introduction|Related Work|Methods?|Methodology|Experiments?|Results?|"
+                     r"Discussion|Conclusions?|References|Appendix)\b", re.I)
+SCOPE_KW = ["rag", "retrieval-augmented generation", "dense retrieval", "sparse retrieval", "hybrid retrieval", "bm25",
+            "vector database", "vector db", "vector store", "vector index", "embedding", "reranker", "re-ranker", "chunking",
+            "top-k", "faiss", "chromadb", "weaviate", "qdrant", "milvus", "colbert", "splade", "graph rag", "graphrag",
+            "agentic rag", "retriev"]
+KNOWN_DS = {"Natural Questions": r"natural questions|\bNQ\b", "HotpotQA": r"hotpotqa", "MS MARCO": r"ms ?marco",
+            "TriviaQA": r"triviaqa", "BEIR": r"\bBEIR\b", "FEVER": r"\bFEVER\b", "PubMedQA": r"pubmedqa",
+            "2WikiMultiHopQA": r"2wiki\w*", "MuSiQue": r"musique", "ASQA": r"\bASQA\b", "ELI5": r"\bELI5\b"}
+RX_TOPK = re.compile(r"(?i)\btop[- ]?k\s*(?:=|:|of|is|set to)\s*(\d+)|\btop[- ](\d+)\s+(?:passages|documents|chunks|results)")
+RX_CHUNK = re.compile(r"(?i)chunk(?:s)?(?: size)?\s*(?:=|:|of|is|set to)?\s*(\d+)\s*(tokens?|characters?|words?)|(\d+)[- ](token|character|word)s? chunks?")
+RX_OVER = re.compile(r"(?i)(?:chunk )?overlap\s*(?:=|:|of|is|set to)?\s*(\d+)")
+RX_LAT = re.compile(r"(?i)\b(?:latency|ttft|time to first token)[^.\d]{0,40}?(\d+(?:\.\d+)?)\s*(ms|milliseconds?|s|sec|seconds?)\b")
+RX_TOK = re.compile(r"(?i)(\d[\d,]*(?:\.\d+)?)\s*tokens?\s*(?:per|/)\s*(?:query|question)")
+METH = {"hybrid": r"hybrid (?:retrieval|search)", "dense": r"dense retrieval", "sparse": r"sparse retrieval|\bbm25\b",
+        "graph": r"graph[- ]?rag|graph retrieval"}
 
 
 def _cells(words: list[tuple]) -> list[tuple[str, float]]:
@@ -93,12 +109,15 @@ def extract_pages(pages) -> dict:
     exps: dict[str, str] = {}
     caps_text: dict[str, str] = {}
     results: list[dict] = []
+    section = ""
     for pno, page in enumerate(pages, 1):
         lines = _lines(page)
         caps = [(ln["y"], CAPTION.match(ln["text"]).group(1), ln["text"]) for ln in lines if CAPTION.match(ln["text"])]
         prev_row = -10
         hdr = None
         for i, ln in enumerate(lines):
+            if len(ln["text"]) < 60 and SECTION.match(ln["text"]):
+                section = SECTION.match(ln["text"]).group(1).title()
             dr = _data_row(ln)
             if not dr:
                 continue
@@ -125,7 +144,7 @@ def extract_pages(pages) -> dict:
                     "metric_name": mets[c], "metric_variant": "", "metric_direction": "", "metric_k": "",
                     "raw_value": nums[c], "raw_unit": "%" if nums[c].endswith("%") else "", "baseline_value": "",
                     "aggregation": "", "sample_size": "", "result_origin": "primary", "cited_ref": "",
-                    "source_page": pno, "source_section": "", "source_table": tab, "source_figure": "",
+                    "source_page": pno, "source_section": section, "source_table": tab, "source_figure": "",
                     "source_fragment": ln["text"], "extraction_status": "extracted",
                     "note": "local rule-based extraction"})
     return {"configs": configs, "datasets": datasets, "exps": exps, "caps": caps_text, "results": results}
@@ -158,7 +177,24 @@ def process_local(pdf: pathlib.Path, cache_dir: pathlib.Path, force: bool, skip_
     doi = re.search(r"10\.\d{4,9}/[^\s,;]+", first)
     year = re.search(r"\b(?:19|20)\d{2}\b", first)
     hits = len(re.findall(r"(?i)retriev|\bRAG\b", full))
-    in_scope = hits >= 10 and bool(ex["results"])
+    low = full.lower()
+    kws = [k for k in SCOPE_KW if re.search(r"(?<![a-z])" + re.escape(k) + ("" if k == "retriev" else "(?![a-z])"), low)]
+    in_scope = hits >= 8 and (len(kws) >= 3 or "rag" in kws or "retrieval-augmented generation" in kws)
+    one = lambda vals: vals.pop() if len(set(vals)) == 1 else ""
+    topk = one([m.group(1) or m.group(2) for m in RX_TOPK.finditer(full)])
+    ch = [(m.group(1) or m.group(3), (m.group(2) or m.group(4)).lower().rstrip("s") + "s") for m in RX_CHUNK.finditer(full)]
+    chunk = ch[0] if len(set(ch)) == 1 else ("", "")
+    over = one([m.group(1) for m in RX_OVER.finditer(full)])
+    meths = [k for k, rx in METH.items() if re.search(rx, low)]
+    lat = []
+    for m in RX_LAT.finditer(full):
+        v = float(m.group(1)) * (1000 if m.group(2).lower() in ("s", "sec", "second", "seconds") else 1)
+        lat.append(format(v, "g"))
+    latency = one(lat)
+    tpq = one([m.group(1).replace(",", "") for m in RX_TOK.finditer(full)])
+    for name, rx in KNOWN_DS.items():
+        if len(re.findall(rx, full, re.I)) >= 2:
+            ex["datasets"].setdefault(name, f"DS{len(ex['datasets']) + 1}")
     z = {c: "" for c in ("rag_variant retrieval_method retriever_model embedding_model embedding_version chunking_method "
                          "chunk_size chunk_overlap chunk_unit index_type vector_store top_k reranker_model generator_model "
                          "generator_version prompt_strategy context_strategy note").split()}
@@ -168,14 +204,16 @@ def process_local(pdf: pathlib.Path, cache_dir: pathlib.Path, force: bool, skip_
             "configurations": [], "datasets": [], "tasks": [], "experiments": [], "issues": []}
     if in_scope:
         for (label, oth), cid in ex["configs"].items():
-            meta["configurations"].append({**z, "config_id": cid, "rag_variant": label, "generator_model": oth,
+            meta["configurations"].append({**z, "config_id": cid, "rag_variant": label, "generator_model": oth, "top_k": topk, "chunk_size": chunk[0],
+                                           "chunk_unit": chunk[1] if chunk[0] else "", "chunk_overlap": over,
+                                           "retrieval_method": meths[0] if len(meths) == 1 else "",
                                            "note": "local rule-based extraction"})
         for name, did in ex["datasets"].items():
             meta["datasets"].append({"dataset_id": did, "dataset_name": name, "dataset_version": "", "language": "",
                                      "data_split": "", "scientific_domain": "", "note": ""})
         for tab, eid in ex["exps"].items():
             meta["experiments"].append({"experiment_id": eid, "evaluation_protocol": ex["caps"].get(tab, ""), "baseline_name": "",
-                                        "hardware": "", "latency_ms": "", "tokens_per_query": "", "sample_size": "",
+                                        "hardware": "", "latency_ms": latency, "tokens_per_query": tpq, "sample_size": "",
                                         "note": tab})
     cache = {"version": CACHE_VERSION, "n_pages": n, "is_scan": False, "mode": "local", "window": n, "complete": True,
              "meta": meta, "windows": {f"1-{n}": {"results": ex["results"] if in_scope else []}}}

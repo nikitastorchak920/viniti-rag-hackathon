@@ -21,7 +21,7 @@ BOUNDED = re.compile(
 LOWER = re.compile(r"(?i)latency|loss|error|perplexity|hallucination|cost|time|tokens|wer\b|cer\b|memory")
 HIGHER = re.compile(r"(?i)accuracy|\bacc\b|exact match|\bem\b|f1|f-?score|precision|recall|hit|mrr|ndcg|\bmap\b|"
                     r"rouge|bleu|faithfulness|relevan|correctness|win rate")
-DELTA = re.compile(r"(?i)delta|Δ|improv|gain|change|increase|decrease|drop|diff")
+DELTA = re.compile(r"(?i)delta|Δ|improv|gain|change|increase|decrease|drop|diff|reduc|speedup")
 NUM = re.compile(r"^[≈~]?\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:%|±.*|\+/-.*)?$")
 
 
@@ -270,7 +270,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     pp = defaultdict(list)
     for r in rows:
         v = r["metric_value"]
-        if v and BOUNDED.match(r["metric_name"]):
+        if v and not DELTA.search(r["metric_name"]) and (BOUNDED.match(r["metric_name"]) or r["metric_unit"] in ("fraction", "%")):
             x = Decimal(v)
             lim = {"fraction": 1, "%": 100}.get(r["metric_unit"])
             if lim is not None and not 0 <= x <= lim:
@@ -287,6 +287,13 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                            "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
         if v and r["metric_unit"] == "%" and DELTA.search(r["metric_name"]):
             pp[r["source_page"]].append(r)
+    topk = {c["config_id"]: c["top_k"] for c in out["configurations"] if c["top_k"]}
+    for r in rows:
+        tk, mk = topk.get(r["config_id"], ""), r["metric_k"]
+        if tk and mk and int(mk) > int(tk) and r["extraction_status"] == "extracted":
+            issues.append({"check_name": "metric_k_gt_top_k", "record_ids": r["result_id"],
+                           "description": f"{r['metric_name']}: metric_k={mk} > top_k={tk} of the configuration; check the retrieval/reranker stage that metric_k refers to.",
+                           "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
     for page, rs in pp.items():
         issues.append({"check_name": "percentage_vs_percentage_point", "record_ids": ";".join(x["result_id"] for x in rs),
                        "description": "Difference-type metrics are labeled with % in the source; it is not established whether they are relative "
