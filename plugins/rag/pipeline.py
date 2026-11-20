@@ -7,7 +7,6 @@ import time
 from core.llm_client import GeminiClient, LLMError, load_cache, log, save_cache
 from core.pdf_processor import inspect_pdf
 from plugins.rag.prompts import META_USER, SYSTEM, window_user
-from plugins.rag.schemas import Meta, Window
 
 CACHE_VERSION = 2
 
@@ -40,6 +39,8 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         cache = {}
     cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan,
                  mode="pdf" if use_pdf else "text", window=window, windows=cache.get("windows", {}), complete=False)
+    from plugins.rag.schemas import Meta, Window  # lazy: needs pydantic
+
     uploaded = None
     try:
         if use_pdf:
