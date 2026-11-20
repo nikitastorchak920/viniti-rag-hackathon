@@ -72,16 +72,21 @@ def main(argv: list[str] | None = None) -> int:
 
         load_env()
         client = None
-        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
-            try:
+        try:
+            if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
                 client = GeminiClient()
-            except (LLMError, ImportError) as exc:
-                log(f"ERROR: {exc}")
-                return 1
-            log(f"model={client.model} docs={len(pdfs)}")
+            elif os.environ.get("DEEPSEEK_API_KEY"):
+                from core.llm_client import DeepSeekClient
+
+                client = DeepSeekClient()
+        except (LLMError, ImportError) as exc:
+            log(f"ERROR: {exc}")
+            return 1
+        if client is not None:
+            log(f"backend={type(client).__name__} model={client.model} docs={len(pdfs)}")
         else:
             a.skip_scans = True
-            log("WARN: GEMINI_API_KEY not set: --skip-scans enabled automatically; only cached documents can be exported")
+            log("WARN: no GEMINI_API_KEY / DEEPSEEK_API_KEY: --skip-scans enabled automatically; only cached documents can be exported")
         from plugins.rag.pipeline import process_document
 
         for pdf in pdfs:
@@ -93,6 +98,8 @@ def main(argv: list[str] | None = None) -> int:
                 failed.append(pdf.stem)
             gc.collect()
 
+    if getattr(locals().get("client"), "tokens_in", 0):
+        log(f"TOKENS total in={client.tokens_in} out={client.tokens_out}")
     tables = {t: [] for t in exporter.TABLES}
     built = 0
     for pdf in pdfs:

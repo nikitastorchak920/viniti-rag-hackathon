@@ -168,3 +168,96 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
     tmp = p.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
     os.replace(tmp, p)
+
+
+# ---- DeepSeek (OpenAI-compatible chat API, stdlib urllib only; text-only) ----
+class DeepSeekClient:
+    text_only = True
+    URL = "https://api.deepseek.com/chat/completions"
+
+    def __init__(self) -> None:
+        load_env()
+        self.key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+        if not self.key:
+            raise LLMError("DEEPSEEK_API_KEY is not set (see .env.example)")
+        self.model = os.environ.get("DEEPSEEK_MODEL", "").strip() or "deepseek-flash"
+        self.max_retries = int(_f("DEEPSEEK_MAX_RETRIES", 6))
+        self.base = _f("GEMINI_BACKOFF_BASE", 2)
+        self.cap = _f("GEMINI_BACKOFF_MAX", 60)
+        self.timeout = _f("DEEPSEEK_TIMEOUT_S", 300)
+        self.max_out = int(_f("DEEPSEEK_MAX_TOKENS", 8192))
+        self.temperature = _f("DEEPSEEK_TEMPERATURE", 0)
+        self.tokens_in = 0
+        self.tokens_out = 0
+
+    def _post(self, payload: dict) -> dict:
+        import urllib.request
+
+        req = urllib.request.Request(
+            self.URL, data=json.dumps(payload).encode("utf-8"), method="POST",
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {self.key}"})
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            return json.loads(r.read().decode("utf-8"))
+
+    def generate_json(self, contents: list[Any], system: str, schema: Any, tag: str = "") -> dict:
+        import urllib.error
+
+        try:
+            shape = json.dumps(schema.model_json_schema(), ensure_ascii=False)
+        except Exception:  # noqa: BLE001
+            shape = ""
+        sys_msg = system + "\n\nReturn ONLY a valid json object that matches this JSON Schema (all fields required):\n" + shape
+        payload = {
+            "model": self.model, "temperature": self.temperature, "max_tokens": self.max_out,
+            "thinking": {"type": "disabled"}, "response_format": {"type": "json_object"},
+            "messages": [{"role": "system", "content": sys_msg},
+                         {"role": "user", "content": "\n\n".join(str(c) for c in contents)}]}
+        last = "unknown"
+        for attempt in range(self.max_retries + 1):
+            wait = None
+            try:
+                resp = self._post(payload)
+                u = resp.get("usage") or {}
+                self.tokens_in += u.get("prompt_tokens", 0)
+                self.tokens_out += u.get("completion_tokens", 0)
+                log(f"  [{tag}] tokens in={u.get('prompt_tokens', 0)} out={u.get('completion_tokens', 0)} "
+                    f"(total in={self.tokens_in} out={self.tokens_out})")
+                ch = (resp.get("choices") or [{}])[0]
+                if ch.get("finish_reason") == "length":
+                    raise LLMError("output truncated (finish_reason=length): rerun with a smaller --window or raise DEEPSEEK_MAX_TOKENS")
+                text = ((ch.get("message") or {}).get("content") or "").strip()
+                if not text:
+                    raise ValueError("empty response")
+                data = json.loads(text)
+                if not isinstance(data, dict):
+                    raise ValueError("response is not a JSON object")
+                return data
+            except LLMError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                last = f"{type(exc).__name__}: {str(exc)[:300]}"
+                if isinstance(exc, urllib.error.HTTPError):
+                    try:
+                        last += " " + exc.read().decode("utf-8", "replace")[:200]
+                    except Exception:  # noqa: BLE001
+                        pass
+                    ra = exc.headers.get("Retry-After") if exc.headers else None
+                    if exc.code == 429 and ra and ra.replace(".", "", 1).isdigit():
+                        wait = min(self.cap, float(ra))
+                if not (is_transient(exc) or isinstance(exc, (ValueError, json.JSONDecodeError))):
+                    raise LLMError(last) from exc
+                if attempt >= self.max_retries:
+                    break
+                if wait is None:
+                    delay = min(self.cap, self.base * (2 ** attempt)) * random.uniform(0.5, 1.5)
+                else:
+                    delay = wait + random.uniform(0, 1)
+                log(f"  [{tag}] retry {attempt + 1}/{self.max_retries} in {delay:.1f}s: {last}")
+                time.sleep(delay)
+        raise LLMError(f"retries exhausted ({self.max_retries}); last error: {last}")
+
+    def upload_pdf(self, *a: Any, **k: Any) -> Any:
+        raise LLMError("DeepSeek is text-only: scanned PDFs are not supported")
+
+    def delete_file(self, f: Any) -> None:
+        pass

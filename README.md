@@ -15,6 +15,7 @@ Copy-Item .env.example .env        # Linux: cp .env.example .env ; затем в
 | Переменная | По умолчанию | Назначение |
 |---|---|---|
 | `GEMINI_API_KEY` | — (обязательна) | ключ Google AI Studio (`GOOGLE_API_KEY` тоже подходит) |
+| `DEEPSEEK_API_KEY` | — | если нет ключа Gemini: DeepSeek (`deepseek-flash`, `https://api.deepseek.com/chat/completions`, только текст, thinking отключён; токены логируются, 429 с учётом Retry-After; `DEEPSEEK_MODEL`, `DEEPSEEK_MAX_TOKENS`) |
 | `GEMINI_MODEL` | `gemini-3.8-flash` | модель |
 | `GEMINI_MAX_RETRIES` | 6 | повторы при 429/500/502/503/504, таймаутах, обрыве связи, битом JSON |
 | `GEMINI_BACKOFF_BASE` / `GEMINI_BACKOFF_MAX` | 2 / 60 | экспоненциальная пауза (сек) с jitter ×0.5–1.5 |

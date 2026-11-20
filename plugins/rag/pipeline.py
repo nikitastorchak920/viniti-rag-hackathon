@@ -33,6 +33,10 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
     if client is None:
         return False, "GEMINI_API_KEY not set and no complete cache"
     use_pdf = pdf_mode == "pdf" or (pdf_mode == "auto" and info.is_scan)
+    if getattr(client, "text_only", False):  # DeepSeek: no multimodal input
+        if info.is_scan:
+            return None, "SKIPPED_SCAN (text-only DeepSeek backend)"
+        use_pdf = False
     if not use_pdf and info.is_scan:
         return False, "no text layer and --pdf-mode text forbids multimodal upload"
     if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != ("pdf" if use_pdf else "text")):
