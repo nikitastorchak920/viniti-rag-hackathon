@@ -221,7 +221,7 @@ class DeepSeekClient:
         self.timeout = _f("DEEPSEEK_TIMEOUT_S", 300)
         self.max_out = int(_f("DEEPSEEK_MAX_TOKENS", 8192))
         self.temperature = _f("DEEPSEEK_TEMPERATURE", 0)
-        self.freq_penalty = _f("DEEPSEEK_FREQUENCY_PENALTY", 0.2)
+        self.freq_penalty = _f("DEEPSEEK_FREQUENCY_PENALTY", 0)
         self.tokens_in = 0
         self.tokens_out = 0
 

@@ -26,19 +26,57 @@ def _gen(client, contents, schema, tag: str) -> dict:
     raise LLMError(f"model output failed schema validation 3x: {last}")
 
 
-def _window(client, contents_fn, meta: dict, first: int, last: int, doc_id: str) -> dict:
-    """Extract pages first..last; on truncation split the range in half (down to one page)."""
+OVERLAP = 4  # lines shared by the two halves of a split page (keeps table header / context)
+
+
+def _dedupe(rows: list[dict]) -> list[dict]:
+    seen, out = set(), []
+    for r in rows:
+        k = (r.get("config_id"), r.get("dataset_id"), r.get("metric_name"), r.get("raw_value"), r.get("source_fragment"))
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
+
+
+def _part(client, contents_fn, meta: dict, page: int, lines: list[str], doc_id: str, depth: int = 0) -> list[dict]:
+    """One page, or a slice of its lines. On truncation split the lines in half (with overlap), recursively."""
+    from plugins.rag.schemas import Window
+
+    tag = f"{doc_id}:{page}-{page}" + (f"/L{len(lines)}" if depth else "")
+    try:
+        text = f"--- PAGE {page} ---\n" + "\n".join(lines)
+        data = _gen(client, contents_fn(window_user(meta, page, page, part=depth > 0), page, page, text), Window, tag)
+        return data["results"]
+    except TruncatedResponseError:
+        if len(lines) < 2 * OVERLAP + 2 or depth >= 8:
+            raise
+        mid = len(lines) // 2
+        log(f"  [{doc_id}] page {page} still truncated ({len(lines)} lines): splitting by lines")
+        a = _part(client, contents_fn, meta, page, lines[:mid + OVERLAP], doc_id, depth + 1)
+        b = _part(client, contents_fn, meta, page, lines[mid - OVERLAP:], doc_id, depth + 1)
+        return _dedupe(a + b)
+
+
+def _window(client, contents_fn, meta: dict, first: int, last: int, doc_id: str, page_text_fn=None) -> dict:
+    """Extract pages first..last; on truncation halve the page range, then (single page) halve its lines."""
     from plugins.rag.schemas import Window
 
     try:
-        return _gen(client, contents_fn(window_user(meta, first, last), first, last), Window, f"{doc_id}:{first}-{last}")
+        return _gen(client, contents_fn(window_user(meta, first, last), first, last, None), Window, f"{doc_id}:{first}-{last}")
     except TruncatedResponseError:
         if first >= last:
-            raise
+            text = page_text_fn(first) if page_text_fn else None
+            if not text or not text.strip():
+                raise  # PDF/multimodal mode or empty text layer: cannot split text
+            rows = _part(client, contents_fn, meta, first, text.strip().splitlines(), doc_id, depth=1)
+            for r in rows:
+                r["source_page"] = first
+            return {"results": rows}
         mid = (first + last) // 2
         log(f"  [{doc_id}] truncated at pages {first}-{last}: splitting into {first}-{mid} and {mid + 1}-{last}")
-        a = _window(client, contents_fn, meta, first, mid, doc_id)
-        b = _window(client, contents_fn, meta, mid + 1, last, doc_id)
+        a = _window(client, contents_fn, meta, first, mid, doc_id, page_text_fn)
+        b = _window(client, contents_fn, meta, mid + 1, last, doc_id, page_text_fn)
         return {"results": a["results"] + b["results"]}
 
 
@@ -82,14 +120,14 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
             log(f"  [{doc_id}] scan/multimodal mode: uploading PDF")
             uploaded = client.upload_pdf(pdf, tag=doc_id)
 
-        def contents(prompt: str, first: int, last: int) -> list:
+        def contents(prompt: str, first: int, last: int, text: str | None = None) -> list:
             if use_pdf:
                 return [uploaded, prompt]
-            return ["PAPER TEXT (page markers are PDF page numbers):\n\n" + info.marked_text(first, last), prompt]
+            return ["PAPER TEXT (page markers are PDF page numbers):\n\n" + (text if text is not None else info.marked_text(first, last)), prompt]
 
         if "meta" not in cache:
             log(f"  [{doc_id}] meta pass ({info.n_pages} pages)")
-            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages), Meta, doc_id)
+            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), Meta, doc_id)
             save_cache(cache_dir, doc_id, cache)
         if cache["meta"]["publication"].get("in_scope"):
             for first in range(1, info.n_pages + 1, window):
@@ -98,7 +136,8 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                 if key in cache["windows"]:
                     continue
                 log(f"  [{doc_id}] results pass pages {key}")
-                cache["windows"][key] = _window(client, contents, cache["meta"], first, last, doc_id)
+                cache["windows"][key] = _window(client, contents, cache["meta"], first, last, doc_id,
+                                                None if use_pdf else (lambda n: info.pages[n - 1]))
                 save_cache(cache_dir, doc_id, cache)
         cache["complete"] = True
         save_cache(cache_dir, doc_id, cache)

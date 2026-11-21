@@ -33,7 +33,7 @@ Use only the paper. Leave unknown fields "".
 """
 
 
-def window_user(meta: dict, first: int, last: int) -> str:
+def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
     ent = {
         "configurations": [{k: c.get(k, "") for k in ("config_id", "rag_variant", "generator_model", "retriever_model", "note")}
                            for c in meta["configurations"]],
@@ -51,6 +51,11 @@ def window_user(meta: dict, first: int, last: int) -> str:
         "(origin primary if re-run by the authors, cited if copied from other work). If a table gives a baseline column next to a value for a comparable "
         "setting, you may put it in `baseline_value` instead of a separate row only when the same metric/dataset/protocol applies; otherwise make separate rows.\n"
         "Set source_page for every row to the PDF page where the value appears; source_table like \"Table 1\"; source_section like \"4.2\".\n"
-        "If these pages contain no results (references, appendix text, etc.), return an empty list.\n\n"
+        "If these pages contain no results (references, appendix text, etc.), return an empty list.\n"
+        "OUTPUT SIZE: return compact JSON (no indentation, no extra whitespace or blank lines). source_fragment must be a SHORT verbatim quote "
+        "(at most 15 words around the value, e.g. the table row); keep note short or empty.\n"
+        + ("NOTE: the text below is only a FRAGMENT of the page (a few lines may repeat from the neighbouring fragment); "
+           "extract only values visible in it and keep source_page = the page number in the marker.\n" if part else "")
+        + "\n"
         "ENTITIES (already extracted, ids fixed):\n" + json.dumps(ent, ensure_ascii=False)
     )
