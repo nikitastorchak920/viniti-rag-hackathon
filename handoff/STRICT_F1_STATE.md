@@ -1,8 +1,22 @@
 # Strict F1 checkpoint state
 
+## P0.2 · Completed offline relinking
+
+- Status: awaiting operator approval before P0.3. No API calls and no evaluator changes. Both builds scored the same 17 available local document caches against 21 gold publications.
+- Changes: `core/pdf_processor.py` exposes optional native line coordinates only for result pages. `plugins/rag/table_context.py` links an exact cached value and metric to repeated column groups under known printed dataset labels. It scopes to a uniquely captioned table, checks row method and generator evidence, and leaves ambiguous cells unresolved. A configuration reassignment requires a quoted method and a unique configuration. Cache version 2 and the seven CSV schemas are unchanged.
+
+| Snapshot | Strict P | Strict R | Strict F1 | Strict TP | Loose P | Loose R | Loose F1 | Loose TP | Pred | Gold |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Before P0.2 | 0.10129 | 0.02032 | 0.03385 | 394 | 0.31003 | 0.06219 | 0.10360 | 1,206 | 3,890 | 19,392 |
+| After P0.2 | 0.11831 | 0.02372 | 0.03952 | 460 | 0.31019 | 0.06219 | 0.10361 | 1,206 | 3,888 | 19,392 |
+
+The source-supported relinks changed 142 dataset references and uncovered 66 new strict matches in D007. No previous strict matches were lost. Two observations remained in CSV but were marked duplicates after their contexts were corrected. The joint configuration path is covered by synthetic fixtures; this cache comparison had no configuration reference changes. The checker reported zero structural errors and 260 review items in both builds. `pytest` passed 35 tests. The four missing local caches and OCR-only layouts were outside this measurement.
+
+Reproduce the candidate with `python main.py --input dev --output out_dev_strict_p02 --rebuild-csv-only`. Use `python scripts/evaluate.py out_dev_strict_p02 dev_gold --show-diffs 20` to inspect changes beside the P0.1 export. P0.3 is the next proposed task: audit missing labels, then recover source-supported entities and aliases with a separate measured checkpoint.
+
 ## P0.1 · Completed offline baseline audit
 
-- Status: waiting for operator approval before P0.2. No production settings or extraction code changed.
+- Historical checkpoint. No production settings or extraction code changed during P0.1.
 - Reference: code `b5cb065`, full report [DOMAIN2-DEV-001](FROM_ANTIGRAVITY.md#domain2-dev-001) at `4b77325`.
 - Local command: `python main.py --input dev --output out_dev_strict_audit --rebuild-csv-only`. Exit 1 reflects four incomplete local caches. The build has 17 processed papers, no API calls, and retained all 21 gold papers in the scoring denominator. It is distinct from the full, 21-paper post-OCR snapshot. Scoring used the repository evaluator's strict and loose multiset keys.
 
@@ -32,7 +46,3 @@ The projection recomputes multiset overlap after omitting one key at a time. Del
 ### Model check
 
 On 2026-11-21, the [official model documentation](https://api-docs.deepseek.com/quick_start/pricing/) identifies `deepseek-flash` at `https://api.deepseek.com` as DeepSeek-V4.1-Flash-1017. The legacy V4 Flash model is retired. The official endpoint still routes legacy aliases to the current model. The exact November 15 date was not verified. Both the code fallback and `.env.example` use the official alias. The effective local settings select DeepSeek through a third-party gateway with `deepseek-v4-flash`, so the model served there cannot be inferred. No credentials were read into the report and no provider request was sent. The provider migration is a prerequisite before any approved live pilot.
-
-### Next proposed work item
-
-P0.2 is the only proposed next task. Start with dataset context and verify joint variant/generator linkage from the same evidence. Judge the change on exact scores with fixed keys and stop at the first measured checkpoint.

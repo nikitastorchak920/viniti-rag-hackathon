@@ -154,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
                 stub(pdf.stem)
                 continue
             pages_norm = None
+            table_layout = None
             if a.ocr and cache.get("ocr"):
                 from core.ocr import ocr_pages
 
@@ -166,11 +167,15 @@ def main(argv: list[str] | None = None) -> int:
                     log(f"  {pdf.stem}: WARN OCR quote check skipped ({exc})")
             elif not cache.get("is_scan") and not cache.get("ocr") and cache.get("mode") in ("text", "local"):
                 try:
-                    pages_norm = [exporter.norm(t) for t in inspect_pdf(pdf).pages]
+                    table_pages = {exporter.to_page(row.get("source_page")) for row in exporter.iter_results(cache)
+                                   if row.get("source_table") and (row.get("result_origin") or "primary") == "primary"}
+                    info = inspect_pdf(pdf, layout_pages=table_pages)
+                    pages_norm = [exporter.norm(t) for t in info.pages]
+                    table_layout = info.layout
                 except Exception as exc:  # noqa: BLE001
                     log(f"  {pdf.stem}: WARN quote check skipped ({exc})")
             try:
-                doc = exporter.build_doc(pdf.stem, cache, pages_norm, log)
+                doc = exporter.build_doc(pdf.stem, cache, pages_norm, log, table_layout=table_layout)
             except Exception as exc:  # noqa: BLE001
                 log(f"{pdf.stem}: FAIL - export error {type(exc).__name__}: {exc}")
                 failed.append(pdf.stem)

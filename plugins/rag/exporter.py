@@ -297,7 +297,7 @@ def _fill_ids(rows: list[dict], out: dict) -> None:
                 r[k] = v
 
 
-def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> dict[str, list[dict]]:
+def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, table_layout=None) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {t: [] for t in TABLES}
     meta = cache["meta"]
     p = meta["publication"]
@@ -500,6 +500,17 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                        extraction_status=status, note=note)
             rows.append(row)
             validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
+    if table_layout:
+        from plugins.rag.table_context import label, relink
+
+        labels = defaultdict(set)
+        for dataset in out["datasets"]:
+            for name in (dataset["dataset_name"], dataset_display_name(dataset["dataset_name"], dataset["dataset_version"])):
+                labels[label(name)].add(dataset["dataset_id"])
+        known = {name: next(iter(ids)) for name, ids in labels.items() if name and len(ids) == 1}
+        configurations = [(cfg["config_id"], label(cfg["rag_variant"]), label(cfg["generator_model"]))
+                          for cfg in out["configurations"]]
+        relink(rows, table_layout, known, configurations)
     _fill_ids(rows, out)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----

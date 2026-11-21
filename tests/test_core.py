@@ -159,6 +159,30 @@ class Misc(unittest.TestCase):
 
 
 class Linking(unittest.TestCase):
+    def test_positioned_table_relinks_dataset_and_joint_configuration(self):
+        from core.pdf_processor import TextLine
+
+        layout = {1: [TextLine(x, x + 20, y, name) for x, y, name in [
+            (10, 10, "Table 1: Baselines using Acme A"), (100, 20, "Corpus A"), (200, 20, "Corpus B"),
+            (10, 30, "Method"), (100, 30, "EM"), (200, 30, "EM"),
+            (10, 40, "Dense Retrieval"), (100, 40, "0.21"), (200, 40, "0.34"),
+            (10, 50, "BM25"), (100, 50, "0.34"), (200, 50, "0.34"),
+            (10, 60, "Table 2: unrelated experiment"),
+        ]]}
+        configs = [{"config_id": cid, "rag_variant": method, "generator_model": model}
+                   for cid, method, model in [("C01", "Dense Retrieval", "Acme A"),
+                                              ("C02", "Dense Retrieval", "Acme B"), ("C03", "BM25", "Acme A")]]
+        datasets = [{"dataset_id": "DS1", "dataset_name": "Corpus A"}, {"dataset_id": "DS2", "dataset_name": "Corpus B"}]
+        rows = [result(raw_value="0.34", source_fragment="Dense Retrieval 0.34", config_id="C02", dataset_id="DS1"),
+                result(raw_value="0.34", source_fragment="BM25 0.34", config_id="C03", dataset_id="DS1"),
+                result(raw_value="0.34", source_fragment="0.34", config_id="C02", dataset_id="DS1"),
+                result(raw_value="0.34", source_fragment="Dense Retrieval 0.34", config_id="C02", dataset_id="DS1",
+                       source_table="Table 2")]
+        doc = exporter.build_doc("P1", make_cache(rows, configs=configs, datasets=datasets), None, Mock(), table_layout=layout)
+        self.assertEqual([(r["dataset_id"], r["config_id"]) for r in doc["results"]],
+                         [("DS2", "C01"), ("DS1", "C03"), ("DS1", "C02"), ("DS1", "C02")])
+        self.assertTrue(all(r["metric_value"] == "0.34" for r in doc["results"]))
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]
