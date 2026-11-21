@@ -1,5 +1,19 @@
 # Strict F1 checkpoint state
 
+## R1.4 · Full-cache verification completed
+
+The [RECALL-DEV-001 report](FROM_ANTIGRAVITY.md#recall-dev-001) at `676ef1f` tested `dae1acc` on all 21 caches in `out_dev_domain2_scan_cache`. Both rebuilds completed without API calls, stubs or structural errors. The checker exited 2 with review items.
+
+| Full-cache export | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP | Strict F1 without D014 |
+|---|---:|---|---:|---|---:|---:|
+| Domain 2 reference | 4,922 | 0.030/0.118/0.048 | 579 | 0.089/0.350/0.142 | 1,721 | 0.093 |
+| Current default | 4,911 | 0.038/0.149/0.060 | 731 | 0.095/0.375/0.152 | 1,842 | 0.117 |
+| Both recovery flags | 19,069 | 0.038/0.039/0.039 | 741 | 0.618/0.629/0.623 | 11,989 | 0.119 |
+
+The combined candidate had zero per-paper Strict F1 regressions and 10 additional Strict matches from 34 table cells on D007. D014 contributed 10,135 additional Loose TP and zero Strict TP. Spot checks confirmed linear-axis calibration on inspected panels and identified missed axes and colorbars, repeated plotted series, an explicit selection limit omitted from metadata, and gaps in the cited configuration and task context. Review items rose from 550 to 2,420. Caption verification alone cannot confirm calibrated coordinates or point-level conditions.
+
+`RECALL-DEV-002` isolates the table flag to measure its effect on corpus Strict F1 and audits native PDF evidence for plot context before implementation. The original report and full metric history remain in the repository.
+
 ## R1.2 · Offline figure recovery and abbreviation resolution
 
 - Same 17 complete local caches, scored against all 21 gold papers. The new default export expands uniquely defined abbreviations printed in the source. The optional pilot adds 14,124 vector observations and 34 table cells. All values derived from plot geometry are marked approximate. Literal generator names in panel titles can be linked to partial configurations. Unavailable point-level parameters are left empty.
