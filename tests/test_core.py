@@ -289,6 +289,13 @@ class SubmissionCompliance(unittest.TestCase):
             for pid in ("EMPTY", "MISSING"):
                 self.assertTrue(any(w.startswith(f"{pid}: unprocessed publication") for w in report["warnings"]))
             self.assertEqual(report["rows"]["results"], 1)
+            self.assertEqual(report["quote_checks"]["results"], [
+                ["GOOD", "R001", "1", "Vanilla RAG 0.204", True],
+            ])
+            unresolved = cs.validate(output, source, page_reader=lambda _: ["", ""])
+            self.assertEqual(unresolved["quote_checks"]["results"], [
+                ["GOOD", "R001", "1", "Vanilla RAG 0.204", False],
+            ])
 
     def test_check_submission_no_errors_no_review(self):
         import check_submission as cs

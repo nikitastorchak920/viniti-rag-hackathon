@@ -19,7 +19,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path: str) -> str:
         p = path.split("?", 1)[0]
         name = p.removeprefix("/data/")
-        if p != name and name in CSV_FILES:
+        if p != name and (name in CSV_FILES or name == "validation.json"):
             return str(self.data_dir / name)
         return super().translate_path(path)
 

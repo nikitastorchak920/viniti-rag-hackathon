@@ -101,6 +101,7 @@ def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, pa
     folder = pathlib.Path(folder)
     errors, warnings, data, index = [], [], {}, {}
     quotes = {'requested': 0, 'matched': 0, 'unresolved': 0}
+    quote_checks = {'results': [], 'issues': []}
     def err(location, message): errors.append(f'{location}: {message}')
     def warn(location, message): warnings.append(f'{location}: {message}')
     for table, columns in schema['tables'].items():
@@ -262,7 +263,9 @@ def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, pa
                     if table=='results' and row['extraction_status']=='extracted': warn(loc,'table/figure locator only: visual evidence requires manual review')
                     continue
                 needle=norm(frag)
-                if needle and any(needle in text for text in pages[n-1]): quotes['matched']+=1
+                matched = bool(needle and any(needle in text for text in pages[n-1]))
+                quote_checks[table].append([pid, row[schema['keys'][table]], page, frag, matched])
+                if matched: quotes['matched']+=1
                 else:
                     quotes['unresolved']+=1
                     other=[str(i+1) for i,variants in enumerate(pages) if needle and any(needle in t for t in variants)]
@@ -273,7 +276,8 @@ def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, pa
         for pid,pub in pubs.items():
             if pub['in_scope']=='true' and not any(r['publication_id']==pid for r in data['results']):
                 warn(pid,'in-scope publication has no results; completeness has not been established')
-    report={'errors':errors,'warnings':warnings,'rows':{t:len(r) for t,r in data.items()},'quotes':quotes,'semantic_completeness_certified':False}
+    report={'errors':errors,'warnings':warnings,'rows':{t:len(r) for t,r in data.items()},'quotes':quotes,
+            'quote_checks':quote_checks,'semantic_completeness_certified':False}
     report['exit_code']=1 if errors else (2 if warnings or quotes['matched']<quotes['requested'] else 0)
     return report
 
@@ -296,7 +300,7 @@ def main():
     report['source_text_mode']='native plus local OCR on image-only pages' if args.ocr else 'native PDF text only'
     for message in report['errors']:print('ERROR:',message)
     for message in report['warnings']:print('REVIEW:',message)
-    print(json.dumps({k:v for k,v in report.items() if k not in ['errors','warnings']},ensure_ascii=False))
+    print(json.dumps({k:v for k,v in report.items() if k not in ['errors','warnings','quote_checks']},ensure_ascii=False))
     print(f'Errors: {len(report["errors"])}; review items: {len(report["warnings"])}')
     if args.json_report:args.json_report.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     return report['exit_code']

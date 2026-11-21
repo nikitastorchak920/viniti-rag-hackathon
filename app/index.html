@@ -1,90 +1,432 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RAG: просмотр извлечённых данных</title>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAG Atlas — обзор корпуса</title>
 <style>
-body{font:14px system-ui,sans-serif;margin:0;background:#f6f7f9;color:#1b1f24}
-header{padding:10px 16px;background:#1f3a5f;color:#fff;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-main{padding:12px 16px}.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-input,select,button{padding:5px 8px;font:inherit}
-table{border-collapse:collapse;width:100%;background:#fff}th,td{border:1px solid #d5d9de;padding:3px 6px;text-align:left;vertical-align:top;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-th{background:#eef1f5;position:sticky;top:0}tr.r:hover{background:#eef6ff;cursor:pointer}
-#detail{background:#fff;border:1px solid #9db4d3;padding:8px 12px;margin:8px 0;white-space:pre-wrap;display:none}
-.tabs button.on{background:#1f3a5f;color:#fff}.muted{color:#667}.wrap{max-height:62vh;overflow:auto}
-</style></head><body>
-<header><b>RAG viewer</b><label>Папка с CSV (out_dev): <input id="files" type="file" webkitdirectory multiple></label><span id="stat" class="muted" style="color:#cfe"></span></header>
-<main>
-<div class="tabs bar" id="tabs"></div>
-<div class="bar"><input id="q" placeholder="поиск по всем полям" size="30">
-<select id="fpub"><option value="">все публикации</option></select>
-<select id="fmetric"><option value="">все метрики</option></select>
-<select id="fdata"><option value="">все датасеты</option></select>
-<select id="fscope"><option value="">все статусы области</option><option value="true">в области</option><option value="false">вне области</option><option value="unprocessed">не обработано</option></select>
-<select id="fmodel"><option value="">все модели/конфигурации</option></select>
-<select id="fcheck"><option value="">все правила (issues)</option></select>
-<select id="forig"><option value="">primary+cited</option><option>primary</option><option>cited</option></select>
-<select id="fstat"><option value="">любой статус</option><option>extracted</option><option>present_not_extractable</option><option>absent</option></select>
-<span id="cnt" class="muted"></span></div>
-<div id="detail"></div><div class="wrap"><table id="t"></table></div>
+:root{color-scheme:light;--bg:#f7f8fb;--surface:#fff;--tone:#f2f4f8;--text:#182134;--muted:#536078;--line:#e5e7eb;--accent:#373f82;--accent-bg:#eceffd;--verified:#17674f;--verified-bg:#e8f5ef;--issue:#87500e;--issue-bg:#fbf0df;--shadow:0 2px 6px #18213406}
+:root[data-theme=dark]{color-scheme:dark;--bg:#151926;--surface:#1c2232;--tone:#222b3e;--text:#edf0fc;--muted:#aab5cd;--line:#354056;--accent:#c5caff;--accent-bg:#303860;--verified:#91dfbd;--verified-bg:#203c35;--issue:#f5cc8e;--issue-bg:#49371f;--shadow:none}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit;color:inherit}
+button,select{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+button:disabled{cursor:default;opacity:.45}
+button{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-weight:600}
+button:hover:not(:disabled){background:var(--tone)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.shell{width:min(1360px,100%);margin-inline:auto;padding-inline:clamp(16px,4vw,56px)}
+.masthead{background:var(--surface);border-bottom:1px solid var(--line)}
+.masthead .shell{height:66px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand,.actions{display:flex;align-items:center;gap:10px}
+.brand{font-size:17px;font-weight:750;letter-spacing:-.025em;white-space:nowrap}
+.mark{display:grid;place-content:center;background:var(--accent-bg);color:var(--accent);border-radius:9px;width:31px;height:31px}
+.mark::before{content:"";width:14px;height:14px;border:2px solid currentColor;border-radius:3px;box-shadow:inset 0 -3px 0 var(--accent-bg),inset 0 -5px 0 currentColor}
+main{padding-block:clamp(24px,5vw,56px)}
+.overview{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:23px}
+h1,h2,h3,p{margin:0}
+h1{font-size:clamp(28px,4vw,43px);line-height:1.1;letter-spacing:-.045em;font-weight:750}
+h2{font-size:22px;letter-spacing:-.02em}
+h3{font-size:14px;margin-bottom:9px}
+#bundle{margin-top:8px;font-size:13px;overflow-wrap:anywhere}
+.notice{margin-bottom:16px;padding:10px 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:27px}
+.kpi{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:16px 19px}
+.kpi-label{color:var(--muted);font-weight:560;font-size:13px}
+.kpi strong{display:block;margin:5px 0 1px;font-size:clamp(25px,3.5vw,35px);font-weight:740;line-height:1.2;letter-spacing:-.04em}
+.kpi small{display:block;min-height:1.5em;color:var(--muted)}
+.kpi .confirmed{color:var(--verified)}
+.kpi .attention{color:var(--issue)}
+.tabs{display:flex;gap:4px;background:var(--tone);width:fit-content;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:14px}
+.tabs button{border-color:transparent;background:transparent;color:var(--muted);padding:7px 13px;font-size:13px}
+.tabs button[aria-pressed=true]{background:var(--surface);border-color:var(--line);color:var(--text);box-shadow:var(--shadow)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:15px}
+.search{position:relative;display:flex;align-items:center;flex:1 1 260px;max-width:470px}
+.search::before{position:absolute;left:12px;width:10px;height:10px;border:1.5px solid var(--muted);border-radius:50%;content:"";pointer-events:none}
+.search::after{position:absolute;left:22px;top:55%;width:6px;height:1.5px;background:var(--muted);transform:rotate(45deg);content:"";pointer-events:none}
+.search input{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px 12px 8px 36px}
+.search input::placeholder{color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.pill{border-radius:999px;font-size:12px;padding:6px 11px;white-space:nowrap}
+.pill[aria-pressed=true]{color:var(--accent);background:var(--accent-bg);border-color:transparent}
+select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:105px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+thead{background:var(--tone);color:var(--muted)}
+th,td{border-top:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:middle;overflow-wrap:anywhere}
+th:first-child,td:first-child{padding-left:17px}
+th{font-size:12px;font-weight:620}
+td{height:51px;font-size:13px}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr:focus-within{background:var(--tone)}
+.cell-label{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.row-button{border:0;background:transparent;padding:0;color:var(--accent);text-align:left;font-weight:650;border-radius:3px}
+.row-button:hover:not(:disabled){background:transparent;text-decoration:underline}
+.row-end{color:var(--muted);text-align:right}
+.state{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.state::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.state.verified{color:var(--verified)}
+.state.issue{color:var(--issue)}
+.empty{text-align:center;padding:43px 16px;color:var(--muted);border-top:1px solid var(--line)}
+.pagination{border-top:1px solid var(--line);padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:12px}
+.paging-buttons{display:flex;gap:7px}
+.paging-buttons button{padding:5px 10px;font-size:12px}
+dialog{position:fixed;inset:0 0 0 auto;margin:0;width:min(580px,100%);max-width:none;height:100dvh;max-height:none;padding:0;border:0;border-left:1px solid var(--line);background:var(--surface);color:var(--text);box-shadow:-12px 0 44px #19223a24}
+dialog[open]{animation:slide-in .2s ease-out}
+dialog::backdrop{background:#14203654}
+@keyframes slide-in{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.drawer-head{position:sticky;top:0;background:var(--surface);padding:19px 22px;border-bottom:1px solid var(--line);display:flex;align-items:start;justify-content:space-between;gap:14px;z-index:1}
+.drawer-body{padding:20px 22px;display:grid;gap:24px}
+.drawer-close{font-size:20px;line-height:1;padding:6px 8px}
+.drawer-section{min-width:0}
+blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0 0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;background:var(--tone);padding:12px 14px}
+dl{margin:0;display:grid;grid-template-columns:minmax(112px,1fr) minmax(0,2fr);font-size:13px}
+dt,dd{margin:0;padding:7px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;white-space:pre-wrap}
+dt{color:var(--muted);padding-right:12px}
+.issue-list{margin:0;padding-left:18px}
+.issue-list li+li{margin-top:8px}
+@media(max-width:850px){.hide-medium{display:none}.search{max-width:none}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.kpi{padding:12px}.overview{display:block}.actions{gap:5px}.actions button{font-size:12px;padding:6px 8px}.tabs button{font-size:11px;padding:6px 7px}.hide-small{display:none}th,td{padding:8px 6px}th:first-child,td:first-child{padding-left:9px}.pagination{padding:10px}.drawer-head,.drawer-body{padding-inline:16px}}
+@media(prefers-reduced-motion:reduce){dialog[open]{animation:none}}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="shell">
+    <div class="brand"><span class="mark" aria-hidden="true"></span>RAG Atlas</div>
+    <div class="actions">
+      <button id="theme" type="button" aria-pressed="false">Тёмная тема</button>
+      <button id="folder" type="button">Открыть пакет CSV</button>
+      <input id="files" type="file" webkitdirectory multiple hidden>
+    </div>
+  </div>
+</header>
+<main class="shell">
+  <div class="overview">
+    <div><h1>Обзор корпуса RAG</h1><p id="bundle" class="muted" aria-live="polite">Загрузка пакета…</p></div>
+  </div>
+  <p id="notice" class="notice" role="status" hidden></p>
+  <section class="kpis" aria-label="Показатели корпуса">
+    <div class="kpi"><p class="kpi-label">Обработанные статьи</p><strong id="paper-count" class="num">—</strong><small id="paper-note"></small></div>
+    <div class="kpi"><p class="kpi-label">Извлечённые результаты</p><strong id="result-count" class="num">—</strong><small>Числовые значения</small></div>
+    <div class="kpi"><p class="kpi-label">Проверенные цитаты</p><strong id="quote-count" class="num confirmed">—</strong><small id="quote-note">Ожидается отчёт проверки</small></div>
+    <div class="kpi"><p class="kpi-label">Замечания</p><strong id="issue-count" class="num attention">—</strong><small>Записи в issues.csv</small></div>
+  </section>
+  <nav class="tabs" aria-label="Разделы данных">
+    <button type="button" data-tab="results" aria-pressed="true">Извлечённые результаты</button>
+    <button type="button" data-tab="publications" aria-pressed="false">Публикации</button>
+    <button type="button" data-tab="issues" aria-pressed="false">Проверка и замечания</button>
+  </nav>
+  <section class="panel" aria-label="Обозреватель данных">
+    <div class="toolbar">
+      <label class="search"><input id="q" type="search" aria-label="Поиск" placeholder="Статья, датасет, модель или метрика"></label>
+      <div class="filters" aria-label="Фильтры">
+        <button class="pill" type="button" data-filter="all" aria-pressed="true">Все</button>
+        <button class="pill" type="button" data-filter="verified" aria-pressed="false">Проверенные</button>
+        <button class="pill" type="button" data-filter="issues" aria-pressed="false">С замечаниями</button>
+        <select id="paper" aria-label="ID статьи"><option value="">Все статьи</option></select>
+      </div>
+    </div>
+    <table id="grid"><thead></thead><tbody></tbody></table>
+    <p id="empty" class="empty" hidden></p>
+    <div class="pagination">
+      <span id="range" class="num" aria-live="polite"></span>
+      <div class="paging-buttons"><button type="button" id="prev">Назад</button><button type="button" id="next">Далее</button></div>
+    </div>
+  </section>
 </main>
+<dialog id="detail" aria-labelledby="detail-title">
+  <div class="drawer-head">
+    <div><p id="detail-kicker" class="muted num"></p><h2 id="detail-title"></h2></div>
+    <form method="dialog"><button class="drawer-close" aria-label="Закрыть карточку">×</button></form>
+  </div>
+  <div class="drawer-body" id="detail-body"></div>
+</dialog>
 <script>
-const T=["publications","configurations","datasets","tasks","experiments","results","issues"];
-let D={},cur="results";
-function parse(s){const rows=[];let r=[],f="",q=false;s=s.replace(/^﻿/,"");
-for(let i=0;i<s.length;i++){const c=s[i];
- if(q){if(c=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
- else if(c=='"')q=true;else if(c==','){r.push(f);f=""}
- else if(c=='\n'||c=='\r'){if(c=='\r'&&s[i+1]=='\n')i++;r.push(f);f="";rows.push(r);r=[]}else f+=c}
-if(f||r.length){r.push(f);rows.push(r)}
-const h=rows.shift()||[];return rows.filter(x=>x.length>1).map(x=>Object.fromEntries(h.map((k,i)=>[k,x[i]||""])))}
-function loadBundle(data){
- const missing=T.filter(t=>!(t in data));
- D=missing.length?{}:data;
- init();
- if(missing.length)document.getElementById("stat").textContent="Нет файлов: "+missing.map(t=>t+".csv").join(", ");
+"use strict";
+const tables = ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"];
+const pageSize = 25;
+const fmt = new Intl.NumberFormat("ru");
+const $ = id => document.getElementById(id);
+const grid = $("grid");
+const dialog = $("detail");
+const tabs = [...document.querySelectorAll("[data-tab]")];
+const pills = [...document.querySelectorAll("[data-filter]")];
+const entityFields = {
+  configurations: "config_id", datasets: "dataset_id", tasks: "task_id", experiments: "experiment_id",
+};
+const headers = {
+  results: [["Статья", 12], ["Метрика", 25], ["Датасет", 17, "hide-medium"], ["Модель", 17, "hide-medium"],
+            ["Значение", 13], ["Источник", 13, "hide-small"], ["", 3]],
+  publications: [["ID", 14], ["Публикация", 43], ["Год", 9, "hide-small"], ["Результаты", 15], ["Статус", 16], ["", 3]],
+  issues: [["Статья", 12], ["Правило", 24], ["Описание", 43], ["Связи", 18, "hide-small"], ["", 3]],
+};
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;",
+})[c]);
+const key = (paper, id) => JSON.stringify([paper, id]);
+const normalize = value => String(value ?? "").normalize("NFKC").toLowerCase();
+const quote = row => row.source_quote || row.source_fragment || "";
+const scope = row => row.exclusion_reason === "Unprocessed: no scope decision"
+  ? "Не обработана" : row.in_scope === "true" ? "В области" : "Вне области";
+const extracted = row => row.extraction_status === "extracted" && row.metric_value !== "";
+let view = "results", filter = "all", page = 0, pageRows = [], bundle = null, loadVersion = 0;
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  text = text.replace(/^\uFEFF/, "");
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (quoted) {
+      if (char === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (char === '"') quoted = false;
+      else field += char;
+    } else if (char === '"' && !field) quoted = true;
+    else if (char === ",") { row.push(field); field = ""; }
+    else if (char === "\n" || char === "\r") {
+      if (char === "\r" && text[i + 1] === "\n") i++;
+      row.push(field);
+      if (row.length > 1 || field) rows.push(row);
+      row = []; field = "";
+    } else field += char;
+  }
+  if (quoted) throw new Error("Незакрытое поле CSV");
+  if (row.length || field) { row.push(field); rows.push(row); }
+  const columns = rows.shift();
+  if (!columns?.includes("publication_id")) throw new Error("Отсутствует заголовок CSV");
+  return rows.map(cells => Object.fromEntries(columns.map((column, i) => [column, cells[i] ?? ""])));
 }
-window.addEventListener("load",async()=>{
- if(location.protocol==="file:")return;
- const data={};
- await Promise.all(T.map(async t=>{try{const r=await fetch("data/"+t+".csv");if(r.ok)data[t]=parse(await r.text())}catch(e){}}));
- loadBundle(data)});
-document.getElementById("files").onchange=async e=>{
- const data={};
- for(const f of e.target.files){const n=f.name.replace(/\.csv$/,"");if(T.includes(n)&&f.name.endsWith(".csv"))data[n]=parse(await f.text())}
- loadBundle(data)};
-function uniq(rows,k){return [...new Set(rows.map(r=>r[k]).filter(Boolean))].sort()}
-function fill(id,vals,all){const s=document.getElementById(id);s.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option>${esc(v)}</option>`).join("")}
-function esc(x){return String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function init(){
- document.getElementById("stat").textContent=T.map(t=>t+":"+(D[t]||[]).length).join(" ");
- const R=D.results||[];
- fill("fpub",uniq(D.publications||[],"publication_id"),"все публикации");
- fill("fmodel",uniq((D.configurations||[]).map(c=>({m:c.rag_variant+(c.generator_model?" | "+c.generator_model:"")})),"m"),"все модели/конфигурации");
- fill("fcheck",uniq(D.issues||[],"check_name"),"все правила (issues)");
- fill("fmetric",uniq(R,"metric_name"),"все метрики");fill("fdata",uniq(D.datasets||[],"dataset_name"),"все датасеты");
- document.getElementById("tabs").innerHTML=T.map(t=>`<button data-t="${t}" class="${t==cur?"on":""}">${t}</button>`).join("");
- document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
-  cur=b.dataset.t;document.querySelector("#tabs .on").classList.remove("on");b.classList.add("on");render()});
- render()}
-["q","fpub","fmetric","fdata","forig","fstat","fscope","fmodel","fcheck"].forEach(id=>document.getElementById(id).oninput=render);
-function render(){
- const rows=D[cur]||[],v=id=>document.getElementById(id).value,q=v("q").toLowerCase();
- document.getElementById("detail").style.display="none";
- ["fmetric","fdata","fmodel","forig","fstat"].forEach(id=>document.getElementById(id).hidden=cur!=="results");
- document.getElementById("fcheck").hidden=cur!=="issues";
- const scope=new Map((D.publications||[]).map(p=>[p.publication_id,p.exclusion_reason==="Unprocessed: no scope decision"?"unprocessed":p.in_scope]));
- const cfn={};(D.configurations||[]).forEach(c=>cfn[c.publication_id+"|"+c.config_id]=c.rag_variant+(c.generator_model?" | "+c.generator_model:""));
- const dsn={};(D.datasets||[]).forEach(d=>dsn[d.publication_id+"|"+d.dataset_id]=d.dataset_name);
- const out=rows.filter(r=>(!v("fpub")||r.publication_id==v("fpub"))&&(!v("fscope")||scope.get(r.publication_id)==v("fscope"))&&
-  (cur!="issues"||!v("fcheck")||r.check_name==v("fcheck"))&&(cur!="results"||!v("fmodel")||cfn[r.publication_id+"|"+r.config_id]==v("fmodel"))&&
-  (cur!="results"||((!v("fmetric")||r.metric_name==v("fmetric"))&&(!v("fdata")||dsn[r.publication_id+"|"+r.dataset_id]==v("fdata"))&&
-   (!v("forig")||r.result_origin==v("forig"))&&(!v("fstat")||r.extraction_status==v("fstat"))))&&
-  (!q||Object.values(r).some(x=>x.toLowerCase().includes(q)))).slice(0,3000);
- document.getElementById("cnt").textContent=out.length+" строк (показано до 3000)";
- const cols=rows.length?Object.keys(rows[0]):[];const t=document.getElementById("t");
- t.innerHTML="<tr>"+cols.map(c=>`<th>${esc(c)}</th>`).join("")+"</tr>"+out.map((r,i)=>`<tr class="r" data-i="${i}">`+cols.map(c=>{
-  const value=c==="in_scope"&&scope.get(r.publication_id)==="unprocessed"?"не обработано":r[c];
-  return `<td title="${esc(value)}">${esc(value)}</td>`}).join("")+"</tr>").join("");
- t.querySelectorAll("tr.r").forEach(tr=>tr.onclick=()=>{const r=out[tr.dataset.i],d=document.getElementById("detail");d.style.display="block";
-  const fields=Object.entries(r).filter(e=>e[1]).map(([key,value])=>key+": "+(key==="in_scope"&&scope.get(r.publication_id)==="unprocessed"?"не обработано":value));
-  d.textContent=fields.join("\n")+((cur=="results"||cur=="issues")&&r.source_page?"\n\n→ Источник: "+r.publication_id+".pdf, стр. "+r.source_page+" (с 1)"+(r.source_table?", "+r.source_table:"")+(r.source_section?", раздел "+r.source_section:"")+(r.source_fragment?"\n→ Цитата: «"+r.source_fragment+"»":""):"")})}
-</script></body></html>
+
+function addTo(index, id, row) {
+  const group = index.get(id);
+  if (group) group.push(row);
+  else index.set(id, [row]);
+}
+
+function evidenceIndex(report, table) {
+  const checks = report?.quote_checks?.[table];
+  return new Map((Array.isArray(checks) ? checks : []).filter(check => Array.isArray(check) && check.length === 5)
+    .map(([paper,id,sourcePage,fragment,matched]) => [key(paper,id), {sourcePage, fragment, matched}]));
+}
+
+function verifiedState(row, checks, id) {
+  const fragment = quote(row).trim();
+  if (!fragment) return null;
+  const check = checks.get(key(row.publication_id, id));
+  if (check && check.sourcePage === (row.source_page || "").trim() && check.fragment === fragment) return check.matched === true;
+  if (row.quote_verified === "true") return true;
+  if (row.quote_verified === "false") return false;
+  return null;
+}
+
+function prepare(data, report) {
+  const publications = new Map(data.publications.map(row => [row.publication_id, row]));
+  const entities = Object.fromEntries(Object.entries(entityFields).map(([table, field]) => [
+    table, new Map(data[table].map(row => [key(row.publication_id, row[field]), row])),
+  ]));
+  const byPaper = new Map(), issuesByPaper = new Map(), issuesByResult = new Map();
+  const issueChecks = evidenceIndex(report, "issues");
+  const resultChecks = evidenceIndex(report, "results");
+  const resultsById = new Map(data.results.map(row => [key(row.publication_id, row.result_id), row]));
+  const issues = data.issues.map(row => {
+    const ids = (row.record_ids || "").split(";").map(id => id.trim()).filter(Boolean);
+    const linked = ids.map(id => resultsById.get(key(row.publication_id, id))).filter(Boolean);
+    const item = {row, ids, verified: verifiedState(row, issueChecks, row.issue_id),
+      search: normalize([publications.get(row.publication_id)?.title, ...Object.values(row),
+        ...linked.flatMap(r => [r.metric_name, entities.datasets.get(key(r.publication_id,r.dataset_id))?.dataset_name,
+          entities.configurations.get(key(r.publication_id,r.config_id))?.generator_model])].join(" "))};
+    addTo(issuesByPaper, row.publication_id, item);
+    for (const id of new Set(ids)) addTo(issuesByResult, key(row.publication_id,id), item);
+    return item;
+  });
+  const results = data.results.map(row => {
+    const paper = publications.get(row.publication_id);
+    const related = Object.fromEntries(Object.entries(entityFields).map(([table, field]) => [
+      table, entities[table].get(key(row.publication_id,row[field])),
+    ]));
+    const item = {row, paper, related, links: issuesByResult.get(key(row.publication_id,row.result_id)) || [],
+      verified: verifiedState(row, resultChecks, row.result_id),
+      search: normalize([paper?.title, paper?.authors, ...Object.values(row),
+        ...Object.values(related).flatMap(entity => Object.values(entity || {}))].join(" "))};
+    addTo(byPaper, row.publication_id, item);
+    return item;
+  });
+  const papers = data.publications.map(row => {
+    const results = byPaper.get(row.publication_id) || [];
+    const links = issuesByPaper.get(row.publication_id) || [];
+    return {row, results, links, verified: results.some(item => item.verified) || links.some(item => item.verified),
+      search: normalize([scope(row), ...Object.values(row), ...results.map(item => item.search)].join(" "))};
+  });
+  return {publications: papers, results, issues};
+}
+
+function showNotice(message = "") {
+  $("notice").textContent = message;
+  $("notice").hidden = !message;
+}
+
+function showBundle(data, report, label) {
+  bundle = prepare(data, report);
+  $("bundle").textContent = label;
+  const pending = data.publications.filter(row => scope(row) === "Не обработана").length;
+  const evidence = [...bundle.results, ...bundle.issues].filter(item => quote(item.row).trim());
+  const checked = evidence.filter(item => item.verified !== null).length;
+  const confirmed = evidence.filter(item => item.verified === true).length;
+  $("paper-count").textContent = fmt.format(data.publications.length - pending);
+  $("paper-note").textContent = `из ${fmt.format(data.publications.length)} в пакете`;
+  $("result-count").textContent = fmt.format(data.results.filter(extracted).length);
+  $("quote-count").textContent = checked ? `${fmt.format(Math.round(1000 * confirmed / evidence.length) / 10)} %` : "—";
+  $("quote-note").textContent = checked ? `${fmt.format(confirmed)} из ${fmt.format(evidence.length)} подтверждены`
+    : evidence.length ? "Требуется отчёт валидации" : "В пакете нет цитат";
+  $("issue-count").textContent = fmt.format(data.issues.length);
+  $("paper").replaceChildren(new Option("Все статьи", ""), ...[...new Set(data.publications.map(row => row.publication_id))]
+    .sort((a,b) => a.localeCompare(b, undefined, {numeric:true})).map(id => new Option(id,id)));
+  showNotice();
+  page = 0;
+  render();
+}
+
+async function loadBundle(read, label) {
+  const version = ++loadVersion;
+  const data = {};
+  const missing = [];
+  await Promise.all(tables.map(async table => {
+    try { data[table] = parseCsv(await read(table + ".csv")); }
+    catch (error) { missing.push(table + ".csv" + (error.message ? ` (${error.message})` : "")); }
+  }));
+  let report = null;
+  try { report = JSON.parse(await read("validation.json")); } catch { /* CSV-only bundles are supported. */ }
+  if (version !== loadVersion) return;
+  if (missing.length) {
+    if (!bundle) $("bundle").textContent = "Пакет CSV не загружен";
+    showNotice("Не удалось открыть: " + missing.sort().join(", "));
+    render();
+    return;
+  }
+  showBundle(data, report, label);
+}
+
+function stateLabel(item) {
+  if (item.verified === true) return ["Проверен", "verified"];
+  if (item.verified === false) return ["Не подтверждён", "issue"];
+  return [quote(item.row) ? "Не проверен" : "Без цитаты", ""];
+}
+
+const labelCell = (value, css = "") => `<td class="${css}"><span class="cell-label">${escapeHtml(value || "—")}</span></td>`;
+const buttonCell = value => `<td class="num"><button type="button" class="row-button">${escapeHtml(value || "Открыть")}</button></td>`;
+const endCell = '<td class="row-end" aria-hidden="true">›</td>';
+function rowCells(item) {
+  const row = item.row;
+  if (view === "results") {
+    const [label, tone] = stateLabel(item);
+    const method = item.related.configurations;
+    const model = method?.generator_model || method?.rag_variant;
+    const dataset = item.related.datasets?.dataset_name;
+    const source = `<td class="hide-small"><span class="state ${tone}">${label}</span></td>`;
+    return buttonCell(row.publication_id) + labelCell(row.metric_name) + labelCell(dataset, "hide-medium")
+      + labelCell(model, "hide-medium") + labelCell([row.metric_value, row.metric_unit].filter(Boolean).join(" "), "num") + source + endCell;
+  }
+  if (view === "publications") {
+    return buttonCell(row.publication_id) + labelCell(row.title) + labelCell(row.year, "num hide-small")
+      + labelCell(fmt.format(item.results.filter(result => extracted(result.row)).length), "num") + labelCell(scope(row)) + endCell;
+  }
+  return buttonCell(row.publication_id) + labelCell(row.check_name) + labelCell(row.description)
+    + labelCell(fmt.format(item.ids.length), "num hide-small") + endCell;
+}
+function render() {
+  const terms = normalize($("q").value).trim().split(/\s+/).filter(Boolean);
+  const paper = $("paper").value;
+  const rows = (bundle?.[view] || []).filter(item =>
+    (!paper || item.row.publication_id === paper) &&
+    (filter !== "verified" || item.verified === true) &&
+    (filter !== "issues" || view === "issues" || item.links.length > 0) &&
+    terms.every(term => item.search.includes(term)));
+  page = Math.min(page, Math.max(0, Math.ceil(rows.length / pageSize) - 1));
+  const start = page * pageSize;
+  pageRows = rows.slice(start, start + pageSize);
+  grid.tHead.innerHTML = "<tr>" + headers[view].map(([title, width, css]) =>
+    `<th scope="col" class="${css || ""}" style="width:${width}%">${title}</th>`).join("") + "</tr>";
+  grid.tBodies[0].innerHTML = pageRows.map((item,i) => `<tr data-row="${i}">${rowCells(item)}</tr>`).join("");
+  $("empty").hidden = rows.length > 0;
+  $("empty").textContent = bundle
+    ? filter === "verified" && rows.length === 0 ? "Нет подтверждённых цитат по текущим условиям." : "По текущим условиям ничего не найдено."
+    : "Откройте папку с семью таблицами CSV.";
+  $("range").textContent = rows.length ? `${fmt.format(start+1)}–${fmt.format(start+pageRows.length)} из ${fmt.format(rows.length)}` : "0 записей";
+  $("prev").disabled = page === 0;
+  $("next").disabled = start + pageRows.length >= rows.length;
+}
+function select(group, attr, value) {
+  for (const button of group) button.setAttribute("aria-pressed", String(button.dataset[attr] === value));
+}
+function metadata(row, title) {
+  if (!row) return "";
+  const values = Object.entries(row).filter(([,value]) => value !== "" && value != null).map(([field,value]) =>
+    `<dt>${escapeHtml(field)}</dt><dd class="num">${escapeHtml(field === "in_scope" ? scope(row) : value)}</dd>`).join("");
+  return values ? `<section class="drawer-section"><h3>${title}</h3><dl>${values}</dl></section>` : "";
+}
+function openDetail(item) {
+  const row = item.row;
+  $("detail-kicker").textContent = [row.publication_id, row.result_id || row.issue_id].filter(Boolean).join(" · ");
+  $("detail-title").textContent = row.metric_name || row.title || row.check_name || row.publication_id;
+  const value = [row.metric_value,row.metric_unit].filter(Boolean).join(" ");
+  const bounds = row.source_bbox || row.bounding_box || row.source_bounding_box || row.bbox;
+  const location = [row.source_page && `стр. ${row.source_page}`, row.source_table, row.source_figure, row.source_section,
+    bounds && `координаты: ${bounds}`].filter(Boolean).join(" · ");
+  const [state,tone] = stateLabel(item);
+  const source = view === "publications" ? "" : `<section class="drawer-section"><h3>Источник в PDF</h3>
+    <p class="num muted">${escapeHtml(location || "Локатор не указан")}</p>
+    <span class="state ${tone}">${state}</span>${quote(row) ? `<blockquote>${escapeHtml(quote(row))}</blockquote>` : ""}</section>`;
+  const links = item.links?.length ? `<section class="drawer-section"><h3>Связанные замечания (${fmt.format(item.links.length)})</h3>
+    <ul class="issue-list">${item.links.map(({row:issue}) => `<li><strong>${escapeHtml(issue.check_name)}</strong> <span class="muted num">${escapeHtml(issue.issue_id)}</span><br>${escapeHtml(issue.description)}</li>`).join("")}</ul></section>`
+    : view === "results" ? '<section class="drawer-section"><h3>Связанные замечания</h3><p class="muted">Нет записей, привязанных к результату.</p></section>' : "";
+  const relatedTitles = {configurations:"Конфигурация", datasets:"Датасет", tasks:"Задача", experiments:"Эксперимент"};
+  $("detail-body").innerHTML = (value ? `<section class="drawer-section"><h3>Значение метрики</h3><h2 class="num">${escapeHtml(value)}</h2></section>` : "")
+    + source + links + metadata(row, "Метаданные")
+    + Object.entries(item.related || {}).map(([table, entity]) => metadata(entity, relatedTitles[table])).join("");
+  dialog.showModal();
+}
+for (const button of tabs) button.addEventListener("click", () => {
+  view = button.dataset.tab; select(tabs, "tab", view); page = 0; render();
+});
+for (const button of pills) button.addEventListener("click", () => {
+  filter = button.dataset.filter; select(pills, "filter", filter); page = 0; render();
+});
+for (const id of ["q","paper"]) $(id).addEventListener("input", () => { page = 0; render(); });
+$("prev").addEventListener("click", () => { page--; render(); });
+$("next").addEventListener("click", () => { page++; render(); });
+grid.tBodies[0].addEventListener("click", event => {
+  const row = event.target.closest("tr[data-row]");
+  if (row) openDetail(pageRows[Number(row.dataset.row)]);
+});
+dialog.addEventListener("click", event => { if (event.target === dialog && event.clientX < dialog.getBoundingClientRect().left) dialog.close(); });
+$("theme").addEventListener("click", () => {
+  const dark = document.documentElement.dataset.theme !== "dark";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  $("theme").setAttribute("aria-pressed", String(dark));
+  $("theme").textContent = dark ? "Светлая тема" : "Тёмная тема";
+});
+$("folder").addEventListener("click", () => $("files").click());
+$("files").addEventListener("change", () => {
+  const files = new Map([...$("files").files].filter(file => file.webkitRelativePath.split("/").length <= 2).map(file => [file.name,file]));
+  if (!files.size) return;
+  const label = [...files.values()][0].webkitRelativePath.split("/")[0] || "Локальный пакет";
+  loadBundle(name => {
+    const file = files.get(name);
+    if (!file) throw new Error("");
+    return file.text();
+  }, label);
+});
+render();
+if (location.protocol === "file:") $("bundle").textContent = "Откройте локальный пакет CSV";
+else loadBundle(async name => {
+  const response = await fetch("data/" + name, {cache:"no-store"});
+  if (!response.ok) throw new Error("");
+  return response.text();
+}, "Корпус публикаций");
+</script>
+</body>
+</html>
