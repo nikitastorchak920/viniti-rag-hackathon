@@ -34,6 +34,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="folder with <id>.json OCR files from the teammate's PC (scanned PDFs); no OCR is run here")
     ap.add_argument("--workers", type=int, default=None,
                     help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
+    ap.add_argument("--verify-pass", action="store_true",
+                    help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
     a = ap.parse_args(argv)
     if a.cache is None:
@@ -122,6 +124,12 @@ def main(argv: list[str] | None = None) -> int:
             elif not ok:
                 failed.append(stem)
 
+    if a.verify_pass and not a.rebuild_csv_only and locals().get("client") is not None:
+        from plugins.rag.pipeline import verify_pass
+
+        for pdf in pdfs_todo if "pdfs_todo" in locals() else pdfs:
+            ok, msg = verify_pass(pdf, client, a.cache)
+            log(f"{pdf.stem}: verify - {msg}")
     if getattr(locals().get("client"), "tokens_in", 0):
         log(f"TOKENS total in={client.tokens_in} out={client.tokens_out}")
     writer = exporter.TableWriter(a.output)

@@ -7,7 +7,7 @@ import time
 
 from core.llm_client import GeminiClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
 from core.pdf_processor import inspect_pdf
-from plugins.rag.prompts import META_USER, SYSTEM, window_user
+from plugins.rag.prompts import META_USER, SYSTEM, verify_user, window_user
 
 CACHE_VERSION = 2
 
@@ -110,6 +110,65 @@ def _window(client, contents_fn, meta: dict, first: int, last: int, doc_id: str,
         a = _window(client, contents_fn, meta, first, mid, doc_id, page_text_fn)
         b = _window(client, contents_fn, meta, mid + 1, last, doc_id, page_text_fn)
         return {"results": a["results"] + b["results"]}
+
+
+NUM_TOKEN = re.compile(r"(?<![\w.])[-+]?\d+(?:\.\d+)?%?(?![\w])")
+
+
+def select_verify_pages(pages: list[str], cache: dict, min_numbers: int = 40, min_rows_ratio: float = 0.5) -> list[int]:
+    """Pages worth a second look: dense numeric pages (tables), or pages whose extraction looks thin
+    (fewer rows than numbers/ratio) or has quotes absent from the text layer."""
+    from plugins.rag.exporter import norm
+
+    rows_by_page: dict[int, list[dict]] = {}
+    for w in cache.get("windows", {}).values():
+        for r in w.get("results", []):
+            try:
+                rows_by_page.setdefault(int(r.get("source_page")), []).append(r)
+            except (TypeError, ValueError):
+                pass
+    out = []
+    for n, text in enumerate(pages, 1):
+        dens = len(NUM_TOKEN.findall(text))
+        rows = rows_by_page.get(n, [])
+        pn = norm(text)
+        unverified = sum(1 for r in rows if r.get("source_fragment") and norm(r["source_fragment"]) not in pn)
+        if (dens >= min_numbers and len(rows) < dens * min_rows_ratio) or unverified:
+            out.append(n)
+    return out
+
+
+def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: int = 25) -> tuple[bool, str]:
+    """Optional second LLM audit of dense pages; recovered rows go to cache['verify'][page] (idempotent,
+    resumable). Text mode only. Never touches the first-pass windows."""
+    doc_id = pdf.stem
+    cache = load_cache(cache_dir, doc_id)
+    if not cache.get("complete") or cache.get("mode") != "text" or not cache.get("meta", {}).get("publication", {}).get("in_scope"):
+        return True, "verify skipped (no complete text-mode in-scope cache)"
+    if client is None:
+        return False, "no LLM client for --verify-pass"
+    from plugins.rag.schemas import Window
+
+    info = inspect_pdf(pdf)
+    cache.setdefault("verify", {})
+    todo = [p for p in select_verify_pages(info.pages, cache) if str(p) not in cache["verify"]][:max_pages]
+    added = 0
+    try:
+        for p in todo:
+            existing = [f"{r.get('config_id')}|{r.get('dataset_id')}|{r.get('metric_name')}|{r.get('raw_value')}|{r.get('result_origin')}"
+                        for w in cache["windows"].values() for r in w.get("results", []) if str(r.get("source_page")) == str(p)]
+            contents = ["PAPER TEXT (page markers are PDF page numbers):\n\n" + info.marked_text(p, p),
+                        verify_user(cache["meta"], p, existing)]
+            log(f"  [{doc_id}] verify pass page {p}")
+            res = _gen(client, contents, Window, f"{doc_id}:verify{p}")
+            for r in res["results"]:
+                r["source_page"] = p
+            cache["verify"][str(p)] = {"results": res["results"]}
+            added += len(res["results"])
+            save_cache(cache_dir, doc_id, cache)
+    except LLMError as exc:
+        return False, f"{exc} (verify progress kept)"
+    return True, f"verified {len(todo)} pages, +{added} rows"
 
 
 def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: pathlib.Path, force: bool,

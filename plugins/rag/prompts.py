@@ -25,9 +25,31 @@ HARD RULES
 16. Identifiers: configurations C01, C02, ...; datasets DS1, DS2, ...; tasks T1, T2, ...; experiments E1, E2, ... (consistent everywhere).
 """
 
+FEWSHOT = """
+CANONICAL CONVENTIONS (from the expert-annotated gold set)
+- Table "Method x Generator x Dataset x Metric" is expanded to ATOMIC rows: one configuration per (method, generator); one result row per (configuration, dataset, metric).
+  Example: row "RA-CoT" with generators LLaMA3-8B-Instruct / Qwen3.5 plus / GPT-4o mini and datasets HotpotQA, 2Wiki each with EM and F1
+  -> 3 configurations {rag_variant:"RA-CoT", generator_model:"LLaMA3-8B-Instruct"|"Qwen3.5 plus"|"GPT-4o mini"}, each with 2 datasets x 2 metrics = 4 rows.
+- Retriever-only systems: {rag_variant:"Retriever-Only", generator_model:""}; reranker variants: {rag_variant:"Retriever-Only + LCR"}. The reranker/method is part of rag_variant, the LLM never is.
+- No retrieval / closed-book LLM rows: {rag_variant:"No Retrieval" (or "Baseline" if the paper calls it so), generator_model:<LLM>}.
+- WRONG: {rag_variant:"Vanilla RAG Llama 3.1 8B Instruct"}. RIGHT: {rag_variant:"Vanilla RAG", generator_model:"Llama 3.1 8B Instruct"}.
+- @k metrics: metric_name "NDCG@5" (no spaces) and metric_k "5"; plain "Accuracy" has metric_k "". OC@0.8 is a threshold: metric_k "".
+- Scale: copy the printed number. ".204" -> raw_value ".204" (fraction); "62.4%" -> raw_value "62.4%", raw_unit "%". Never convert 0.204 <-> 20.4.
+- A column of deltas/improvements ("EM improvement over X", "EM decrease") is its own metric name. A cost table (tokens, ms, USD) is its own experiment with its own metric names and units.
+- Ablation rows ("w/o X") are separate configurations: rag_variant "<Method> w/o X".
+- Numbers copied from another paper's results (marked with a citation or "reported in [x]") = cited with cited_ref; the authors' own runs of baselines = primary.
+- A qualitative statement without a number ("significantly better") is NOT a result row.
+"""
+
+IN_SCOPE_RUBRIC = """IN_SCOPE RUBRIC (precision matters: every excluded paper must have in_scope=false and EMPTY entity lists, otherwise its metrics count as false positives)
+in_scope=true when ALL hold: (a) a system, method, benchmark or analysis in the paper retrieves from an EXTERNAL document/knowledge collection (chunks, passages, web, KB, graph built from documents) and conditions generation of an answer on it; (b) the paper reports measured evaluation results (tables/plots/text numbers) for such configurations. Includes: RAG methods, RAG training/reranking/chunking/watermarking/security/benchmark papers, RAG analyses, domain RAG applications with evaluation.
+in_scope=false when ANY holds: pure retrieval/embedding paper with no generation step evaluated; pure LLM paper without external retrieval (parametric knowledge only, long-context, fine-tuning only); survey/position paper with no new measurements; RAG only mentioned as related work or motivation; no quantitative results at all.
+Decide from the paper's content, not its title. exclusion_reason: one sentence stating which criterion fails.
+"""
+
 META_USER = """TASK: read the whole paper and return the paper-level entities.
 
-1. publication: title, year (4 digits), doi (only if printed), authors ("First Last; First Last"), in_scope, exclusion_reason.
+1. publication (apply the IN_SCOPE RUBRIC at the end of this message): title, year (4 digits), doi (only if printed), authors ("First Last; First Last"), in_scope, exclusion_reason.
    in_scope=true only if the paper itself describes a system that retrieves information from an external document collection and uses the retrieved context to produce an answer, AND reports a configuration with evaluation results. Decide by content, not by the word RAG in the title. If false: give a short exclusion_reason and return EMPTY lists for configurations, datasets, tasks, experiments, issues. If true: exclusion_reason = "".
 2. configurations (rag_variant = method only, generator_model = LLM only; one row per method x generator, including baselines, ablations, appendix and analysis setups): every distinct RAG system/baseline/ablation/generator variant that has results (one row per table row x generator when generators differ). `note`: where defined (page, table row).
 3. datasets (name, version, language, split, domain), tasks (task_type, e.g. "open-domain multi-hop question answering"), experiments (evaluation protocol, baseline names joined by ";", hardware, latency in ms only if the source unit is known, tokens per query, evaluation sample size).
@@ -35,6 +57,20 @@ META_USER = """TASK: read the whole paper and return the paper-level entities.
 
 Use only the paper. Leave unknown fields "".
 """
+META_USER = META_USER + "\n" + IN_SCOPE_RUBRIC
+
+VERIFY_USER = """TASK: AUDIT of PDF page {page}. Rows already extracted from this page are listed below (compact). Find numeric values on this page that are MISSING (every table cell of every table on the page, appendix tables, ablation/baseline rows, values in text) and return ONLY the missing rows in `results`, following all rules. Do not repeat existing rows. Return an empty list if nothing is missing.
+Return compact JSON.
+
+ENTITIES: {entities}
+
+ALREADY EXTRACTED (config_id|dataset_id|metric|raw_value|origin): {existing}
+"""
+
+
+def verify_user(meta: dict, page: int, existing: list[str]) -> str:
+    ent = window_user(meta, page, page).split("ENTITIES (already extracted, ids fixed):\n", 1)[1]
+    return VERIFY_USER.format(page=page, entities=ent, existing=json.dumps(existing, ensure_ascii=False))
 
 
 def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
@@ -65,3 +101,5 @@ def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
         + "\n"
         "ENTITIES (already extracted, ids fixed):\n" + json.dumps(ent, ensure_ascii=False)
     )
+
+SYSTEM = SYSTEM + FEWSHOT

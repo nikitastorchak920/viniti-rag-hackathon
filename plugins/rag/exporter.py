@@ -149,19 +149,81 @@ def strip_names(variant: str, *names: str) -> str:
     return v
 
 
+def canon_space(t: str) -> str:
+    return re.sub(r"\s+", " ", (t or "").replace("\u00a0", " ")).strip()
+
+
+def canon_metric(name: str) -> str:
+    """'nDCG @ 5' -> 'nDCG@5'; collapse whitespace; keep the paper's casing."""
+    return re.sub(r"\s*@\s*(?=\d)", "@", canon_space(name))
+
+
+def k_from_name(name: str) -> str:
+    """k of an @k metric ('NDCG@5' -> '5'); a fractional threshold (OC@0.8) is not k."""
+    m = re.search(r"@(\d+)(?![\d.]*\d)(?!\.\d)", name)
+    return m.group(1) if m else ""
+
+
+def iter_results(cache: dict):
+    for wkey in sorted(cache["windows"], key=lambda k: int(k.split("-")[0])):
+        yield from cache["windows"][wkey].get("results", [])
+    for pg in sorted(cache.get("verify", {}), key=int):  # optional --verify-pass recoveries
+        yield from cache["verify"][pg].get("results", [])
+
+
+def _hint(r: dict) -> str:
+    return canon_space(" ".join(r.get(k, "") for k in ("source_fragment", "source_table", "source_section",
+                                                       "metric_variant", "note"))).lower()
+
+
+def _unique_best(cands: list[tuple[int, str]]) -> str:
+    if not cands:
+        return ""
+    cands.sort(reverse=True)
+    top = [c for sc, c in cands if sc == cands[0][0]]
+    return top[0] if len(set(top)) == 1 else ""
+
+
 def _fill_ids(rows: list[dict], out: dict) -> None:
-    """Fill blank ids when unambiguous: single entity of a kind, or table named in one experiment's protocol."""
+    """Fill blank ids of primary results: (1) single entity of a kind; (2) table named in one experiment's
+    protocol; (3) config/dataset by name match in the row's own quote/table text; (4) experiment/task
+    inherited from the same source_table when every labelled row of that table agrees."""
     only = {k: out[t][0][k] for t, k in (("experiments", "experiment_id"), ("configurations", "config_id"),
                                           ("datasets", "dataset_id"), ("tasks", "task_id")) if len(out[t]) == 1}
     for r in rows:
         if r["result_origin"] != "primary":
             continue
-        if not r["experiment_id"] and r["source_table"]:
-            tb = re.sub(r"\s+", " ", r["source_table"]).strip().lower()
+        tb = canon_space(r["source_table"]).lower()
+        if not r["experiment_id"] and tb:
             hit = [e["experiment_id"] for e in out["experiments"]
                    if re.search(r"\b" + re.escape(tb) + r"\b(?!\d)", (e.get("evaluation_protocol") or "").lower())]
             if len(hit) == 1:
                 r["experiment_id"] = hit[0]
+        h = _hint(r)
+        if not r["config_id"] and h:
+            cands = []
+            for c in out["configurations"]:
+                v, g = canon_space(c["rag_variant"]).lower(), canon_space(c["generator_model"]).lower()
+                if len(v) >= 3 and v in h and (not g or g in h):
+                    cands.append((len(v) + len(g), c["config_id"]))
+            r["config_id"] = _unique_best(cands)
+        if not r["dataset_id"] and h:
+            r["dataset_id"] = _unique_best([(len(n), d["dataset_id"]) for d in out["datasets"]
+                                            if len(n := canon_space(d["dataset_name"]).lower()) >= 3 and n in h])
+    by_tab: dict[str, dict[str, set]] = defaultdict(lambda: defaultdict(set))
+    for r in rows:
+        tb = canon_space(r["source_table"]).lower()
+        if tb:
+            for k in ("experiment_id", "task_id"):
+                if r[k]:
+                    by_tab[tb][k].add(r[k])
+    for r in rows:
+        if r["result_origin"] != "primary":
+            continue
+        tb = canon_space(r["source_table"]).lower()
+        for k in ("experiment_id", "task_id"):
+            if not r[k] and tb and len(by_tab[tb][k]) == 1:
+                r[k] = next(iter(by_tab[tb][k]))
         for k, v in only.items():
             if not r[k]:
                 r[k] = v
@@ -237,9 +299,11 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
 
     cfg_in = [dict(c) for c in meta["configurations"]]
     for c in cfg_in:
+        for f in ("generator_model", "retriever_model", "embedding_model", "reranker_model"):
+            c[f] = canon_space(c.get(f, ""))
         c["rag_variant"] = strip_names(c.get("rag_variant", ""), c.get("generator_model", ""), c.get("retriever_model", ""))
     cfgs = merge_entities(cfg_in, "config_id")
-    dss = merge_entities([dict(d) for d in meta["datasets"]], "dataset_id")
+    dss = merge_entities([dict(d, dataset_name=canon_space(d.get("dataset_name", ""))) for d in meta["datasets"]], "dataset_id")
     tks = merge_entities([dict(t) for t in meta["tasks"]], "task_id")
     exs = merge_entities([dict(e) for e in meta["experiments"]], "experiment_id")
     cset = uniq_ids(cfgs, "config_id", "C")
@@ -260,10 +324,11 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     rows: list[dict] = []
     drops = defaultdict(int)
     fstat = defaultdict(int)
-    for wkey in sorted(cache["windows"], key=lambda k: int(k.split("-")[0])):
-        for r in cache["windows"][wkey].get("results", []):
+    nonnum: list[dict] = []
+    for r in iter_results(cache):
+        if True:
             note = (r.get("note") or "").strip()
-            name = (r.get("metric_name") or "").strip()
+            name = canon_metric(r.get("metric_name") or "")
             if not name:
                 drops["no metric_name"] += 1
                 continue
@@ -306,8 +371,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
             if (r.get("sample_size") or "").strip() and sample is None:
                 note = (note + " | " if note else "") + f"sample_size: {r['sample_size'].strip()}"
             k = (r.get("metric_k") or "").strip()
-            m = re.search(r"@\s*(\d+)\s*$", name)
-            k = as_int(k) or (m.group(1) if m else "")
+            k = as_int(k) or k_from_name(name)
             direction = (r.get("metric_direction") or "").strip()
             if direction not in DIRECTIONS:
                 direction = "lower_is_better" if LOWER.search(name) else ("higher_is_better" if HIGHER.search(name) else "")
@@ -345,7 +409,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                         if row["source_table"] or row["source_figure"]:
                             frag = ""  # keep a table/figure locator instead of an unverifiable quote
             if status == "extracted" and not value:
-                drops["non-numeric metric_value"] += 1
+                drops["non-numeric metric_value (routed to issues.csv)"] += 1
+                nonnum.append({"page": str(page), "name": name, "raw": raw, "frag": row["source_fragment"], "note": note})
                 continue
             row.update(metric_direction=direction, metric_k=k, metric_value=value, metric_unit=unit,
                        baseline_value=blv or "", sample_size=sample or "", raw_value=raw, raw_unit=raw_unit,
@@ -354,6 +419,13 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                        extraction_status=status, note=note)
             rows.append(row)
     _fill_ids(rows, out)
+    if len(nonnum) > 40:  # keep issues.csv readable: group the rest per page
+        by_page: dict[str, list[dict]] = defaultdict(list)
+        for x in nonnum[40:]:
+            by_page[x["page"]].append(x)
+        nonnum = nonnum[:40] + [{"page": pg, "name": "; ".join(sorted({y["name"] for y in xs}))[:200],
+                                 "raw": f"{len(xs)} qualitative values", "frag": xs[0]["frag"], "note": ""}
+                                for pg, xs in by_page.items()]
     if fstat:
         log(f"  {doc_id}: quote check {dict(fstat)}")
     for why, n in drops.items():
@@ -428,6 +500,11 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                        "description": "Difference-type metrics are labeled with % in the source; it is not established whether they are relative "
                                       "percent or percentage points. Original unit retained, no conversion.",
                        "source_page": page, "source_fragment": rs[0]["source_fragment"]})
+    for x in nonnum:
+        issues.append({"check_name": "non_numeric_result", "record_ids": "",
+                       "description": f"Qualitative/non-numeric finding not stored as a result: {x['name']} = '{x['raw']}'"
+                                      + (f" ({x['note']})" if x["note"] else ""),
+                       "source_page": x["page"], "source_fragment": x["frag"]})
     for mi in meta.get("issues", []):
         pg = to_page(mi.get("source_page"))
         pg = str(pg) if 1 <= pg <= n_pages else ""

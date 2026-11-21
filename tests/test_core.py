@@ -1,0 +1,169 @@
+"""Zero-PDF tests: synthetic caches + dev_gold schema checks. Run: python -m unittest discover -s tests"""
+import csv
+import pathlib
+import sys
+import tempfile
+import threading
+import time
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tools"))
+
+from plugins.rag import exporter, pipeline  # noqa: E402
+
+TEXT = "Table 1: Results\nMethod EM F1\nVanilla RAG 0.204 0.330"
+
+
+def result(**kw):
+    r = dict(metric_name="EM", raw_value="0.204", source_page=1, source_table="Table 1", source_fragment="Vanilla RAG 0.204",
+             experiment_id="", config_id="", dataset_id="", task_id="", result_origin="primary", cited_ref="")
+    r.update(kw)
+    return r
+
+
+def make_cache(results, configs=None, datasets=None, exps=None, in_scope=True):
+    return {"n_pages": 2, "windows": {"1-2": {"results": results}}, "meta": {
+        "publication": {"title": "T", "year": "2025", "in_scope": in_scope, "exclusion_reason": ""},
+        "configurations": configs if configs is not None else [
+            {"config_id": "C01", "rag_variant": "Vanilla RAG Llama 3.1 8B", "generator_model": "Llama 3.1 8B"},
+            {"config_id": "C02", "rag_variant": "Retriever-Only", "generator_model": ""}],
+        "datasets": datasets if datasets is not None else [
+            {"dataset_id": "DS1", "dataset_name": "HotpotQA"}, {"dataset_id": "DS2", "dataset_name": "MuSiQue"}],
+        "tasks": [{"task_id": "T1", "task_type": "QA"}],
+        "experiments": exps if exps is not None else [
+            {"experiment_id": "E1", "evaluation_protocol": "Table 1 main evaluation"},
+            {"experiment_id": "E2", "evaluation_protocol": "Table 2 ablation"}],
+        "issues": []}}
+
+
+def build(cache):
+    return exporter.build_doc("D999", cache, None, lambda *_: None)
+
+
+class Normalization(unittest.TestCase):
+    def test_strip_generator_from_variant(self):
+        self.assertEqual(exporter.strip_names("vanilla rag llama 3.1 8b instruct", "llama 3.1 8b instruct"), "vanilla rag")
+        self.assertEqual(exporter.strip_names("Vanilla RAG (Llama 3.1 8B)", "Llama 3.1 8B"), "Vanilla RAG")
+        self.assertEqual(exporter.strip_names("RA-CoT", "GPT-4o mini"), "RA-CoT")
+        self.assertEqual(exporter.strip_names("GPT-4o mini", "GPT-4o mini"), "GPT-4o mini")  # never empty
+
+    def test_metric_k(self):
+        self.assertEqual(exporter.canon_metric("nDCG @ 5"), "nDCG@5")
+        self.assertEqual(exporter.k_from_name("NDCG@5"), "5")
+        self.assertEqual(exporter.k_from_name("Recall@10 (avg)"), "10")
+        self.assertEqual(exporter.k_from_name("OC@0.8"), "")
+        self.assertEqual(exporter.k_from_name("Accuracy"), "")
+
+    def test_doc_variant_and_k(self):
+        d = build(make_cache([result(metric_name="nDCG @ 5", config_id="C01", dataset_id="DS1", experiment_id="E1", task_id="T1")]))
+        self.assertEqual(d["configurations"][0]["rag_variant"], "Vanilla RAG")
+        self.assertEqual(d["results"][0]["metric_name"], "nDCG@5")
+        self.assertEqual(d["results"][0]["metric_k"], "5")
+
+    def test_scale_kept(self):
+        d = build(make_cache([result(raw_value=".204"), result(raw_value="62.4%", metric_name="Accuracy", source_fragment="x 62.4%")]))
+        self.assertEqual([(r["metric_value"], r["metric_unit"]) for r in d["results"]], [("0.204", "fraction"), ("62.4", "%")])
+
+    def test_quote_repair_and_grounding(self):
+        pages = [exporter.norm(TEXT), exporter.norm("other")]
+        frag, page, st = exporter.ground("Vanilla  RAG 0.204", 2, pages)  # wrong page + spacing
+        self.assertEqual(page, 1)
+        self.assertNotEqual(st, "unverified")
+
+    def test_out_of_scope_has_no_results(self):
+        d = build(make_cache([result()], in_scope=False))
+        self.assertEqual(d["results"], [])
+        self.assertEqual(d["publications"][0]["in_scope"], "false")
+        self.assertTrue(d["publications"][0]["exclusion_reason"])
+
+
+class Linking(unittest.TestCase):
+    def test_multikey_link(self):
+        rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
+              result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]
+        d = build(make_cache(rs))["results"]
+        self.assertEqual((d[0]["config_id"], d[0]["dataset_id"], d[0]["experiment_id"], d[0]["task_id"]), ("C01", "DS1", "E1", "T1"))
+        self.assertEqual((d[1]["config_id"], d[1]["dataset_id"]), ("C02", "DS2"))
+
+    def test_ambiguous_stays_blank(self):
+        d = build(make_cache([result(source_fragment="0.204", source_table="Table 9")]))["results"]
+        self.assertEqual((d[0]["config_id"], d[0]["dataset_id"], d[0]["experiment_id"]), ("", "", ""))
+
+    def test_table_inheritance(self):
+        rs = [result(source_table="Table 9", experiment_id="E2"), result(source_table="Table 9", raw_value="0.5", source_fragment="y 0.5")]
+        d = build(make_cache(rs))["results"]
+        self.assertEqual(d[1]["experiment_id"], "E2")
+
+    def test_non_numeric_goes_to_issues(self):
+        d = build(make_cache([result(raw_value="significantly better")]))
+        self.assertEqual(d["results"], [])
+        self.assertTrue(any(i["check_name"] == "non_numeric_result" for i in d["issues"]))
+
+    def test_verify_rows_exported(self):
+        c = make_cache([result()])
+        c["verify"] = {"1": {"results": [result(raw_value="0.77", source_fragment="Vanilla RAG 0.77")]}}
+        self.assertEqual(len(build(c)["results"]), 2)
+
+
+class Pipeline(unittest.TestCase):
+    def _run(self, workers):
+        names = [pathlib.Path(f"D{i:03d}.pdf") for i in range(1, 9)]
+
+        def fn(p):
+            time.sleep(0.02 * (hash(p.stem) % 3))
+            return (True, f"ok {p.stem}") if p.stem != "D005" else (None, "SKIPPED_SCAN")
+        return pipeline.run_documents(names, fn, workers)
+
+    def test_workers_determinism(self):
+        self.assertEqual(self._run(1), self._run(4))
+
+    def test_header_preserved_on_split(self):
+        lines = ["Table 1: Results", "Method EM F1"] + [f"row{i} 0.{i} 0.{i}" for i in range(30)]
+        hdr = pipeline._header(lines, 20)
+        self.assertEqual(hdr[0], "Table 1: Results")
+        self.assertIn("Method EM F1", hdr)
+
+    def test_verify_page_selection(self):
+        dense = " ".join(f"{i}.5" for i in range(60))
+        cache = {"windows": {"1-2": {"results": [{"source_page": 1, "source_fragment": "a"}] * 3}}}
+        self.assertEqual(pipeline.select_verify_pages([dense, "text only"], cache), [1])
+        full = {"windows": {"1-2": {"results": [{"source_page": 1, "source_fragment": ""}] * 50}}}
+        self.assertEqual(pipeline.select_verify_pages([dense], full), [])
+
+
+class SubmissionCompliance(unittest.TestCase):
+    def test_check_submission_no_errors_no_review(self):
+        import check_submission as cs
+        rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204", config_id="", dataset_id=""),
+              result(raw_value="n/a text")]
+        doc = build(make_cache(rs))
+        with tempfile.TemporaryDirectory() as td:
+            w = exporter.TableWriter(pathlib.Path(td))
+            w.write_doc(doc)
+            w.close(True)
+            rep = cs.validate(td, None)
+        self.assertEqual(rep["errors"], [])
+        self.assertEqual([w for w in rep["warnings"] if "PDF directory not provided" not in w], [])
+
+
+class GoldSchema(unittest.TestCase):
+    def test_gold_conventions(self):
+        g = ROOT / "dev_gold"
+        if not g.exists():
+            self.skipTest("no dev_gold")
+        def rd(t):
+            with (g / f"{t}.csv").open(encoding="utf-8-sig") as f:
+                return list(csv.DictReader(f))
+        self.assertEqual({r["in_scope"] for r in rd("publications")}, {"true"})
+        res = rd("results")
+        self.assertTrue(all(r["metric_k"].isdigit() for r in res if "@" in r["metric_name"] and r["metric_k"]))
+        cols = exporter.columns()
+        for t in exporter.TABLES:
+            with (g / f"{t}.csv").open(encoding="utf-8-sig") as f:
+                self.assertEqual(f.readline().strip().split(","), cols[t])
+
+
+if __name__ == "__main__":
+    unittest.main()
