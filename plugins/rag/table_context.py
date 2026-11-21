@@ -1,16 +1,25 @@
-"""Relink cached results only when the PDF exposes an unambiguous table cell."""
+"""Resolve and recover cached table observations from native PDF cells."""
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from decimal import Decimal
 import re
 import unicodedata
+from typing import NamedTuple
 
 from core.pdf_processor import TextLine
 
 
 CAPTION = re.compile(r"^table\s+([a-z]?\d+(?:\.\d+)*[a-z]?)(?:\s*[.:](?=\s|$)|\s*$)", re.I)
 NUMBER = re.compile(r"(?<![\w.])[-+−]?(?:\d+(?:\.\d+)?|\.\d+)%?(?![\w.]|[.,]\d)")
+
+
+class TableCell(NamedTuple):
+    dataset: str
+    variant: str
+    configs: set[str]
+    single_metric: bool
+    printed: str
 
 
 def label(text: str) -> str:
@@ -123,7 +132,8 @@ def _table_candidates(lines, dataset_labels, configurations, metrics):
                 continue
             # A body row must align with every header column. This excludes prose and partial matches.
             gap = min(b[0] - a[0] for a, b in zip(columns, columns[1:]))
-            numeric = [(line, number(line.text.strip())) for line in row if NUMBER.fullmatch(line.text.strip())]
+            numeric = [(line, (number(line.text.strip()), line.text.strip()))
+                       for line in row if NUMBER.fullmatch(line.text.strip())]
             left = " ".join(line.text.strip() for line in row if line.right < columns[0][0] - gap * .4)
             aligned = [[value for line, value in numeric if abs((line.left + line.right) / 2 - x) < gap * .45]
                        for x, _, _ in columns]
@@ -137,35 +147,91 @@ def _table_candidates(lines, dataset_labels, configurations, metrics):
             variant, config_ids = _method(row_label, caption, configurations, anchor_model=not single)
             if not config_ids:
                 continue
-            for (_, metric, dataset_id), (value,) in zip(columns, aligned):
-                candidates[table, metric, value].append((dataset_id, variant, config_ids, single))
+            for (_, metric, dataset_id), ((value, printed),) in zip(columns, aligned):
+                candidates[table, metric, value].append(TableCell(dataset_id, variant, config_ids, single, printed))
     return candidates
 
 
-def relink(rows, layout, dataset_labels, configurations) -> None:
-    for page, lines in layout.items():
-        page_rows = [row for row in rows if row["source_page"] == str(page) and row["source_table"]
-                     and row["result_origin"] == "primary" and row["extraction_status"] == "extracted"]
-        if not page_rows:
+def _source_key(row):
+    table = CAPTION.fullmatch((row.get("source_table") or "").strip())
+    return (str(row.get("source_page")), table[1].casefold(), label(row.get("metric_name") or "")) if table else None
+
+
+def index_cells(rows, layout, dataset_labels, configurations):
+    by_page = defaultdict(set)
+    for row in rows:
+        key = _source_key(row)
+        if key and key[2] and (row.get("result_origin") or "primary") == "primary":
+            by_page[key[0]].add(key[2])
+    return {(str(page), *key): values for page, lines in layout.items() if str(page) in by_page
+            for key, values in _table_candidates(lines, dataset_labels, configurations, by_page[str(page)]).items()}
+
+
+def relink(rows, cells) -> None:
+    for row in rows:
+        if row["result_origin"] != "primary" or row["extraction_status"] != "extracted":
             continue
-        cells = _table_candidates(lines, dataset_labels, configurations, {label(row["metric_name"]) for row in page_rows})
-        for row in page_rows:
-            table = CAPTION.fullmatch(row["source_table"].strip())
-            raw = row["raw_value"].strip()
-            if not table or not NUMBER.fullmatch(raw):
-                continue
-            value = number(raw)
-            quote = row["source_fragment"]
-            if value not in {number(match[0]) for match in NUMBER.finditer(quote)}:
-                continue
-            options = cells.get((table[1].casefold(), label(row["metric_name"]), value), ())
-            quoted = [item for item in options if not item[3] and mentions(item[1], label(quote))]
-            anchored = quoted or [item for item in options if row["config_id"] and row["config_id"] in item[2]]
-            if len(anchored) != 1:
-                continue
-            dataset, _, config_ids, _ = anchored[0]
-            if not dataset:
-                continue
-            row["dataset_id"] = dataset
-            if quoted and len(config_ids) == 1:
-                row["config_id"] = next(iter(config_ids))
+        key = _source_key(row)
+        raw = row["raw_value"].strip()
+        if not key or not NUMBER.fullmatch(raw):
+            continue
+        value = number(raw)
+        quote = row["source_fragment"]
+        if value not in {number(match[0]) for match in NUMBER.finditer(quote)}:
+            continue
+        options = cells.get((*key, value), ())
+        quoted = [item for item in options if not item.single_metric and mentions(item.variant, label(quote))]
+        anchored = quoted or [item for item in options if row["config_id"] and row["config_id"] in item.configs]
+        if len(anchored) != 1 or not anchored[0].dataset:
+            continue
+        cell = anchored[0]
+        row["dataset_id"] = cell.dataset
+        if quoted and len(cell.configs) == 1:
+            row["config_id"] = next(iter(cell.configs))
+
+
+RECOVERY_FIELDS = ("experiment_id", "task_id", "metric_name", "metric_group", "metric_variant", "metric_k",
+                   "metric_direction", "raw_unit", "aggregation", "sample_size", "source_section")
+
+
+def recover_missing(rows, cells, pages_norm) -> list[dict]:
+    """Recover unique, unseen values in rectangular tables with a known result schema."""
+    metadata = defaultdict(set)
+    observed, blocked = set(), set()
+    for row in rows:
+        key = _source_key(row)
+        raw = (row.get("raw_value") or "").strip()
+        if not key:
+            continue
+        if NUMBER.fullmatch(raw):
+            observed.add((*key, number(raw)[0]))
+        if (row.get("result_origin") or "primary") != "primary" or row.get("cited_ref"):
+            blocked.add(key)
+        elif NUMBER.fullmatch(raw) and (row.get("extraction_status") or "extracted") == "extracted":
+            metadata[key].add(tuple(row.get(field) or "" for field in RECOVERY_FIELDS))
+    recovered = []
+    multiplicity = Counter()
+    for (p, t, m, value), options in cells.items():
+        multiplicity[p, t, m, value[0]] += len(options)
+    for (p, table, metric, value), options in cells.items():
+        key = (p, table, metric)
+        if key in blocked or len(metadata[key]) != 1 or len(options) != 1:
+            continue
+        physical_value = (*key, value[0])
+        if physical_value in observed or multiplicity[physical_value] != 1:
+            continue
+        cell = options[0]
+        if cell.single_metric or not cell.dataset or len(cell.configs) != 1:
+            continue
+        page = int(p)
+        if not 1 <= page <= len(pages_norm) or cell.printed not in pages_norm[page-1]:
+            continue
+        row = dict(zip(RECOVERY_FIELDS, next(iter(metadata[key]))))
+        if not row["experiment_id"] or not row["task_id"] or (row["raw_unit"] not in {"", "%"} and value[1]):
+            continue
+        recovered.append(dict(row, source_page=page, source_table=f"Table {table}", source_fragment=cell.printed,
+                              raw_value=cell.printed, dataset_id=cell.dataset, config_id=next(iter(cell.configs)),
+                              result_origin="primary", extraction_status="extracted",
+                              note="Recovered an unambiguous numeric cell from native PDF table layout."))
+        observed.add(physical_value)
+    return recovered

@@ -1,8 +1,22 @@
 # Strict F1 checkpoint state
 
+## R1.1 · Recall-first audit and opt-in table recovery
+
+- Status: awaiting operator approval before R1.2. Production model settings, cache files and scoring keys stayed unchanged. The two rebuilds, checker and evaluator took 9.6 seconds locally and used zero API tokens. Pytest passed 38 tests.
+- The 17 complete local caches have 3,979 first-pass observations, 3,934 parseable numeric values and 49 empty windows out of 104. The pre-fix CSV has 3,983 rows including earlier verification recoveries. Of these, 45 are non-extractable and 59 are numeric duplicate rows. The evaluator accepts 3,879. Postprocessing does not account for the large difference versus 19,392 corpus gold entries or the 4,922 predictions in the full remote reference.
+- D014 caches all six physical page windows but five yielded zero rows. Only 108 of its 11,760 scored gold cells cite tables. Another 11,643 cite figures and nine have neither locator. Do not claim the table recovery solves chart-point coverage or that missing PDF pages were dropped from the input.
+- The new opt-in `--recover-table-cells` exports unseen numeric cells from native, captioned tables with aligned metric/dataset headers, one configuration and consistent cached experiment/task metadata. D007 gained 34 source-confirmed rows. The printed metric labels `Acc`, `Step` and `Time` do not match their long-form evaluator keys in this sample, so neither TP count increased. The default CSV files are byte-identical to P0.3a.
+
+| Same local cache, 21 gold papers | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP |
+|---|---:|---|---:|---|---:|
+| Default / before | 3,879 | 0.02501/0.12503/0.04168 | 485 | 0.06198/0.30987/0.10330 | 1,202 |
+| Opt-in / after | 3,913 | 0.02501/0.12395/0.04162 | 485 | 0.06198/0.30718/0.10315 | 1,202 |
+
+Reproduce with `python main.py --input dev --output out_dev_recall_01 --rebuild-csv-only --recover-table-cells`, then `python tools/check_submission.py out_dev_recall_01 dev --json-report out_dev_recall_01/validation.json` and `python scripts/evaluate.py out_dev_recall_01 dev_gold --show-diffs 0`. The checker has zero structural errors and 260 review items in the opt-in build. The rebuild reports four incomplete local caches; no LLM calls were made. Next proposed step: R1.2, source-based graphical coverage audit.
+
 ## P0.3a · Completed offline alias recovery
 
-- Status: awaiting operator approval before P0.3b. No API calls or evaluator changes. Both builds scored the same 17 usable document caches against 21 gold publications.
+- Historical checkpoint. No API calls or evaluator changes. Both builds scored the same 17 usable document caches against 21 gold publications.
 - Extracted only acronym definitions printed in the native PDF, in `full name (ABBR)` or `ABBR: full name` form. Conflicting names are excluded. For single-metric tables, the caption must identify one cached metric and the existing configuration must match the printed row method. Unlabeled numeric columns still participate in ambiguity checks. No new entities or configuration IDs were introduced.
 
 | Snapshot | Strict P | Strict R | Strict F1 | Strict TP | Loose P | Loose R | Loose F1 | Loose TP | Pred | Gold |

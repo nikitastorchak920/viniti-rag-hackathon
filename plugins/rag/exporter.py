@@ -297,7 +297,8 @@ def _fill_ids(rows: list[dict], out: dict) -> None:
                 r[k] = v
 
 
-def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, table_layout=None) -> dict[str, list[dict]]:
+def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, table_layout=None,
+              recover_table_cells: bool = False) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {t: [] for t in TABLES}
     meta = cache["meta"]
     p = meta["publication"]
@@ -394,7 +395,28 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     fstat = defaultdict(int)
     issues: list[dict] = []
     validations = []
-    for r in iter_results(cache):
+    source_rows = iter_results(cache)
+    cells = {}
+    if table_layout:
+        from plugins.rag.table_context import dataset_aliases, index_cells, label, recover_missing, relink
+
+        labels = defaultdict(set)
+        for dataset in out["datasets"]:
+            for name in (dataset["dataset_name"], dataset_display_name(dataset["dataset_name"], dataset["dataset_version"])):
+                labels[label(name)].add(dataset["dataset_id"])
+        aliases = dataset_aliases(((d["dataset_id"], d["dataset_name"]) for d in out["datasets"]), pages_norm)
+        for alias, ids in aliases.items():
+            labels[alias].update(ids)
+        known = {name: next(iter(ids)) for name, ids in labels.items() if name and len(ids) == 1}
+        configurations = [(cfg["config_id"], label(cfg["rag_variant"]), label(cfg["generator_model"]))
+                          for cfg in out["configurations"]]
+        cached_rows = list(source_rows)
+        cells = index_cells(cached_rows, table_layout, known, configurations)
+        recovered = recover_missing(cached_rows, cells, pages_norm or []) if recover_table_cells else []
+        if recovered:
+            log(f"  {doc_id}: recovered {len(recovered)} numeric table cells from native PDF layout")
+        source_rows = iter(cached_rows + recovered)
+    for r in source_rows:
         if True:
             note = (r.get("note") or "").strip()
             name = canon_metric(r.get("metric_name") or "")
@@ -500,20 +522,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                        extraction_status=status, note=note)
             rows.append(row)
             validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
-    if table_layout:
-        from plugins.rag.table_context import dataset_aliases, label, relink
-
-        labels = defaultdict(set)
-        for dataset in out["datasets"]:
-            for name in (dataset["dataset_name"], dataset_display_name(dataset["dataset_name"], dataset["dataset_version"])):
-                labels[label(name)].add(dataset["dataset_id"])
-        aliases = dataset_aliases(((d["dataset_id"], d["dataset_name"]) for d in out["datasets"]), pages_norm)
-        for alias, ids in aliases.items():
-            labels[alias].update(ids)
-        known = {name: next(iter(ids)) for name, ids in labels.items() if name and len(ids) == 1}
-        configurations = [(cfg["config_id"], label(cfg["rag_variant"]), label(cfg["generator_model"]))
-                          for cfg in out["configurations"]]
-        relink(rows, table_layout, known, configurations)
+    if cells:
+        relink(rows, cells)
     _fill_ids(rows, out)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----

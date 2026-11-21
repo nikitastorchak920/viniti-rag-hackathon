@@ -25,6 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", nargs="+", metavar="ID", help="document ids to process, e.g. D001 D002")
     ap.add_argument("--force", action="store_true", help="ignore cache and re-query the API")
     ap.add_argument("--rebuild-csv-only", action="store_true", help="no API calls: rebuild CSV from cache")
+    ap.add_argument("--recover-table-cells", action="store_true",
+                    help="also export uniquely identified missing native PDF table cells (works without API calls)")
     ap.add_argument("--window", type=int, default=3, help="pages per result-extraction request (default 3)")
     ap.add_argument("--pdf-mode", choices=["auto", "text", "pdf"], default="auto",
                     help="auto: text layer, scans sent as PDF; pdf: always send PDF; text: text layer only")
@@ -175,7 +177,8 @@ def main(argv: list[str] | None = None) -> int:
                 except Exception as exc:  # noqa: BLE001
                     log(f"  {pdf.stem}: WARN quote check skipped ({exc})")
             try:
-                doc = exporter.build_doc(pdf.stem, cache, pages_norm, log, table_layout=table_layout)
+                doc = exporter.build_doc(pdf.stem, cache, pages_norm, log, table_layout=table_layout,
+                                         recover_table_cells=a.recover_table_cells)
             except Exception as exc:  # noqa: BLE001
                 log(f"{pdf.stem}: FAIL - export error {type(exc).__name__}: {exc}")
                 failed.append(pdf.stem)

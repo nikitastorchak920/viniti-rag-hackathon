@@ -4,7 +4,7 @@ After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGR
 
 ## Open tasks
 
-**Paused after P0.3a.** Read `handoff/STRICT_F1_STATE.md` for the same-cache comparison. Wait for operator approval before starting the queued task below or any extraction changes. The next proposed implementation is P0.3b in `TODO.md`.
+**Paused after R1.1.** Read `handoff/STRICT_F1_STATE.md` for the Recall-first audit and opt-in recovery measurement. Wait for operator approval before starting the queued task below or any extraction changes. The next proposed step is R1.2 in `TODO.md`.
 
 ### STRICT-DEV-001 · Audit dense-table coverage and compare the two D013 caches
 

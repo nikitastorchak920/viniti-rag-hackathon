@@ -159,6 +159,29 @@ class Misc(unittest.TestCase):
 
 
 class Linking(unittest.TestCase):
+    def test_recovery_adds_only_unique_unseen_cells_with_consistent_context(self):
+        from decimal import Decimal
+
+        from plugins.rag.table_context import TableCell, recover_missing
+
+        rows = [result(experiment_id="E1", task_id="T1", raw_value="0.204", raw_unit="fraction")]
+        def cell(number, dataset="DS2", configs=None):
+            return TableCell(dataset, "method", configs or {"C01"}, False, number)
+
+        def key(number, percent=False):
+            return ("1", "1", "em", (Decimal(number), percent))
+
+        cells = {key("0.204"): [cell("0.204")], key("0.31"): [cell(".31")],
+                 key("0.42"): [cell(".42"), cell(".42", "DS1")], key("0.50"): [cell(".50", configs={"C01", "C02"})],
+                 key("0.51"): [cell(".51")], key("0.51", True): [cell(".51%")], key("0.99"): [cell(".99")]}
+        pages = ["0.204 .31 .42 .50 .51 .51%"]
+        recovered = recover_missing(rows, cells, pages)
+        self.assertEqual([(r["dataset_id"], r["config_id"], r["raw_value"], r["source_fragment"]) for r in recovered],
+                         [("DS2", "C01", ".31", ".31")])
+        conflict = rows + [result(experiment_id="E2", task_id="T1", raw_value="0.204", raw_unit="fraction")]
+        self.assertEqual(recover_missing(conflict, cells, pages), [])
+        self.assertEqual(recover_missing(rows + [result(result_origin="cited")], cells, pages), [])
+
     def test_explicit_dataset_aliases_retained_as_candidates_with_conflicts(self):
         from plugins.rag.table_context import dataset_aliases
 
