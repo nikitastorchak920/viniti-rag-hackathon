@@ -34,6 +34,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="folder with <id>.json OCR files from the teammate's PC (scanned PDFs); no OCR is run here")
     ap.add_argument("--workers", type=int, default=None,
                     help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
+    ap.add_argument("--ocr", action="store_true",
+                    help="OCR image-only PDFs (needs pytesseract + Tesseract on the PC) so they are processed in text mode instead of SKIPPED_SCAN")
     ap.add_argument("--verify-pass", action="store_true",
                     help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
@@ -117,7 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         workers = max(1, min(workers, len(pdfs_todo) or 1))
         log(f"workers={workers}")
         for stem, ok, msg in run_documents(
-                pdfs_todo, lambda p: process_document(p, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans),
+                pdfs_todo, lambda p: process_document(p, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans, a.ocr),
                 workers):
             if ok is None:
                 skipped.append(stem)
@@ -150,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
                 stub(pdf.stem)
                 continue
             pages_norm = None
-            if not cache.get("is_scan") and cache.get("mode") in ("text", "local"):
+            if not cache.get("is_scan") and not cache.get("ocr") and cache.get("mode") in ("text", "local"):
                 try:
                     pages_norm = [exporter.norm(t) for t in inspect_pdf(pdf).pages]
                 except Exception as exc:  # noqa: BLE001

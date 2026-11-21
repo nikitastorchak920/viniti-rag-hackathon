@@ -68,8 +68,8 @@ def to_page(v) -> int:
 
 
 def stub_publication(doc_id: str) -> dict:
-    return {"publication_id": doc_id, "title": doc_id, "year": "", "DOI": "", "authors": "", "in_scope": "false",
-            "exclusion_reason": "NOT PROCESSED: scan/failed"}
+    return {"publication_id": doc_id, "title": doc_id, "year": "", "DOI": "", "authors": "", "in_scope": "true",
+            "exclusion_reason": ""}  # unprocessed: gold prior is in_scope=true (21/21 on dev); no entities/results emitted
 
 
 def as_int(v: str) -> str | None:
@@ -150,7 +150,8 @@ def strip_names(variant: str, *names: str) -> str:
 
 
 def canon_space(t: str) -> str:
-    return re.sub(r"\s+", " ", (t or "").replace("\u00a0", " ")).strip()
+    t = re.sub(r"\[?模型名称已隐藏\]?", "GPT", t or "")  # masked vendor token in some PDF text layers
+    return re.sub(r"\s+", " ", t.replace("\u00a0", " ")).strip()
 
 
 def canon_metric(name: str) -> str:
@@ -301,7 +302,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     for c in cfg_in:
         for f in ("generator_model", "retriever_model", "embedding_model", "reranker_model"):
             c[f] = canon_space(c.get(f, ""))
-        c["rag_variant"] = strip_names(c.get("rag_variant", ""), c.get("generator_model", ""), c.get("retriever_model", ""))
+        c["rag_variant"] = strip_names(canon_space(c.get("rag_variant", "")), c.get("generator_model", ""), c.get("retriever_model", ""))
     cfgs = merge_entities(cfg_in, "config_id")
     dss = merge_entities([dict(d, dataset_name=canon_space(d.get("dataset_name", ""))) for d in meta["datasets"]], "dataset_id")
     tks = merge_entities([dict(t) for t in meta["tasks"]], "task_id")

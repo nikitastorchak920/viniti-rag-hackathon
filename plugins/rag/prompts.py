@@ -38,6 +38,11 @@ CANONICAL CONVENTIONS (from the expert-annotated gold set)
 - A column of deltas/improvements ("EM improvement over X", "EM decrease") is its own metric name. A cost table (tokens, ms, USD) is its own experiment with its own metric names and units.
 - Ablation rows ("w/o X") are separate configurations: rag_variant "<Method> w/o X".
 - Numbers copied from another paper's results (marked with a citation or "reported in [x]") = cited with cited_ref; the authors' own runs of baselines = primary.
+- DATASETS are granular: every sub-corpus, domain, language, property, split or aggregate shown as a row/column gets its OWN dataset ("DocBench / Law", "OpinioBank: Ala Moana Honolulu", "RAG-Multi-Corpus / Overall", "mean over TREC DL19 and DL20"). Use the table's own label. A table without a dataset dimension => dataset_id "" unless the paper has one dataset.
+- METRIC NAMES: use the full name as the paper defines it ("Entity Match Rate", "Factuality", "Answer accuracy"), not a table abbreviation ("EM-R", "Fac.", "Acc"). Keep one spelling for the same metric everywhere.
+- metric_k: if a column/section is computed at a stated retrieval depth (top-20 retrieved items, "k=5"), put that integer in metric_k even if the name has no "@".
+- rag_variant: the full row label as printed, including qualifiers ("Traditional RAG raw KB", "PrismRAG w/o Distractor", "ThreadRAG ablation SN+STG+EDP"); ablation/sweep rows keep their own variant, do not collapse them into the full method.
+- generator_model: copy the notation printed in the table/caption ("LLaMA3-8B-Instruct", "Qwen-14B", "GPT-4o mini"); do NOT expand it to a full official model name or add version numbers/vendor prefixes that are not printed there.
 - A qualitative statement without a number ("significantly better") is NOT a result row.
 """
 

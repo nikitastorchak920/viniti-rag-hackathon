@@ -20,7 +20,7 @@ class PdfInfo:
         return "\n\n".join(parts)
 
 
-def inspect_pdf(path: str | pathlib.Path) -> PdfInfo:
+def inspect_pdf(path: str | pathlib.Path, ocr: bool = False) -> PdfInfo:
     import pymupdf  # lazy: keeps --help / rebuild working without the package
 
     path = pathlib.Path(path)
@@ -30,4 +30,10 @@ def inspect_pdf(path: str | pathlib.Path) -> PdfInfo:
     # Scan = (almost) no text layer anywhere. Mixed PDFs are treated as scans too,
     # so that image-only pages are never silently lost.
     is_scan = not pages or with_text < max(1, int(0.9 * len(pages)))
+    if is_scan and ocr and pages:
+        from core.ocr import ocr_available, ocr_pages
+
+        if ocr_available():
+            pages = ocr_pages(path)
+            is_scan = sum(1 for t in pages if len(t.strip()) >= MIN_CHARS_PER_TEXT_PAGE) < max(1, int(0.9 * len(pages)))
     return PdfInfo(path=path, n_pages=len(pages), pages=pages, is_scan=is_scan)

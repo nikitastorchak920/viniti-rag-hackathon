@@ -143,7 +143,7 @@ def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: i
     resumable). Text mode only. Never touches the first-pass windows."""
     doc_id = pdf.stem
     cache = load_cache(cache_dir, doc_id)
-    if not cache.get("complete") or cache.get("mode") != "text" or not cache.get("meta", {}).get("publication", {}).get("in_scope"):
+    if not cache.get("complete") or cache.get("mode") != "text" or cache.get("ocr") or not cache.get("meta", {}).get("publication", {}).get("in_scope"):
         return True, "verify skipped (no complete text-mode in-scope cache)"
     if client is None:
         return False, "no LLM client for --verify-pass"
@@ -172,7 +172,7 @@ def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: i
 
 
 def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: pathlib.Path, force: bool,
-                     window: int, pdf_mode: str, skip_scans: bool = False) -> tuple[bool | None, str]:
+                     window: int, pdf_mode: str, skip_scans: bool = False, ocr: bool = False) -> tuple[bool | None, str]:
     """Return (ok, message). Only successful model responses are cached; a document is
     'complete' only when the meta pass and every page window succeeded."""
     doc_id = pdf.stem
@@ -183,7 +183,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
     if cache.get("complete"):
         return True, "cached"
     try:
-        info = inspect_pdf(pdf)
+        info = inspect_pdf(pdf, ocr=ocr)
     except Exception as exc:  # noqa: BLE001
         return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
     if info.n_pages == 0:
@@ -201,7 +201,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         return False, "no text layer and --pdf-mode text forbids multimodal upload"
     if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != ("pdf" if use_pdf else "text")):
         cache = {}
-    cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan,
+    cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan, ocr=bool(ocr),
                  mode="pdf" if use_pdf else "text", window=window, windows=cache.get("windows", {}), complete=False)
     from plugins.rag.schemas import Meta  # lazy: needs pydantic
 

@@ -79,6 +79,28 @@ class Normalization(unittest.TestCase):
         self.assertTrue(d["publications"][0]["exclusion_reason"])
 
 
+class Misc(unittest.TestCase):
+    def test_masked_vendor_token(self):
+        self.assertEqual(exporter.canon_space("[模型名称已隐藏]-4o-mini"), "GPT-4o-mini")
+
+    def test_stub_in_scope_true(self):
+        self.assertEqual(exporter.stub_publication("D002")["in_scope"], "true")
+
+    def test_schema_coercion(self):
+        try:
+            from plugins.rag.schemas import Window
+        except ImportError:
+            self.skipTest("pydantic missing")
+        base = {k: "" for k in ("experiment_id", "config_id", "dataset_id", "task_id", "metric_group", "metric_name", "metric_variant",
+                                "metric_direction", "metric_k", "raw_value", "raw_unit", "baseline_value", "aggregation", "sample_size",
+                                "result_origin", "cited_ref", "source_section", "source_table", "source_figure", "source_fragment",
+                                "extraction_status", "note")}
+        base.update(source_figure=3, source_table=["Table 1", "Table 2"], source_page="p. 5", metric_k=None)
+        v = Window.parse_obj({"results": [base]}) if hasattr(Window, "parse_obj") else Window.model_validate({"results": [base]})
+        r = v.results[0]
+        self.assertEqual((r.source_figure, r.source_table, r.source_page, r.metric_k), ("3", "Table 1; Table 2", 5, ""))
+
+
 class Linking(unittest.TestCase):
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
