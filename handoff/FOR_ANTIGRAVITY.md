@@ -4,6 +4,8 @@ After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGR
 
 ## Open tasks
 
+**Paused at P0.1.** Read `handoff/STRICT_F1_STATE.md` for the completed offline audit. Wait for operator approval before starting the queued task below or any extraction changes. The next proposed implementation is P0.2 in `TODO.md`.
+
 ### STRICT-DEV-001 · Audit dense-table coverage and compare the two D013 caches
 
 Work from the project Python environment in PowerShell. This is a **zero-token** checkpoint. Preserve the accepted `out_dev/`, `cache/`, and `out_dev_domain2_scan_cache/`. Use fresh output folders. Skip live extraction and the 111-paper test run.
