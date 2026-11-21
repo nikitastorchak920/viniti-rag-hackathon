@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=None,
                     help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
     ap.add_argument("--ocr", action="store_true",
-                    help="OCR image-only PDFs (needs pytesseract + Tesseract on the PC) so they are processed in text mode instead of SKIPPED_SCAN")
+                    help="try Tesseract on pages with little text; Gemini auto mode uses the PDF if OCR is unusable")
     ap.add_argument("--verify-pass", action="store_true",
                     help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")

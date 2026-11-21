@@ -78,7 +78,7 @@ class TruncatedResponseError(LLMError):
 SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\Z")
 
 
-def _status_code(exc: Exception) -> int | None:
+def _status_code(exc: BaseException) -> int | None:
     for attr in ("code", "status_code"):
         v = getattr(exc, attr, None)
         if isinstance(v, int):
@@ -88,17 +88,26 @@ def _status_code(exc: Exception) -> int | None:
 
 
 def is_transient(exc: Exception) -> bool:
-    code = _status_code(exc)
-    if code is not None:
-        return code in RETRYABLE_CODES
-    name = type(exc).__name__.lower()
-    text = str(exc).lower()
     markers = ("timeout", "timed out", "connection", "unavailable", "resource_exhausted",
-               "reset by peer", "remote protocol", "temporarily", "overloaded", "readerror",
+               "reset by peer", "remote protocol", "server disconnected", "temporarily", "overloaded", "readerror",
                "eof", "ssl", "incomplete", "remotedisconnected", "broken pipe")
-    # network-level failures (TLS EOF, dropped TCP, truncated body): always retryable
-    return isinstance(exc, (urllib.error.URLError, ssl.SSLError, http.client.HTTPException, OSError)) or any(
-        k in name or k in text for k in markers)
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        # Recognize httpx and httpcore transport failures without importing either.
+        if any(cls.__name__ == "RemoteProtocolError" for cls in type(current).__mro__):
+            return True
+        code = _status_code(current)
+        if code is not None:
+            return code in RETRYABLE_CODES
+        name, message = type(current).__name__.lower(), str(current).lower()
+        if isinstance(current, (urllib.error.URLError, ssl.SSLError, http.client.HTTPException, OSError)) or any(
+            marker in name or marker in message for marker in markers
+        ):
+            return True
+        current = current.__cause__ or (None if current.__suppress_context__ else current.__context__)
+    return False
 
 
 class GeminiClient:

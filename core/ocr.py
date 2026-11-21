@@ -5,6 +5,8 @@ from __future__ import annotations
 import gc
 import pathlib
 
+from core.pdf_processor import MIN_CHARS_PER_TEXT_PAGE
+
 
 def ocr_available() -> bool:
     try:
@@ -26,13 +28,16 @@ def ocr_pages(path: str | pathlib.Path, lang: str = "eng", dpi: int = 200) -> li
 
     out: list[str] = []
     with pymupdf.open(pathlib.Path(path)) as doc:
-        for page in doc:
+        for number, page in enumerate(doc, 1):
             txt = page.get_text() or ""
-            if len(txt.strip()) < 30:
-                pix = page.get_pixmap(dpi=dpi, colorspace=pymupdf.csGRAY)
-                with Image.open(io.BytesIO(pix.tobytes("png"))) as im:
-                    txt = pytesseract.image_to_string(im, lang=lang)
-                del pix
-                gc.collect()
+            if len(txt.strip()) < MIN_CHARS_PER_TEXT_PAGE:
+                try:
+                    pix = page.get_pixmap(dpi=dpi, colorspace=pymupdf.csGRAY)
+                    with Image.open(io.BytesIO(pix.tobytes("png"))) as im:
+                        txt = pytesseract.image_to_string(im, lang=lang, timeout=120)
+                    del pix
+                    gc.collect()
+                except Exception as exc:  # noqa: BLE001
+                    raise RuntimeError(f"PDF page {number}: {exc}") from exc
             out.append(txt)
     return out

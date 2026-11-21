@@ -189,20 +189,23 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
     if info.n_pages == 0:
         return False, "PDF has 0 pages"
     if info.is_scan and skip_scans:
-        return None, "SKIPPED_SCAN (no text layer)"
+        return None, "SKIPPED_SCAN (insufficient page text)"
     if client is None:
         return False, "GEMINI_API_KEY not set and no complete cache"
     use_pdf = pdf_mode == "pdf" or (pdf_mode == "auto" and info.is_scan)
     if getattr(client, "text_only", False):  # DeepSeek: no multimodal input
         if info.is_scan:
-            return None, "SKIPPED_SCAN (text-only DeepSeek backend)"
+            return None, "SKIPPED_SCAN (insufficient page text for the text-only backend)"
         use_pdf = False
     if not use_pdf and info.is_scan:
         return False, "no text layer and --pdf-mode text forbids multimodal upload"
-    if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != ("pdf" if use_pdf else "text")):
+    mode = "pdf" if use_pdf else "text"
+    used_ocr = info.used_ocr and not use_pdf
+    if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != mode
+                  or (mode == "text" and bool(cache.get("ocr")) != used_ocr)):
         cache = {}
-    cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan, ocr=bool(ocr),
-                 mode="pdf" if use_pdf else "text", window=window, windows=cache.get("windows", {}), complete=False)
+    cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan, ocr=used_ocr,
+                 mode=mode, window=window, windows=cache.get("windows", {}), complete=False)
     from plugins.rag.schemas import Meta  # lazy: needs pydantic
 
     uploaded = None
@@ -210,6 +213,8 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         if use_pdf:
             log(f"  [{doc_id}] scan/multimodal mode: uploading PDF")
             uploaded = client.upload_pdf(pdf, tag=doc_id)
+        elif used_ocr:
+            log(f"  [{doc_id}] OCR text mode")
 
         def contents(prompt: str, first: int, last: int, text: str | None = None) -> list:
             if use_pdf:
@@ -220,7 +225,8 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
             log(f"  [{doc_id}] meta pass ({info.n_pages} pages)")
             cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), Meta, doc_id)
             save_cache(cache_dir, doc_id, cache)
-        if cache["meta"]["publication"].get("in_scope"):
+        in_scope = cache["meta"]["publication"].get("in_scope")
+        if in_scope:
             for first in range(1, info.n_pages + 1, window):
                 last = min(first + window - 1, info.n_pages)
                 key = f"{first}-{last}"
@@ -232,7 +238,13 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                 save_cache(cache_dir, doc_id, cache)
         cache["complete"] = True
         save_cache(cache_dir, doc_id, cache)
+        if not in_scope:
+            reason = cache["meta"]["publication"]["exclusion_reason"]
+            return True, f"out of scope ({reason}), {time.time() - t0:.0f}s"
         n = sum(len(w.get("results", [])) for w in cache["windows"].values())
+        if not n:
+            source = "OCR text" if used_ocr else mode
+            log(f"  [{doc_id}] WARN: in-scope publication yielded 0 raw result rows in {source} mode; review extraction")
         return True, f"{n} raw result rows, {time.time() - t0:.0f}s"
     except LLMError as exc:
         return False, f"{exc} (progress kept in cache; rerun to resume)"

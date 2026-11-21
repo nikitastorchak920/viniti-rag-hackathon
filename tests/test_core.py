@@ -6,12 +6,17 @@ import tempfile
 import threading
 import time
 import unittest
+from collections import Counter
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
 from plugins.rag import exporter, pipeline  # noqa: E402
+from core import llm_client, ocr, pdf_processor  # noqa: E402
+from scripts import evaluate  # noqa: E402
 
 TEXT = "Table 1: Results\nMethod EM F1\nVanilla RAG 0.204 0.330"
 
@@ -153,6 +158,110 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(pipeline.select_verify_pages([dense, "text only"], cache), [1])
         full = {"windows": {"1-2": {"results": [{"source_page": 1, "source_fragment": ""}] * 50}}}
         self.assertEqual(pipeline.select_verify_pages([dense], full), [])
+
+
+class OcrFallback(unittest.TestCase):
+    pdf = pathlib.Path("synthetic.pdf")
+    native = "A full native page with text that exceeds the OCR threshold."
+    recognized = "A recovered scan with metric values and their surrounding text."
+
+    def test_ocr_for_mixed_pdf_and_unusable_outputs(self):
+        # The native scan heuristic alone considers this document text-readable.
+        pages = [Mock(get_text=Mock(return_value=t)) for t in [self.native] * 3 + [""]]
+        open_pdf = Mock()
+        open_pdf.return_value.__enter__ = Mock(return_value=pages)
+        open_pdf.return_value.__exit__ = Mock(return_value=False)
+        with patch.dict(sys.modules, pymupdf=SimpleNamespace(open=open_pdf)), \
+                patch.object(ocr, "ocr_available") as available, \
+                patch.object(ocr, "ocr_pages") as recognize, patch.object(llm_client, "log") as log:
+            recognize.return_value = [self.native] * 3 + [self.recognized]
+            info = pdf_processor.inspect_pdf(self.pdf, ocr=True)
+            self.assertTrue(info.used_ocr)
+            self.assertFalse(info.is_scan)
+            self.assertEqual(info.pages[-1], self.recognized)
+            for installed, error, warning in [(True, None, "insufficient text on PDF pages 4"),
+                                               (True, RuntimeError("OCR failed"), "OCR failed"),
+                                               (False, None, "OCR unavailable")]:
+                with self.subTest(warning=warning):
+                    available.return_value = installed
+                    recognize.side_effect = error
+                    recognize.return_value = [self.native] * 3 + ["  "]
+                    info = pdf_processor.inspect_pdf(self.pdf, ocr=True)
+                    self.assertTrue(info.is_scan)
+                    self.assertFalse(info.used_ocr)
+                    self.assertEqual(info.pages[-1], "")
+                    self.assertIn(warning, log.call_args.args[0])
+
+    def test_backend_mode_and_zero_rows_warning(self):
+        for text_only, used_ocr in [(False, False), (False, True), (True, False), (True, True)]:
+            with self.subTest(text_only=text_only, used_ocr=used_ocr), tempfile.TemporaryDirectory() as tmp:
+                info = pdf_processor.PdfInfo(self.pdf, 1, [self.recognized if used_ocr else ""],
+                                             is_scan=not used_ocr, used_ocr=used_ocr)
+                client = Mock(text_only=text_only)
+                meta = make_cache([])["meta"]
+                cache_dir = pathlib.Path(tmp)
+                with patch.object(pipeline, "inspect_pdf", return_value=info), \
+                        patch.object(pipeline, "_gen", side_effect=[meta, {"results": []}]) as generate, \
+                        patch.object(pipeline, "log") as log:
+                    ok, message = pipeline.process_document(self.pdf, client, cache_dir, False, 3, "auto", ocr=True)
+                if text_only and not used_ocr:
+                    self.assertIsNone(ok)
+                    self.assertIn("SKIPPED_SCAN", message)
+                    generate.assert_not_called()
+                else:
+                    self.assertTrue(ok)
+                    cache = llm_client.load_cache(cache_dir, self.pdf.stem)
+                    self.assertEqual((cache["version"], cache["mode"], cache["ocr"]),
+                                     (2, "text" if used_ocr else "pdf", used_ocr))
+                    first_input = generate.call_args_list[0].args[1][0]
+                    if used_ocr:
+                        self.assertIn(self.recognized, first_input)
+                    else:
+                        self.assertIs(first_input, client.upload_pdf.return_value)
+                        client.delete_file.assert_called_once_with(first_input)
+                    self.assertTrue(any("WARN: in-scope publication yielded 0" in c.args[0] for c in log.call_args_list))
+                self.assertEqual(client.upload_pdf.call_count, int(not text_only and not used_ocr))
+
+
+class NetworkRetries(unittest.TestCase):
+    def test_gemini_retries_remote_protocol_error(self):
+        try:
+            from httpx import RemoteProtocolError
+        except ImportError:
+            self.skipTest("httpx missing")
+        error = RemoteProtocolError("Server disconnected without sending a response")
+        wrapped = RuntimeError("transport failed")
+        wrapped.__cause__ = error
+        self.assertTrue(llm_client.is_transient(error))
+        self.assertTrue(llm_client.is_transient(wrapped))
+        self.assertFalse(llm_client.is_transient(ValueError("400 invalid request")))
+        client = llm_client.GeminiClient.__new__(llm_client.GeminiClient)
+        client.types, client.client = Mock(), Mock()
+        client.model, client.temperature, client.max_out, client.max_retries = "test", 0, 100, 1
+        client._sleep = Mock()
+        generate = client.client.models.generate_content
+        generate.side_effect = [wrapped, SimpleNamespace(text='{"results": []}')]
+        self.assertEqual(client.generate_json([], "", object), {"results": []})
+        self.assertEqual(generate.call_count, 2)
+        client._sleep.assert_called_once()
+
+
+class EvaluationDiffs(unittest.TestCase):
+    def test_loose_diffs_cancel_exact_matches_and_pair_remaining_copies(self):
+        strict = ("P1", "corpus", "ablation", "generator", "recall", "5", "0.5")
+        other_gold = ("P1", "subset", "ablation", "generator", "recall", "5", "0.5")
+        other_pred = ("P1", "subset", "ablation", "generator", "recall", "", "0.5")
+        pred = Counter({strict: 1, other_pred: 3})
+        gold = Counter({strict: 1, other_gold: 2})
+        expected = (("P1", "recall", "0.5"), ("subset", "ablation", "generator", ""),
+                    ("subset", "ablation", "generator", "5"))
+        self.assertEqual(list(evaluate.loose_diffs(pred, gold)), [expected, expected])
+        with patch("builtins.print") as output:
+            evaluate.show_loose_diffs(pred, gold, 1)
+        report = "\n".join(c.args[0] for c in output.call_args_list)
+        self.assertEqual(report.count("metric_k pred='' gold='5'"), 1)
+        self.assertIn("Paired rows: 2; shown: 1", report)
+        self.assertIn("metric_k=2", report)
 
 
 class SubmissionCompliance(unittest.TestCase):

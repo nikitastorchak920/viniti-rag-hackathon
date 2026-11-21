@@ -9,11 +9,13 @@ import csv
 import pathlib
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from decimal import Decimal, InvalidOperation
+from itertools import combinations
 
 csv.field_size_limit(2**31 - 1)
 TABLES = ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"]
+CONTEXT_FIELDS = ("dataset_name", "rag_variant", "generator_model", "metric_k")
 
 
 def read(folder: pathlib.Path, table: str) -> list[dict]:
@@ -69,6 +71,54 @@ def prf(pred: Counter, gold: Counter) -> tuple[float, float, float, int, int, in
     return p, r, f, tp, p_n, g_n
 
 
+def loose_diffs(pred: Counter, gold: Counter):
+    """Pair residual strict rows within each loose key, preferring shared context fields."""
+    def group(rows: Counter) -> dict[tuple, Counter]:
+        grouped = defaultdict(Counter)
+        for (pid, dataset, variant, generator, metric, k, value), count in rows.items():
+            grouped[pid, metric, value][dataset, variant, generator, k] += count
+        return grouped
+
+    extra, missing = group(pred - gold), group(gold - pred)
+    for loose_key in sorted(extra.keys() & missing.keys()):
+        predicted, expected = extra[loose_key], missing[loose_key]
+        # Exact matches were already removed. Match the remaining copies one-to-one,
+        # starting at three shared context fields and working down to zero.
+        for shared in range(len(CONTEXT_FIELDS) - 1, -1, -1):
+            for indexes in combinations(range(len(CONTEXT_FIELDS)), shared):
+                if not predicted or not expected:
+                    break
+                candidates = defaultdict(deque)
+                for row in sorted(expected.elements()):
+                    candidates[tuple(row[i] for i in indexes)].append(row)
+                for row in sorted(predicted.elements()):
+                    matches = candidates.get(tuple(row[i] for i in indexes))
+                    if matches:
+                        match = matches.popleft()
+                        predicted[row] -= 1
+                        expected[match] -= 1
+                        if not predicted[row]:
+                            del predicted[row]
+                        if not expected[match]:
+                            del expected[match]
+                        yield loose_key, row, match
+
+
+def show_loose_diffs(pred: Counter, gold: Counter, limit: int) -> None:
+    print("\n== loose matches that fail strict matching")
+    counts = Counter()
+    total = 0
+    for (pid, metric, value), actual, expected in loose_diffs(pred, gold):
+        differences = [(field, a, e) for field, a, e in zip(CONTEXT_FIELDS, actual, expected) if a != e]
+        counts.update(field for field, _, _ in differences)
+        total += 1
+        if total <= limit:
+            detail = ", ".join(f"{field} pred={a!r} gold={e!r}" for field, a, e in differences)
+            print(f"  {pid} {metric}={value}: {detail}")
+    print(f"Paired rows: {total}; shown: {min(total, limit)}")
+    print("Field mismatches: " + ", ".join(f"{field}={counts[field]}" for field in CONTEXT_FIELDS))
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -79,7 +129,11 @@ def main() -> int:
     ap.add_argument("gold", type=pathlib.Path, nargs="?", default=pathlib.Path("dev_gold"))
     ap.add_argument("--only", nargs="+")
     ap.add_argument("--exclude", default="D014", help="publication reported separately (dominates gold rows)")
+    ap.add_argument("--show-diffs", type=int, default=20, metavar="N",
+                    help="show up to N loose-match discrepancies (default: 20; 0 shows counts only)")
     a = ap.parse_args()
+    if a.show_diffs < 0:
+        ap.error("--show-diffs must be nonnegative")
 
     pr = {r["publication_id"]: r for r in read(a.result, "publications")}
     gd = {r["publication_id"]: r for r in read(a.gold, "publications")}
@@ -115,6 +169,7 @@ def main() -> int:
                         ("value_loose", "metric values (loose: metric name+value)")):
         p, r, f, tp, pn, gn = prf(kp[name], kg[name])
         print(f"{label:58} P={p:.3f} R={r:.3f} F1={f:.3f}  (tp={tp}, pred={pn}, gold={gn})")
+    show_loose_diffs(kp["value"], kg["value"], a.show_diffs)
 
     print(f"\n== without {a.exclude}")
     for name in ("value", "value_loose"):
