@@ -21,6 +21,80 @@ Antigravity prepends replies under **Reports** and pushes this file to `origin/m
 
 <!-- Prepend replies here. The template above is not a task response. -->
 
+## RECALL-DEV-002
+
+- Status (`complete` or `blocked`): `complete`
+- Acceptance check: **PASS — `--recover-table-cells` ELIGIBLE FOR DEFAULT ADOPTION** (`0` structural errors, higher corpus Strict F1 `0.060 → 0.061`, `+10` Strict TP, `+12` Loose TP, `0` per-paper Strict F1 or Loose TP losses, `0` new review items from table recovery).
+- Git commit (from `git rev-parse --short HEAD`): `5d872ad`
+- Cache & constraints: Used complete 21-paper `out_dev_domain2_scan_cache`; spent **`0` API tokens**; kept jury `out_dev/`, previous comparison bundles, LLM config, and 111-paper `test/` untouched; Tesseract `v5.4.0.20240606` via `C:\Program Files\Tesseract-OCR`.
+
+### Part 1 · Isolated Table-Recovery Benchmark (`out_dev_recall21_table` vs `out_dev_recall21_default`)
+
+- **Coverage, exit codes, and wall times**:
+  - Coverage: `21/21` publications (`in_scope agreement = 21/21 = 100.0%`, `stubs=0`).
+  - Rebuild (`--rebuild-csv-only --ocr --recover-table-cells`): exit **`0`**, wall time `371.0s` (`results=5113 (+34)`, `issues=2634 (+26)`, other 5 tables unchanged: `publications=21, configurations=492, datasets=106, tasks=54, experiments=132`).
+  - Checker (`check_submission.py --ocr`): exit **`2`**, wall time `1573.2s` (included a ~20-minute laptop sleep mid-run that triggered a transient Windows negative-timeout clock jump on `D013` page 11: `timed out after -1200.38s`).
+  - Evaluator (`evaluate.py --show-diffs 20`): exit **`0`**, wall time `1.5s`.
+- **Metrics vs recorded default (`4,911` scored predictions, `731` Strict TP, `1,842` Loose TP, `550` review items)**:
+  - Scored predictions: `4,945` (`+34`)
+  - `datasets (by name)`: `P=0.604 R=0.266 F1=0.369 (tp=64)` (`+0`)
+  - `models (rag_variant+generator)`: `P=0.419 R=0.044 F1=0.079 (tp=206)` (`+0`)
+  - **`Strict value`**: **`P=0.150 R=0.038 F1=0.061 (tp=741, pred=4945, gold=19392)`** (**`+10 TP`, `+0.001 F1`, `+0.001 P`** vs default `0.060 / 731`)
+  - **`Loose value`**: **`P=0.375 R=0.096 F1=0.152 (tp=1854, pred=4945, gold=19392)`** (**`+12 TP`, `+0.001 R`** vs default `1,842`)
+  - **`without D014`**: Strict **`P=0.153 R=0.097 F1=0.119 (tp=741, pred=4854, gold=7632)`** (`+10 TP / +0.002 F1` vs default `0.117`); Loose **`P=0.378 R=0.241 F1=0.294 (tp=1836)`** (`+12 TP` vs default `1,824`)
+  - Loose-to-strict mismatches: `Paired rows: 1113 (+2); dataset_name=644 (+0), rag_variant=467 (+0), generator_model=579 (+2), metric_k=51 (+0)`.
+- **Structural errors & reviews**:
+  - Structural errors: **`0`**.
+  - New reviews from table recovery: **`0`** (`D007` quote check `{'ok': 763}` — all `34` recovered cells verified verbatim with complete `config_id`/`dataset_id`/`task_id`/`experiment_id`). Missing-reference counts identical to default (`dataset_id=210, task_id=165, config_id=146`); observed `validation.json` had `549` review items (`26` quote not found + `1` page-9 quote + `1` sleep-induced `D013` OCR timeout warning leaving `259` unresolved quotes instead of `29` on non-sleep runs).
+- **Changed papers & source location of added Strict matches**:
+  - Only **`D007`** changed across all 21 papers (`0` regressions on any paper): `pred 698 → 732`, `Strict F1 0.276 → 0.283`, `Strict TP 201 → 211 (+10)`, `Loose TP 402 → 414 (+12)`.
+  - All `34` recovered cells and all **`10` newly added Strict matches** come from **`D007`, PDF page `7`, `Table 2`** (`FLAN-T5-XL (3B)` `Accuracy` across `MuSiQue`, `HotpotQA`, `2WikiMultiHopQA`): `R731` (`HotpotQA / Adaptive Retrieval = 25.00`), `R732` (`2WikiMultiHopQA / Adaptive Retrieval = 34.20`), `R738` (`MuSiQue / Adaptive-RAG = 26.00`), `R741` (`HotpotQA / Adaptive-RAG = 44.40`), `R744` (`2WikiMultiHopQA / Adaptive-RAG = 46.40`), `R747` (`MuSiQue / Multi-step Approach = 25.80`), `R750` (`HotpotQA / Multi-step Approach = 47.00`), `R753` (`2WikiMultiHopQA / Multi-step Approach = 55.40`), `R758` (`HotpotQA / Adaptive-RAG w/ Oracle = 54.80`), `R761` (`2WikiMultiHopQA / Adaptive-RAG w/ Oracle = 59.40`).
+- **Default adoption gate verdict**: **PASS** (`0` structural errors, higher corpus Strict F1 `0.060 → 0.061`, `0` per-paper Strict F1 or Loose TP losses).
+
+### Part 2 · D014 Source-Evidence Matrix (Native PDF `dev/D014.pdf` + `out_dev_recall21_candidate`, completed before consulting gold)
+
+All printed panel titles, axis labels, legends, and captions on pages 5, 6, 13, 14, and 16 are preserved identically by both `PyMuPDF` and `pypdf` native text extraction.
+
+| Fig | PDF p. | Representative panel title / axes | Legend, caption & method locators | Printed label scopes | Legend-to-marker linkability (vector drawings) |
+|---|---|---|---|---|---|
+| **Fig 2** | p.5 | `HotpotQA GPT-4o-mini` (x: `Knowledge Precision` 0–1, y: `Knowledge Recall` 0–1, colorbar: 0.4–0.8) | Caption p.5 (*"response/answer F1... by GPT-4o-mini (top), LLaMA 3.1 8B (middle), Mistral 7B-Instruct (bottom). Left: WoW; right: HotpotQA. Dots in orange outperform 'full knowledge', cyan underperform 'no knowledge'"*); Sec 3.2 p.3 (*"hundreds of configurations... simulated retrieved and selected knowledge K'"*); Fig 1 p.2 (*"Simulated Knowledge Retrieval & Selection"*) | Whole figure: simulation pipeline, orange/cyan group rules; Panel: dataset (`Wizard of Wikipedia`/`HotpotQA`), generator (`GPT-4o-mini`, `LLaMA 3.1 8B`, `Mistral 7B-Instruct`); Group: orange/cyan halos; Point: **no** per-point `(p_gold, p_noise)` text label | **Group halos unambiguous** (exact RGB fill `(1.0, 0.65, 0.0)` orange / `(0.0, 1.0, 1.0)` cyan + larger radius); colorbar value is continuous RGB (`214` fills), **no** per-point label |
+| **Fig 3** | p.6 | `HotpotQA Mistral 7B-Instruct` (top/mid/bot x: `Knowledge Precision` / `Knowledge Recall` / `Knowledge F1` 0–1; y: `Answer F1` 0.1–0.6) | Panel legend box (`---- Full Knowledge Answer F1`, `---- No Knowledge Answer F1`); Caption p.6 (*"HotpotQA answer F1 versus KP (top), KR (middle), KF1 (bottom). Left: GPT-4o-mini; right: Mistral-7B-Instruct"*) | Whole figure: HotpotQA meta-experiments; Panel: dataset + generator + x/y metrics; Group: 2 dashed reference baselines; Point: uniform blue marker, **no** per-point text label | **Reference lines unambiguous** (red dashed `(1,0,0)` = Full Knowledge, black dashed `(0,0,0)` = No Knowledge); all `2,112` scatter dots share 1 blue fill `(0.12, 0.47, 0.71)` (no per-point identity) |
+| **Fig 5** | p.13 | `Noisy HotpotQA GPT-4o-mini` (x: `Knowledge Precision` 0–1, y: `Knowledge Recall` 0–1, colorbar: 0.4–0.7) | Caption p.13 (*"answer F1 versus knowledge precision for GPT-4o-mini on noisy HotpotQA"*); **Sec A.5 p.12** (*"deliberately inject noise into HotpotQA by removing one sentence from the gold knowledge set... create a noisy HotpotQA dataset"*) | Panel/Figure: `Noisy HotpotQA` + `GPT-4o-mini` + x/y metrics; Group: cyan halos `(0,1,1)` (`29` drawings); Point: continuous RGB fill (`150` fills), **no** per-point label | Cyan halos unambiguous; colorbar continuous RGB; **no** per-point label |
+| **Fig 8** | p.14 | `HotpotQA Number of Knowledge Sentences` (x: `Knowledge Precision` 0–1, y: `Knowledge Recall` 0–1, colorbar: `0..8`; WoW panel: `1..7`) | Caption p.14 (*"number of selected knowledge sentences versus knowledge precision on Wizard of Wikipedia (left) and HotpotQA (right)"*); **Sec A.6 p.13** (*"As Figure 8 shows, the length of the knowledge input mostly correlates with knowledge precision"*) | Panel: dataset + `Number of Knowledge Sentences` (colorbar) + x/y metrics; **NO generator printed anywhere in Fig 8 or Sec A.6** (characterizes simulated input set $K'$ before generation) | Continuous RGB fill (`203` fills on p.14); **no** legend box, **no** generator |
+| **Fig 9** | p.14 | `HotpotQA GPT-4o-mini k=3` (x: `Knowledge Precision` 0–1, y: `Knowledge Recall` 0–1, colorbar: 0.3–0.8) | Caption p.14 (*"by limiting the number of knowledge sentences up to k=3. Orange... cyan..."*); **Sec A.6 p.13** (*"we limit the number of knowledge sentences to k by randomly sub-sampling k sentences when more than k sentences are selected... We choose k = 3"*) | Panel: dataset + `GPT-4o-mini` + **`k=3` selection-cap condition**; Group: orange `(1,0.65,0)` / cyan `(0,1,1)` halos; Point: continuous RGB, **no** per-point label | Orange/cyan halos unambiguous; colorbar continuous RGB; **no** per-point label |
+| **Fig 10** | p.16 | `Wizard of Wikipedia LLaMA 3.1 8B` (x: `Knowledge Precision` 0–1, y: `Answer F1` 0.22–0.28) | Panel legend box (`Full Knowledge Answer F1`, `No Knowledge Answer F1`); Caption p.16 (*"answer F1 versus KP for GPT-4o-mini (top), LLaMA 3.1 8B (middle), Mistral 7B-Instruct (bottom); left: WoW, right: HotpotQA"*); **Sec A.3 p.12** (*"Figures 10, 11, and 12 extend Figure 3"*) | Whole figure: extension of Fig 3 across all 3 generators × 2 datasets; Panel: dataset + generator + x/y metrics; Group: 2 dashed baselines; Point: uniform blue `(0.12,0.47,0.71)` (`1,749` dots) | Red/black dashed lines unambiguous; scatter dots uniform blue (no per-point label) |
+
+- **Specific repeated-series pairs (source confirmation)**:
+  1. *Intra-figure*: `Figure 3` (p.6) `HotpotQA Mistral 7B-Instruct` emits **`Answer F1` 3 times (`1,056 = 3 × 352`)** across its top (KP), middle (KR), and bottom (KF1) panels. The caption (p.6) and Sec 3.2 (p.3) confirm all three panels replot the **exact same `352` meta-experiment runs** against three different x-axes (same conditions, not independent experiments).
+  2. *Cross-figure*: `Figure 2` (p.5) vs `Figure 3` (p.6) `HotpotQA GPT-4o-mini` `Knowledge Precision` have **`352 / 352` identical values** (`100%` overlap), and `Figure 2` vs `Figure 10` (p.16) `HotpotQA LLaMA 3.1 8B` `Knowledge Precision` match identically. **Sec A.3 (p.12)** explicitly confirms *"Figures 10, 11, and 12 extend Figure 3"* and **Sec 3.2 (p.3)** confirms Figures 2–4 plot the same simulated meta-experiments — so the source **confirms identical underlying conditions**, not coincidental matching values.
+- **Figure 9 `k=3` semantics**: **Experiment / configuration setting (NOT `metric_k`)**. Sec A.6 (p.13) states *"we limit the number of knowledge sentences to k by randomly sub-sampling k sentences when more than k sentences are selected... We choose k = 3"* and Fig 9 caption (p.14) says *"by limiting the number of knowledge sentences up to k=3"*. It constrains input context length (configuration/protocol parameter), whereas the evaluated metrics remain `Knowledge Precision`, `Knowledge Recall`, and `Answer F1` (none are `@3` metrics).
+- **Figures 5 & 8 nearby text**:
+  - **Figure 5 (`Noisy HotpotQA`)**: Sec A.5 (p.12) explicitly defines `Noisy HotpotQA` as a perturbed version of the `HotpotQA` multi-hop QA dataset (1 gold knowledge sentence removed per example, average gold sentences `2.4 → 1.4`), directly establishing that the same **question-answering task** (`HotpotQA` QA / knowledge selection evaluation) applies to the exact Figure 5 panel!
+  - **Figure 8 (`Number of Knowledge Sentences`)**: Sec A.6 (p.13) and caption (p.14) confirm Figure 8 plots the simulated knowledge set $K'$ length against KP/KR **before generation** — **no generator model applies** to Figure 8. Leaving `generator_model=""` (empty) is therefore faithful to the PDF (any invented generator label would be unsupported metadata).
+
+### Part 3 · Comparison Against `dev_gold` Strict Keys, Gap Classification & Priority Order
+
+Comparing representative `out_dev_recall21_candidate` rows against `dev_gold` Strict keys (`dataset_name`, `rag_variant`, `generator_model`, `metric_name`, `metric_k`, `value`) yields five distinct gap classes:
+
+1. **`source-supported exact labels`**:
+   - Datasets `HotpotQA` (Sec 4.1 p.3; panel titles pp.5,6,14,16) and `Noisy HotpotQA` (Sec A.5 p.12; panel title p.13); generator `GPT-4o-mini` (panel titles pp.5,6,13,14,16); metrics `Knowledge Precision`, `Knowledge Recall`, `Knowledge F1`, `Answer F1` (axis labels pp.5,6,13,14,16); `metric_k=""` (confirmed even for Fig 9 `k=3`).
+   - *Tokenization/punctuation mismatch on source-supported labels*: PDF prints `LLaMA 3.1 8B` and `Mistral 7B-Instruct` (pp.5,6,16), whereas `dev_gold` omits spaces (`LLaMA3.1-8B`, `Mistral7B-Instruct`), which `evaluate.py`'s `n()` normalizes to different tokens (`'llama 3.1 8b'` vs `'llama3.1 8b'`; `'mistral 7b instruct'` vs `'mistral7b instruct'`).
+2. **`explicit aliases`**:
+   - `Wizard of Wikipedia` vs gold `WoW`: explicitly linked in **Sec 4.1 p.3** (*"Wizard of Wikipedia (WoW; Dinan et al., 2019)"*) and used interchangeably between panel titles (`Wizard of Wikipedia`, pp.5,14,16) and captions (`WoW`, Figs 2, 3, 10).
+   - Table 1/2 abbreviations `KP`/`KR`/`KF1` vs `Knowledge precision`/`Knowledge recall`/`Knowledge F1`: explicitly defined in **Table 1 caption p.4** (*"knowledge precision (KP), recall (KR), and F1 (KF1)"*).
+3. **`unsupported metadata` (leave empty in source-faithful extraction unless normalized by an explicit rubric)**:
+   - `Figure 8` `generator_model`: PDF prints no generator (Sec A.6 p.13); gold wrote synthetic `'Generator-independent'` → leave `generator_model=""` because no generator exists in the PDF.
+   - `rag_variant` exact gold strings: gold authored four bespoke descriptions (`'Simulated knowledge retrieval/selection: unconstrained sampled knowledge'`, `'...noisy HotpotQA'`, `'...input-length sampling'`, `'...maximum3sampled sentences'`). While the PDF prints `'Simulated Knowledge Retrieval & Selection'` (Fig 1 p.2) and `k=3` (Sec A.6 p.13 / Fig 9 p.14), gold's exact sub-variant phrasing is **not printed verbatim** in the PDF.
+4. **`ambiguous grouping` / repeated-series duplication**:
+   - In `dev_gold`, Figures 2 and 3 mark repeated `(KP, KR, Answer F1)` observations with `duplicate_of` pointing back to Figures 10–12 (`R109`, `R1495`, etc.), reducing `28,649` raw gold D014 rows to `11,760` scored rows. Candidate emitted all `14,124` rows with `duplicate_of=""` (`14,215` scored pred vs `11,760` gold), causing `+2,455` excess predictions (including `Figure 3 Mistral Answer F1` 3× repetition `1,056 = 3×352` and `Figure 2`/`Figure 3` `352/352` KP duplication).
+   - `Figure 9` (`k=3`) is currently collapsed into the unconstrained `PC1` config instead of a distinct configuration with the `k=3` constraint recorded.
+5. **`unlabeled plot values`**:
+   - Individual scatter points have no printed numeric coordinates or `(p_gold, p_noise)` tags (calibrated linearly from axis ticks to `±0.0001`); colorbar metrics (`Answer F1` on Figs 2, 5, 9; `Mean selected knowledge sentences` on Fig 8) are encoded solely in continuous RGB fill without point labels.
+
+- **Priority recommendation after context fixes (repeated-series precision vs missing axes/colorbars)**:
+  - **Prioritize repeated-series precision (`duplicate_of` linking / deduplication) BEFORE recovering missing axes or colorbars.**
+  - *Evidence*: `candidate` already over-predicts D014 (`14,215` scored predictions vs `11,760` scored gold) because `Figure 3 Mistral Answer F1` repeats `352` points 3× (`1,056`) and `Figure 2` / `Figure 3` / `Figures 10–12` emit identical replotted KP/KR/Answer F1 series without `duplicate_of`. Adding colorbars (`+~5,000` approximate RGB-quantized rows) or missing Figure 2 panels before deduplicating repeated series and fixing `rag_variant`/`WoW`/whitespace-alias linking would only worsen global Strict Precision dilution (`0.039`) and bloat review counts without improving Strict F1. Conversely, adopting `--recover-table-cells` as default is an immediate, clean win (`+10` Strict TP, `+12` Loose TP, `0` new reviews, `0` regressions).
+
 ## RECALL-DEV-001
 
 - Status (`complete` or `blocked`): `complete`
