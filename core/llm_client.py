@@ -1,13 +1,16 @@
 """Gemini wrapper: structured JSON output, bounded retries, per-document cache."""
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import pathlib
 import random
 import re
+import ssl
 import sys
 import time
+import urllib.error
 from typing import Any
 
 DEFAULT_MODEL = "gemini-3.8-flash"
@@ -61,8 +64,10 @@ def is_transient(exc: Exception) -> bool:
     name = type(exc).__name__.lower()
     text = str(exc).lower()
     markers = ("timeout", "timed out", "connection", "unavailable", "resource_exhausted",
-               "reset by peer", "remote protocol", "temporarily", "overloaded", "readerror")
-    return isinstance(exc, (TimeoutError, ConnectionError)) or any(
+               "reset by peer", "remote protocol", "temporarily", "overloaded", "readerror",
+               "eof", "ssl", "incomplete", "remotedisconnected", "broken pipe")
+    # network-level failures (TLS EOF, dropped TCP, truncated body): always retryable
+    return isinstance(exc, (urllib.error.URLError, ssl.SSLError, http.client.HTTPException, OSError)) or any(
         k in name or k in text for k in markers)
 
 
@@ -200,13 +205,15 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
 # ---- DeepSeek (OpenAI-compatible chat API, stdlib urllib only; text-only) ----
 class DeepSeekClient:
     text_only = True
-    URL = "https://api.deepseek.com/chat/completions"
+    BASE_URL = "https://api.deepseek.com"
 
     def __init__(self) -> None:
         load_env()
         self.key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
         if not self.key:
             raise LLMError("DEEPSEEK_API_KEY is not set (see .env.example)")
+        self.base_url = (os.environ.get("DEEPSEEK_BASE_URL", "").strip() or self.BASE_URL).rstrip("/")
+        self.URL = self.base_url + "/chat/completions"
         self.model = os.environ.get("DEEPSEEK_MODEL", "").strip() or "deepseek-flash"
         self.max_retries = int(_f("DEEPSEEK_MAX_RETRIES", 6))
         self.base = _f("GEMINI_BACKOFF_BASE", 2)
@@ -221,7 +228,7 @@ class DeepSeekClient:
         import urllib.error
         import urllib.request
 
-        req = urllib.request.Request("https://api.deepseek.com/models", headers={"Authorization": f"Bearer {self.key}"})
+        req = urllib.request.Request(self.base_url + "/models", headers={"Authorization": f"Bearer {self.key}"})
         try:
             with urllib.request.urlopen(req, timeout=30) as r:
                 ids = [m.get("id") for m in json.loads(r.read().decode("utf-8")).get("data", [])]
@@ -274,7 +281,8 @@ class DeepSeekClient:
                 text = ((ch.get("message") or {}).get("content") or "").strip()
                 if not text:
                     raise ValueError("empty response")
-                data = json.loads(text)
+                m = re.match(r"^```(?:json)?\s*(.*?)\s*```$", text, re.S | re.I)
+                data = json.loads(m.group(1) if m else text)
                 if not isinstance(data, dict):
                     raise ValueError("response is not a JSON object")
                 return data
