@@ -1,9 +1,9 @@
 # RAG extraction roadmap · Recall first
 
-## Checkpoint protocol
+## Execution and checkpoints
 
-- Execute one numbered step per approval. Stop after resolving a systemic leak or measuring a Recall/F1 gain. Report the fix, before/after predicted rows and Strict/Loose R/P/F1, elapsed time and API tokens, and the proposed next step.
-- Record snapshots, commands and results in `handoff/STRICT_F1_STATE.md`. Keep Antigravity's queue paused between approvals. Use the existing cache and an offline rebuild before requesting paid extraction.
+- Continue through independent work after each measurement. Record the fix, before/after predicted rows and Strict/Loose R/P/F1, elapsed time and tokens. Yield when the next step depends on Antigravity's report.
+- Record snapshots, commands and results in `handoff/STRICT_F1_STATE.md`. Use the existing cache and an offline rebuild before requesting paid extraction.
 - Keep the current LLM and provider configuration while fixing code and prompt coverage losses. Extraction must generalize to all 111 test papers. Gold is for diagnosis and scoring. Avoid paper IDs, benchmark entity names, and gold values in runtime behavior. Preserve cache v2, CSV schemas, and evaluator keys.
 
 ## Reference
@@ -13,15 +13,15 @@
 
 ## Stage 1 · Recover valid numeric coverage
 
-- [x] **R1.1 Audit cache/export losses and recover missing native table cells.** Local first-pass windows contain 3,979 raw records and only 59 extracted rows are excluded as duplicates. The largest coverage gap is already present in cache. The new opt-in `--recover-table-cells` restores 34 unambiguous PDF table cells without API calls. Exact Strict and Loose Recall stayed unchanged because the table uses short metric labels that differ from gold. The standard export remains byte-identical to the previous one. **Checkpoint awaiting approval.**
-- [ ] **R1.2 Audit graphical numeric coverage.** The largest gap is not explained by table chunking alone. In D014, 11,643 of 11,760 scored gold rows cite figures. Inspect recoverability from native PDF vector paths, chart axes and legends on a small sample, separating chart points from tick labels and repeated panels. Verify the printed scale and source location. Decide whether reliable vector recovery or bounded visual windows are justified before extracting thousands of points. Stop with a reproducible coverage estimate.
-- [ ] **R1.3 Remove capacity losses in long and dense PDFs.** Detect eligible tables, figures, and appendices before extraction and distinguish omitted windows, truncated responses, and suspiciously sparse successful windows. Remove prompt wording that can suppress appendix results and avoid folding explicit baseline rows into a scalar baseline. Segment wide or layered tables into resumable slices with shared headers. Fix split deduplication so distinct metric variants, cutoffs and result contexts survive. Implement and measure each leak in its own checkpoint.
-- [ ] **R1.4 Run one approved extraction pilot.** Start from the existing model and cache. Use the smallest set of slices the offline audit identifies. Measure unique valid cells, Loose Recall, tokens and latency. Expand only after a measured gain and approval.
+- [x] **R1.1 Audit cache/export losses and recover missing native table cells.** Local first-pass windows contain 3,979 raw records and 59 extracted rows are excluded as duplicates. The largest coverage gap is already present in cache. `--recover-table-cells` restores 34 unique PDF table cells without API calls.
+- [x] **R1.2 Recover graphical numeric observations.** In D014, 11,643 of 11,760 scored gold rows cite figures. `--recover-plot-points` reads native vector markers on supported linear axes, records approximate values and preserves distinct coincident observations. The combined recovery pilot increased local Loose Recall from 0.06198 to 0.59169 and Strict Recall from 0.02501 to 0.02867. Keep plot recovery opt-in until full-cache verification and more complete strict context.
+- [ ] **R1.3 Remove capacity losses in long and dense PDFs.** The extraction prompt now explicitly includes appendix results and preserves baseline cells as rows. Split deduplication keeps distinct values, variants, cutoffs and experiment contexts. Remaining work covers proactive resumable slicing and distinguishing omitted windows from truncated or suspiciously sparse successful windows.
+- [ ] **R1.4 Verify on the full cache and scope the next pilot.** `RECALL-DEV-001` asks Antigravity for a zero-token 21-paper comparison and independent plot checks. Use that report to decide whether a targeted live extraction is justified. No provider change or test-set run is part of the current task.
 
 ## Stage 2 · Convert recovered volume into Strict Recall
 
 - [x] Existing context work: positioned table relinking (P0.2) and explicit dataset aliases (P0.3a) raised local Strict TP from 394 to 485. Full-cache confirmation remains pending.
-- [ ] Recover missing source-supported dataset, variant, and generator entities. Inherit labels and cutoffs only from the matching caption, headers and row/column group. Normalize explicit metric abbreviations and aliases against the source. Keep ambiguous links empty. Benchmark fixed Strict/Loose keys on the same cache and stop after each change.
+- [ ] Recover missing source-supported dataset, variant, and generator entities. The default exporter now expands uniquely defined metric abbreviations and gains 61 Strict TP and 125 Loose TP locally without increasing predictions. The plot pilot links generator-only configurations where supported by printed titles. Point-level retrieval context remains empty when absent from the figure. Compare fixed keys on the full cache before expanding these paths.
 
 ## Stage 3 · Improve Precision while preserving Recall
 

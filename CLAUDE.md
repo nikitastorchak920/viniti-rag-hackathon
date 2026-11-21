@@ -10,7 +10,7 @@
 ## Language, demos, and checkpoints
 
 - Communicate with the operator in Russian. Write code and comments, commit messages, `TODO.md`, `handoff/` files, and inter-agent instructions in English. Preserve source quotations in their original language.
-- After each task, update `TODO.md` with the observed checkpoint, run the relevant checks, and commit and push the intended changes to `origin/main`. Stage explicit paths if unrelated files are present.
+- After each task, update `TODO.md` with the observed checkpoint, run the relevant checks, and commit and push the intended changes to `origin/main`. Stage explicit paths if unrelated files are present. Continue independent work between checkpoints and yield when the next step depends on an Antigravity report.
 - End every operator response with `[ОТЧЁТ ДЛЯ ПОЛЬЗОВАТЕЛЯ / ЧТО МОЖНО ПОСМОТРЕТЬ СЕЙЧАС]` (Russian, up to 10 lines, with the change, a command or URL, serious blockers, and whether the gate passed). If an Antigravity task was published, give its ID and repository link. Write the `[PROMPT FOR ANTIGRAVITY]` instructions in the repository.
 
 ## Repository handoff queue

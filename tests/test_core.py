@@ -48,6 +48,29 @@ def build(cache):
 
 
 class Normalization(unittest.TestCase):
+    def test_metric_abbreviation_is_expanded_only_for_unique_printed_definition(self):
+        rows = [{"metric_name": "Eval", "note": ""}, {"metric_name": "Rec", "note": ""},
+                {"metric_name": "Other", "note": ""}]
+        exporter._expand_metric_abbreviations(rows, ["Evaluation (Eval), Recall (Rec), Recollection (Rec)."])
+        self.assertEqual([row["metric_name"] for row in rows], ["Evaluation", "Rec", "Other"])
+        self.assertIn("Eval", rows[0]["note"])
+
+    def test_distinct_vector_observations_survive_export_with_same_metric_value(self):
+        rows = [result(raw_value="~0.3", raw_unit="fraction", source_table="", source_figure="Figure 1",
+                       source_fragment="Figure 1:", experiment_id="E1", config_id="C01", dataset_id="DS1",
+                       plot_observation=True, note=f"vector point {i}") for i in (1, 2)]
+        doc = exporter.build_doc("P1", make_cache([]), ["Figure 1:", ""], Mock(), plot_rows=rows)
+        self.assertEqual([r["metric_value"] for r in doc["results"]], ["0.3", "0.3"])
+        self.assertEqual([r["duplicate_of"] for r in doc["results"]], ["", ""])
+
+    def test_plot_configuration_keeps_only_printed_generator(self):
+        point = result(source_table="", source_figure="Figure 1", source_fragment="Figure 1:",
+                       plot_observation=True, plot_generator="Printed Gen")
+        doc = exporter.build_doc("P1", make_cache([]), ["Figure 1:", ""], Mock(), plot_rows=[point])
+        config_id = doc["results"][0]["config_id"]
+        config = next(c for c in doc["configurations"] if c["config_id"] == config_id)
+        self.assertEqual((config["generator_model"], config["rag_variant"], config["top_k"]), ("Printed Gen", "", ""))
+
     def test_dataset_version_suffix_is_removed_after_linking(self):
         datasets = [
             {"dataset_id": "DS1", "dataset_name": "ExampleQA v1.2", "dataset_version": "v1.2"},
@@ -301,6 +324,13 @@ class Linking(unittest.TestCase):
 
 
 class Pipeline(unittest.TestCase):
+    def test_slice_overlap_keeps_distinct_conditions(self):
+        from plugins.rag import pipeline
+
+        row = result(experiment_id="E1", metric_variant="micro", metric_k="5")
+        self.assertEqual(len(pipeline._dedupe([row, dict(row, note="overlap"), dict(row, metric_variant="macro"),
+                                               dict(row, metric_k="10"), dict(row, experiment_id="E2")])), 4)
+
     def _run(self, workers):
         names = [pathlib.Path(f"D{i:03d}.pdf") for i in range(1, 9)]
 
@@ -466,6 +496,33 @@ class EvaluationDiffs(unittest.TestCase):
         self.assertEqual(report.count("metric_k pred='' gold='5'"), 1)
         self.assertIn("Paired rows: 2; shown: 1", report)
         self.assertIn("metric_k=2", report)
+
+
+class VectorPlots(unittest.TestCase):
+    def test_axis_fit_rejects_nonlinear_and_underconstrained_ticks(self):
+        from plugins.rag.plot_recovery import _fit
+
+        self.assertEqual(_fit([(0, 1), (50, .5), (100, 0)], 100), (-.01, 1.0))
+        self.assertIsNone(_fit([(0, 1), (50, .05), (100, 0)], 100))
+        self.assertIsNone(_fit([(0, 0), (100, 1)], 100))
+
+    def test_scatter_panel_calibrates_ticks_and_keeps_coincident_markers(self):
+        from pymupdf import Rect
+        from plugins.rag.plot_recovery import Text, _panel
+
+        frame = (100, 100, 220, 220)
+        paths = [{"rect": Rect(*segment), "items": [("l",)]} for segment in
+                 [(100, 100, 100, 220), (100, 220, 220, 220)]
+                 + [(x, 220, x, 223) for x in (100, 160, 220)]
+                 + [(97, y, 100, y) for y in (100, 160, 220)]]
+        paths.extend({"rect": Rect(129, 159, 131, 161), "items": [("c",)] * 4, "fill": (0, 0, 1)} for _ in range(12))
+        texts = [Text((x-3, 222, x+3, 228), value, True) for x, value in zip((100, 160, 220), ("0", ".5", "1"))]
+        texts += [Text((90, y-2, 96, y+2), value, True) for y, value in zip((100, 160, 220), ("1", ".5", "0"))]
+        texts += [Text((135, 230, 185, 238), "Precision", True), Text((79, 135, 86, 185), "Recall", False)]
+        x, y, points = _panel(paths, texts, frame)
+        self.assertEqual((x[:2], y[:2], len(points)), (("Precision", "fraction"), ("Recall", "fraction"), 12))
+        self.assertAlmostEqual(x[2][0] * points[0][0] + x[2][1], .25)
+        self.assertAlmostEqual(y[2][0] * points[0][1] + y[2][1], .5)
 
 
 class SubmissionCompliance(unittest.TestCase):

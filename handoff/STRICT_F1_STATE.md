@@ -1,8 +1,22 @@
 # Strict F1 checkpoint state
 
+## R1.2 · Offline figure recovery and abbreviation resolution
+
+- Same 17 complete local caches, scored against all 21 gold papers. The new default export expands uniquely defined abbreviations printed in the source. The optional pilot adds 14,124 vector observations and 34 table cells. All values derived from plot geometry are marked approximate. Literal generator names in panel titles can be linked to partial configurations. Unavailable point-level parameters are left empty.
+- The prompt requests results throughout the document, including appendices, and independent rows for numeric baseline cells. Split deduplication preserves differences in validated result fields. Live extraction changes still need a targeted measurement.
+
+| Local export | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP |
+|---|---:|---|---:|---|---:|
+| Previous default | 3,879 | 0.02501/0.12503/0.04168 | 485 | 0.06198/0.30987/0.10330 | 1,202 |
+| Current default | 3,879 | 0.02816/0.14076/0.04693 | 546 | 0.06843/0.34210/0.11405 | 1,327 |
+| Current default with both recovery flags | 18,037 | 0.02867/0.03083/0.02971 | 556 | 0.59169/0.63614/0.61311 | 11,474 |
+
+- Both exports passed structural validation. Review items rose from 260 in the default to 2,130 in the optional pilot. For plots, quote validation confirms only the caption. Direct checks of axis calibration and figure context are part of the full-cache handoff. Keep the plot pilot opt-in while strict context is sparse and Strict F1 declines.
+- The two offline rebuilds, checkers and scoring took 15.6 seconds and used zero API tokens. Pytest passed 44 tests. The rebuild reports four incomplete or unavailable local caches. The next validation is `RECALL-DEV-001` on Antigravity's complete cache.
+
 ## R1.1 · Recall-first audit and opt-in table recovery
 
-- Status: awaiting operator approval before R1.2. Production model settings, cache files and scoring keys stayed unchanged. The two rebuilds, checker and evaluator took 9.6 seconds locally and used zero API tokens. Pytest passed 38 tests.
+- Historical checkpoint. The two rebuilds, checker and evaluator took 9.6 seconds locally and used zero API tokens. Pytest passed 38 tests.
 - The 17 complete local caches have 3,979 first-pass observations, 3,934 parseable numeric values and 49 empty windows out of 104. The pre-fix CSV has 3,983 rows including earlier verification recoveries. Of these, 45 are non-extractable and 59 are numeric duplicate rows. The evaluator accepts 3,879. Postprocessing does not account for the large difference versus 19,392 corpus gold entries or the 4,922 predictions in the full remote reference.
 - D014 caches all six physical page windows but five yielded zero rows. Only 108 of its 11,760 scored gold cells cite tables. Another 11,643 cite figures and nine have neither locator. Do not claim the table recovery solves chart-point coverage or that missing PDF pages were dropped from the input.
 - The new opt-in `--recover-table-cells` exports unseen numeric cells from native, captioned tables with aligned metric/dataset headers, one configuration and consistent cached experiment/task metadata. D007 gained 34 source-confirmed rows. The printed metric labels `Acc`, `Step` and `Time` do not match their long-form evaluator keys in this sample, so neither TP count increased. The default CSV files are byte-identical to P0.3a.

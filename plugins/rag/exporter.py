@@ -8,6 +8,7 @@ import re
 import unicodedata
 from collections import defaultdict
 from decimal import Decimal
+from itertools import chain
 
 from core.validator import RULE_PROVENANCE_COMPLETE, check_result, finding
 
@@ -219,6 +220,21 @@ def canon_metric(name: str) -> str:
     return re.sub(r"\s*@\s*(?=\d)", "@", canon_space(name))
 
 
+def _expand_metric_abbreviations(rows: list[dict], pages_norm: list[str] | None) -> None:
+    """Restore one-word metric expansions only when explicitly defined in this PDF."""
+    definitions = defaultdict(set)
+    for page in pages_norm or ():
+        for full, short in re.findall(r"\b([A-Z][a-z][a-z-]{2,})\s*\(([A-Z][A-Za-z]{1,6})\)", page):
+            if full.casefold().startswith(short.casefold()):
+                definitions[short.casefold()].add(full)
+    for row in rows:
+        original = row["metric_name"]
+        possible = definitions[original.casefold()]
+        if len(possible) == 1:
+            row["metric_name"] = next(iter(possible))
+            row["note"] = (row["note"] + " | " if row["note"] else "") + f"Printed metric abbreviation: {original}."
+
+
 CUTOFF = re.compile(r"(?i)(?:@\s*|\bk\s*=\s*|\btop[-\s]*)([0-9]+)(?!\w|[.,]\d|[-–]\d)")
 
 
@@ -298,7 +314,7 @@ def _fill_ids(rows: list[dict], out: dict) -> None:
 
 
 def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, table_layout=None,
-              recover_table_cells: bool = False) -> dict[str, list[dict]]:
+              recover_table_cells: bool = False, plot_rows=()) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {t: [] for t in TABLES}
     meta = cache["meta"]
     p = meta["publication"]
@@ -367,6 +383,26 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         return out_
 
     cfg_in = [dict(c) for c in meta["configurations"]]
+    if plot_rows:
+        # A generator printed on a panel is evidence for a partial configuration only.
+        declared_ids = {c.get("config_id") for c in cfg_in}
+        partial_by_model = {}
+        sourced_rows = []
+        next_id = 0
+        for point in plot_rows:
+            model = point.get("plot_generator")
+            if model and not point.get("config_id"):
+                if model not in partial_by_model:
+                    next_id += 1
+                    while f"PC{next_id}" in declared_ids:
+                        next_id += 1
+                    config_id = f"PC{next_id}"
+                    partial_by_model[model] = config_id
+                    cfg_in.append({"config_id": config_id, "generator_model": model,
+                                   "note": "Only the generator is specified by the plot panel. Point-level retrieval settings are not identified."})
+                point = dict(point, config_id=partial_by_model[model])
+            sourced_rows.append(point)
+        plot_rows = sourced_rows
     for c in cfg_in:
         for f in ("generator_model", "retriever_model", "embedding_model", "reranker_model"):
             c[f] = canon_space(c.get(f, ""))
@@ -395,6 +431,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     fstat = defaultdict(int)
     issues: list[dict] = []
     validations = []
+    plot_ids = set()
     source_rows = iter_results(cache)
     cells = {}
     if table_layout:
@@ -416,7 +453,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         if recovered:
             log(f"  {doc_id}: recovered {len(recovered)} numeric table cells from native PDF layout")
         source_rows = iter(cached_rows + recovered)
-    for r in source_rows:
+    for r in chain(source_rows, plot_rows):
         if True:
             note = (r.get("note") or "").strip()
             name = canon_metric(r.get("metric_name") or "")
@@ -521,15 +558,19 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                        cited_publication_id=cref, source_page=str(fpage or ""), source_fragment=frag,
                        extraction_status=status, note=note)
             rows.append(row)
+            if r.get("plot_observation"):
+                plot_ids.add(row["result_id"])
             validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
     if cells:
         relink(rows, cells)
-    _fill_ids(rows, out)
+    _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out)
+    _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
     groups: dict[tuple, list[dict]] = defaultdict(list)
     for r in rows:
-        if r["extraction_status"] == "extracted" and r["metric_value"] and r["experiment_id"] and r["config_id"] and r["dataset_id"]:
+        if (r["result_id"] not in plot_ids and r["extraction_status"] == "extracted" and r["metric_value"]
+                and r["experiment_id"] and r["config_id"] and r["dataset_id"]):
             key = tuple(r[c] for c in ("experiment_id", "config_id", "dataset_id", "task_id", "metric_name", "metric_variant",
                                         "metric_group", "metric_direction", "metric_k", "metric_unit", "aggregation",
                                         "sample_size", "result_origin", "cited_publication_id", "baseline_value"))

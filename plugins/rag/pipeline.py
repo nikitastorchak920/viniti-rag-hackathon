@@ -60,9 +60,10 @@ def _header(lines: list[str], idx: int) -> list[str]:
 
 
 def _dedupe(rows: list[dict]) -> list[dict]:
+    # Overlapping text slices can repeat a row. Different study contexts can share the same literal.
     seen, out = set(), []
     for r in rows:
-        k = (r.get("config_id"), r.get("dataset_id"), r.get("metric_name"), r.get("raw_value"), r.get("source_fragment"))
+        k = tuple(sorted((field, value) for field, value in r.items() if field != "note"))
         if k not in seen:
             seen.add(k)
             out.append(r)

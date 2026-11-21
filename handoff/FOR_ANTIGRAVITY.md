@@ -1,51 +1,38 @@
 # PROMPT FOR ANTIGRAVITY
 
-After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGRAVITY.md`. Run the newest task without a matching report. If none is pending, wait. Keep credentials, PDFs, caches, generated bundles, and full logs local.
+After `git pull --ff-only origin main`, run the newest task without a matching report in `handoff/FROM_ANTIGRAVITY.md`. Keep credentials, PDFs, caches, and generated bundles local. This task supersedes the unreported `STRICT-DEV-001` investigation.
 
 ## Open tasks
 
-**Paused after R1.1.** Read `handoff/STRICT_F1_STATE.md` for the Recall-first audit and opt-in recovery measurement. Wait for operator approval before starting the queued task below or any extraction changes. The next proposed step is R1.2 in `TODO.md`.
+### RECALL-DEV-001 · Validate offline recall on the full 21-paper cache
 
-### STRICT-DEV-001 · Audit dense-table coverage and compare the two D013 caches
+Compare the current default export against its optional vector and table recovery. Use the same complete cache in both commands and keep the jury demo `out_dev/` intact. Prefer the complete `out_dev_domain2_scan_cache` from the last handoff; record any fallback to the original full `cache/`. Use zero API tokens. Keep the configured LLM unchanged. Do not run the 111-paper test set.
 
-Work from the project Python environment in PowerShell. This is a **zero-token** checkpoint. Preserve the accepted `out_dev/`, `cache/`, and `out_dev_domain2_scan_cache/`. Use fresh output folders. Skip live extraction and the 111-paper test run.
+```powershell
+git pull --ff-only origin main
+git rev-parse --short HEAD
+if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
+    $env:Path = "C:\Program Files\Tesseract-OCR;$env:Path"
+}
+$benchCache = 'out_dev_domain2_scan_cache'
+if (-not (Test-Path $benchCache)) { $benchCache = 'cache' }
+python -m pytest tests/test_core.py
+python main.py --input dev --cache $benchCache --output out_dev_recall21_default --rebuild-csv-only --ocr
+python main.py --input dev --cache $benchCache --output out_dev_recall21_candidate --rebuild-csv-only --ocr --recover-table-cells --recover-plot-points
+foreach ($bundle in 'out_dev_recall21_default','out_dev_recall21_candidate') {
+    python tools/check_submission.py $bundle dev --ocr --json-report "$bundle/validation.json"
+    Write-Output "Checker exit $LASTEXITCODE"
+    python scripts/evaluate.py $bundle dev_gold --show-diffs 20
+    Write-Output "Evaluator exit $LASTEXITCODE"
+}
+```
 
-1. **Find where D014 loses coverage.** Measure D014 separately. The latest report shows 91 scored predictions against 11,760 gold tuples and zero Strict TP. Compare the exported and gold row counts grouped by PDF page and table. For the three largest gaps, inspect the original PDF locally and report the PDF page, table or figure label, visible row/column axes, numerical density, and whether the existing cache window returned zero rows, sampled a large table, or emitted rows with mismatched context. Distinguish a genuine missed table from repeated or analysis-heavy gold rows. Propose the smallest generic extraction intervention and the exact pages or windows to target. Use gold only to measure the gaps.
+Record coverage, scored predictions, Strict and Loose R/P/F1 and TP, structural errors, review item categories, runtime, and any per-paper regression. For D014, spot-check several vector observations from at least two figures against printed linear axis ticks and verify that the selected dataset and any credited generator appear in the panel title. The checker only confirms the caption text. Report unsupported context, calibration discrepancies, repeated series, and points without complete configuration separately. Leave the jury bundle untouched.
 
-   ```powershell
-   git pull --ff-only origin main
-   git rev-parse --short HEAD
-   python scripts/evaluate.py out_dev dev_gold --only D014 --show-diffs 20
-   ```
+Prepend `## RECALL-DEV-001` with your findings and tested commit to `handoff/FROM_ANTIGRAVITY.md`. Push only the report. If a local tool or complete cache is missing, report the blocker and whatever evidence is available.
 
-2. **Measure the D013 regression under the same OCR checker.** The old cache retained 28 Strict TP and the live OCR cache retained 2. Rebuild both with the current code and the same Tesseract settings. Use a one-PDF input folder for the checker so a scoped export does not create spurious missing-publication errors.
-
-   ```powershell
-   if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
-       $env:Path = "C:\Program Files\Tesseract-OCR;$env:Path"
-   }
-   tesseract --version
-   $d013Input = 'out_dev_strict_d013_input'
-   New-Item -ItemType Directory -Path $d013Input -Force | Out-Null
-   Copy-Item -LiteralPath dev/D013.pdf -Destination $d013Input
-   python main.py --input $d013Input --output out_dev_strict_d013_old --cache cache --rebuild-csv-only --ocr
-   python main.py --input $d013Input --output out_dev_strict_d013_live --cache out_dev_domain2_scan_cache --rebuild-csv-only --ocr
-   foreach ($bundle in 'out_dev_strict_d013_old','out_dev_strict_d013_live') {
-       python tools/check_submission.py $bundle $d013Input --ocr --json-report "$bundle/validation.json"
-       $LASTEXITCODE
-       python scripts/evaluate.py $bundle dev_gold --only D013 --show-diffs 20
-       $LASTEXITCODE
-   }
-   ```
-
-   Compare numeric rows, strict and loose TP/F1, matched/requested quotes, and missing IDs by field. Identify whether the old cache preserves strict matches under the current OCR verifier and summarize where the newer extraction lost valid rows. Report the trade-off without promoting either cache.
-
-3. **Publish evidence.** Prepend `## STRICT-DEV-001` to `handoff/FROM_ANTIGRAVITY.md` with the tested commit, status, command exit codes, D014 page/table gap summary, D013 comparison, and recommended next experiment. Use short redacted examples. Push only that file:
-
-   ```powershell
-   git add -- handoff/FROM_ANTIGRAVITY.md
-   git commit --only -m "Report STRICT-DEV-001 verification" -- handoff/FROM_ANTIGRAVITY.md
-   git push origin main
-   ```
-
-If `main` advanced, rebase and preserve existing replies. Report blockers if a required cache or Tesseract is missing.
+```powershell
+git add -- handoff/FROM_ANTIGRAVITY.md
+git commit --only -m "Report RECALL-DEV-001 full-cache benchmark" -- handoff/FROM_ANTIGRAVITY.md
+git push origin main
+```
