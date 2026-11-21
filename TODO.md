@@ -1,47 +1,25 @@
-# TODO: Пайплайн извлечения данных RAG (Кейс ВИНИТИ РАН + ЮФУ)
+# RAG extraction roadmap
 
-## ЖЁСТКИЕ ПРАВИЛА ДЛЯ CLAUDE:
-1. **Разделение ролей (Сервер -> GitHub -> ПК тиммейта):**
-   - Этот сервер (1 ГБ RAM, 10 ГБ диска) используется **ТОЛЬКО** для чтения текстовых спецификаций (`README_участникам.md`, `submission_template/`, `dev_gold/`, `tools/check_submission.py`), написания кода и пуша в GitHub.
-   - **НЕ ЗАПУСКАЙ** на этом сервере пакетную обработку PDF, `pip install` тяжёлых библиотек (`pandas`, `streamlit`, `tesseract`, `torch`) и локальный OCR. Все запуски прогонов PDF и проверок будут выполняться на ПК тиммейта через `git pull`.
-   - Пиши весь код строго кроссплатформенно (используй `pathlib`, UTF-8 без привязки к Linux-путям), чтобы он без правки запускался и на Windows, и на Linux, с минимальным набором лёгких пакетов (`google-genai`, `pydantic`, `pymupdf`, `python-dotenv`, `rapidfuzz`).
-2. **Обязательный чекпоинт после КАЖДОГО шага:**
-   - Отмечай выполненные подзадачи `[ ]` прямо в этом файле `TODO.md`.
-   - Выполняй `git add . && git commit -m "<осмысленное сообщение>" && git push` (если `remote` не настроен — проверь `git remote -v` и сообщи пользователю).
-3. **Правила кейса ВИНИТИ РАН:**
-   - Никогда не выдумывай отсутствующие в статье значения (`""` / `null`).
-   - Всегда кэшируй сырой JSON-ответ LLM в `cache/<doc_id>.json`, чтобы пересобирать CSV (`--rebuild-csv-only`) без повторных запросов к API и траты токенов.
+## Phase 1 · Jury-ready working MVP
 
----
+Deliver a complete seven-table `out_dev/` bundle, a working local explorer, and a passport that describes the verified data. The operator reviews a demo checkpoint after each task.
 
-## Выполнено (Шаги 1–3 и доп. работы)
-- [x] **Шаг 1.** Схема, эталон и валидатор изучены; `.gitignore`, `.env.example`, лёгкий `requirements.txt`.
-- [x] **Шаг 2.** Архитектура `core/` + `plugins/rag/`: `pdf_processor`, `llm_client` (Gemini + `DeepSeekClient`), `schemas`, `prompts`, `pipeline`, `exporter`, CLI `main.py` (`--only`, `--force`, `--rebuild-csv-only`, `--window`, `--pdf-mode`, `--skip-scans`, `--local`, `--ocr-json`).
-- [x] **Шаг 3.** `scripts/evaluate.py` (P/R/F1, пропущенные публикации = recall 0, отдельный F1 без `D014`) и инструкция для ПК в `README.md`.
-- [x] **Входы без API:** `--local` (PyMuPDF + regex), OCR-JSON адаптер `plugins/rag/ocr_adapter.py` (id из имени файла, перезапись `ocr_json`), `scripts/merge_cache.py` (проверка `version==2`, `n_pages`, `meta.publication`).
-- [x] **Надёжность LLM-клиентов:** прокси `DEEPSEEK_BASE_URL` (TokenWave), ретраи SSL/EOF/`URLError`/`HTTPException`/`OSError`, снятие ```json-обёртки, `preflight()`, `DEEPSEEK_FREQUENCY_PENALTY` (по умолчанию 0).
-- [x] **Устойчивость к обрезке вывода:** `TruncatedResponseError` → деление окна страниц пополам → деление одной страницы по строкам (перекрытие 4 строки, рекурсивно, дедупликация); компактный JSON в промпте.
-- [x] **Валидация и экспорт:** Pydantic-валидация ответов до `save_cache`, приведение `"3"`→3 и `"false"`→false, заглушки в `publications.csv` для `SKIPPED_SCAN`/`FAIL`, потоковая запись CSV (`TableWriter`), безопасные `uniq_ids`.
-- [x] **UI и документация:** `app/index.html` + `scripts/serve_ui.py`, `DATASET_PASSPORT.md`.
-- Код проверяется синтетическими тестами. Реальные прогоны `dev/` выполняются на ПК тиммейта; результаты последнего прогона описаны в 4.2d.
+- [ ] **1.1 Pipeline stability and clean dev run.** Verify that D002, D009, D013, and D021 finish with numeric rows and that all 21 dev publications are accounted for. Verify that failure and skip placeholders remain visible, count as unresolved scope, and block MVP sign-off. The local cache rebuild processed 17 publications and flagged four. The checker reported zero structural errors and 273 review items. Live OCR and source checks remain pending.
+  - **Demo checkpoint.** Rebuild from cache, then run `python tools/check_submission.py out_dev dev --ocr`. Show the per-paper status, extracted counts for the four IDs, and the checker result. Resolve review findings before a clean pass.
+- [x] **1.2 Interactive explorer and dataset passport.** Verified the rebuilt seven-table bundle in Microsoft Edge, including combined paper/dataset/metric filters, issue filtering, source pages and quotes, and the four unprocessed flags. `DATASET_PASSPORT.md` records measured partial-cache statistics, provenance, and validation findings. Refresh the counts at sign-off after teammate verification.
+  - **Demo checkpoint.** Run `python scripts/serve_ui.py out_dev`, open `http://127.0.0.1:8000/`, and show a filtered result with its source quote and an issue. Compare UI row counts with the validation report.
+- [ ] **1.3 MVP sign-off.** Confirm the complete `out_dev/` package for all 21 dev PDFs, a clean checker result, working local UI, and an up-to-date passport. Obtain the operator's sign-off before Phase 2.
+  - **Demo checkpoint.** Rebuild the verified package without API use and repeat the jury walkthrough from the delivered bundle.
 
----
+## Phase 2 · Strict F1 and final defense
 
-## Шаг 4. Качество извлечения и подготовка к проверке
-- [x] **4.1. Параллельное выполнение (`--workers N`).** Добавить потокобезопасный `--workers` (по умолчанию 4) через `ThreadPoolExecutor` в `main.py` / `plugins/rag/pipeline.py`: параллелить окна страниц и/или документы; блокировки на чтение/запись кэша, счётчики токенов `DeepSeekClient`/`GeminiClient` и общий лог прогресса; сохранить порядок строк в CSV (детерминированный). Проверка: фейковый клиент, `--workers 1` и `--workers 4` дают одинаковые CSV.
-- [x] **4.2. Исправление проблем `check_submission` и `dev_gold`.** Разобрать причины провалов `tools/check_submission.py` и `scripts/evaluate.py` по логам реального прогона `dev/` (`unverified` цитаты, расхождения шкал, пропавшие ссылки, потеря шапки таблицы при делении страницы по строкам) и доработать `plugins/rag/prompts.py` и `plugins/rag/exporter.py` для максимального F1 и кода выхода 0.
-- [x] **4.2b. F1-выравнивание с dev_gold:** `rag_variant` без generator/retriever (промпт + `strip_names`), исчерпывающее извлечение таблиц, отбрасывание нечисловых результатов, заполнение id у primary (`_fill_ids`). Перепрогнать D001/D003 на ПК тиммейта и сверить `evaluate.py`.
-- [x] **4.2c. Глубокий апгрейд (dev_gold-аудит):** few-shot + in_scope-рубрика в `prompts.py`; нормализация (`canon_metric`, `k_from_name`, `strip_names`), multi-key линковка id, нечисловые → `issues.csv` (`non_numeric_result`) в `exporter.py`; `--verify-pass` (`pipeline.verify_pass`, кэш `verify`); `tests/test_core.py` (16 тестов, без PDF). Осталось на ПК: прогон D001–D021, `evaluate.py`, `check_submission.py` с PDF.
-- [x] **4.2d. Разбор dev-прогона:** коэрсия `Result` в `schemas.py` (D009), маска `[模型名称已隐藏]`→GPT, stub `in_scope=true`, промпт (гранулярные datasets, полные имена метрик, k, нотация generator), `--ocr` (`core/ocr.py`). Нужен перепрогон D002/D004/D005/D008/D009/D010/D012/D015/D017–D021 с новым промптом (`--force`) и `--ocr` для сканов.
-- [x] **4.3. OCR, сетевые повторы и диагностика strict/loose.** `--ocr` проверяет страницы со слабым текстовым слоем, в том числе в смешанных PDF. При недоступном Tesseract, ошибке или пустом/недостаточном тексте Gemini в режиме `auto` переходит на исходный PDF с предупреждением; DeepSeek сообщает `SKIPPED_SCAN`. Для статьи в области исследования с 0 сырых результатов выводится предупреждение. Прямые и обёрнутые `RemoteProtocolError` распознаются как повод для повтора. `scripts/evaluate.py --show-diffs N` выводит до `N` расхождений полей строгого ключа среди совпадений по loose-ключу (по умолчанию 20; `0` выводит только счётчики). Проверено: `pytest tests/test_core.py` — 23 теста; синтетические проверки CLI и пересборки CSV из кэша версии 2. Реальная проверка D021 остаётся в 4.5.
-- [ ] **Согласование 4.4.** Получить одобрение плана от ревьюера перед реализацией 4.4a–4.4d. Для всех подпунктов сохранить `CACHE_VERSION = 2` и пересборку из старых кэшей без API; правила должны работать без привязки к идентификаторам статей, датасетам или моделям из `dev_gold/`.
-- [ ] **4.4a. Динамические поднаборы и варианты.** В `plugins/rag/schemas.py`, `prompts.py` и `exporter.py` добавить `dataset_label` для подкорпусов, доменов и сплитов и `variant_label` для абляций и переборов параметров. Проверка: различающиеся метки из синтетической таблицы дают отдельные сущности и корректные ссылки в `results.csv`; старый кэш без этих полей успешно пересобирается.
-- [ ] **4.4b. Контекст при делении плотной страницы.** В `plugins/rag/pipeline.py` сохранить заголовок раздела и две строки перед таблицей вместе с её шапкой внутри `[TABLE HEADER CONTEXT...]`. Проверка: в синтетическом примере продолжение таблицы получает этот контекст после разбиения, а строки контекста не используются как источник значений или цитат.
-- [ ] **4.4c. Наследование идентификаторов внутри таблицы.** В `plugins/rag/exporter.py` расширить `_fill_ids`, чтобы восстанавливать пустые `dataset_id` и `config_id` по однозначному контексту строк/столбцов той же `source_table` внутри публикации. Проверка: однозначные пропуски заполняются, явные ссылки сохраняются, конфликтующие кандидаты или другая таблица не дают подстановки.
-- [ ] **4.4d. Статус области исследования при `FAIL`.** Удалить заглушку `in_scope=true` или явно помечать отсутствие решения для неуспешных документов. Согласовать представление со схемой CSV и `tools/check_submission.py`. Проверка: на синтетической смеси обработанных статей и `FAIL` сбой виден в отчёте и не считается положительным решением `in_scope`; проверить случай сбоя статьи вне области исследования.
-- [ ] **4.5. Синхронизация UI и проверка на ПК тиммейта.** Обновить `app/index.html` и `DATASET_PASSPORT.md` по итогам 4.4. На ПК тиммейта повторно обработать D021 с `--force --ocr`, сохранить выбранный режим, предупреждения и число строк, сверить с `dev_gold/`. Затем прогнать все 21 статью `dev/`, проверить семь CSV через `tools/check_submission.py` и зафиксировать метрики `scripts/evaluate.py`, включая strict/loose и расхождения по полям. Полный прогон `test/` и его приёмка описаны в шаге 5.
+Close the loose-to-strict matching gap with general rules. Use `dev_gold/` to measure progress and keep cache v2 rebuilds compatible.
 
-## Шаг 5. Прогон 111 статей `test/` на ПК тиммейта
+- [ ] **2.1 Granular sub-datasets and ablation variants.** Add `dataset_label` and `variant_label` in `schemas.py`, `prompts.py`, and `exporter.py`. Register sub-corpora, splits, and ablation or sweep qualifiers directly from table rows and headers.
+  - **Demo checkpoint.** Show distinct entities and valid links for a synthetic table. Rebuild a legacy cache, then compare the same targeted dev IDs with strict/loose F1 and `--show-diffs`.
+- [ ] **2.2 Dense table context and ID inheritance.** Preserve the section heading and two pre-table lines inside `[TABLE HEADER CONTEXT...]` when `TruncatedResponseError` splits a page. In `_fill_ids`, carry unambiguous `dataset_id` and `config_id` across sibling rows or columns of the same `source_table`.
+  - **Demo checkpoint.** Show a split-table case with intact context and correct links. Confirm that explicit IDs survive, conflicting candidates stay unresolved, and context lines supply no duplicate values or quotations.
+- [ ] **2.3 Full test extraction and final defense pack.** After operator approval, process all 111 `test/` PDFs on the teammate laptop and validate `out_test/` against those PDFs. Refresh the dataset passport and local UI demo data. Prepare a jury executive report with coverage, validation results, dev strict/loose F1, and known limitations.
+  - **Demo checkpoint.** Show input coverage, a clean checker result, an offline rebuild, and a jury walkthrough using the final local bundle.
 
-- [ ] **5.1. Допуск к прогону.** Завершить 4.4a–4.4d, синхронизацию UI и документации и проверку `dev/` из 4.5. Перед запуском `test/` получить явное разрешение пользователя.
-- [ ] **5.2. Прогон и приёмка.** Обработать 111 PDF на ПК тиммейта и проверить семь CSV через `tools/check_submission.py` с каталогом `test/`. Сверить покрытие по идентификаторам PDF, зафиксировать `FAIL`, `SKIPPED_SCAN`, статьи вне области исследования и неразрешённые проверки источников. Подтвердить, что результаты воспроизводятся через `--rebuild-csv-only`, и закрыть проверку 4.5 после приёмки.
+Existing foundations include Gemini OCR-to-PDF fallback, DeepSeek scan handling, network retries, zero-row diagnostics, cache-backed extraction and `--show-diffs N`.

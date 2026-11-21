@@ -88,8 +88,10 @@ class Misc(unittest.TestCase):
     def test_masked_vendor_token(self):
         self.assertEqual(exporter.canon_space("[模型名称已隐藏]-4o-mini"), "GPT-4o-mini")
 
-    def test_stub_in_scope_true(self):
-        self.assertEqual(exporter.stub_publication("D002")["in_scope"], "true")
+    def test_unprocessed_publication_is_not_an_in_scope_prediction(self):
+        stub = exporter.stub_publication("PENDING")
+        self.assertEqual(stub["in_scope"], "false")
+        self.assertEqual(stub["exclusion_reason"], "Unprocessed: no scope decision")
 
     def test_schema_coercion(self):
         try:
@@ -265,6 +267,29 @@ class EvaluationDiffs(unittest.TestCase):
 
 
 class SubmissionCompliance(unittest.TestCase):
+    def test_rebuild_marks_missing_and_empty_extractions_as_unprocessed(self):
+        import check_submission as cs
+        from main import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            source, cache_dir, output = root / "input", root / "cache", root / "out"
+            source.mkdir()
+            for pid, results in [("GOOD", [result()]), ("EMPTY", []), ("MISSING", None)]:
+                (source / f"{pid}.pdf").touch()
+                if results is not None:
+                    cache = make_cache(results)
+                    cache.update(version=2, complete=True, mode="pdf")
+                    llm_client.save_cache(cache_dir, pid, cache)
+            self.assertEqual(main(["--input", str(source), "--output", str(output),
+                                   "--cache", str(cache_dir), "--rebuild-csv-only"]), 1)
+            report = cs.validate(output, source, page_reader=lambda _: [TEXT, ""])
+            self.assertEqual(report["errors"], [])
+            self.assertEqual(report["exit_code"], 2)
+            for pid in ("EMPTY", "MISSING"):
+                self.assertTrue(any(w.startswith(f"{pid}: unprocessed publication") for w in report["warnings"]))
+            self.assertEqual(report["rows"]["results"], 1)
+
     def test_check_submission_no_errors_no_review(self):
         import check_submission as cs
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204", config_id="", dataset_id=""),

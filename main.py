@@ -144,11 +144,13 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         for pdf in pdfs:
+            if pdf.stem in failed or pdf.stem in skipped:
+                stub(pdf.stem)
+                continue
             cache = load_cache(a.cache, pdf.stem)
             if not cache.get("complete"):
-                if pdf.stem not in skipped and pdf.stem not in failed:
-                    log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
-                    failed.append(pdf.stem)
+                log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
+                failed.append(pdf.stem)
                 stub(pdf.stem)
                 continue
             pages_norm = None
@@ -161,6 +163,13 @@ def main(argv: list[str] | None = None) -> int:
                 doc = exporter.build_doc(pdf.stem, cache, pages_norm, log)
             except Exception as exc:  # noqa: BLE001
                 log(f"{pdf.stem}: FAIL - export error {type(exc).__name__}: {exc}")
+                failed.append(pdf.stem)
+                stub(pdf.stem)
+                continue
+            if doc["publications"][0]["in_scope"] == "true" and not any(
+                r["extraction_status"] == "extracted" and r["metric_value"] for r in doc["results"]
+            ):
+                log(f"{pdf.stem}: FAIL - in-scope publication has no exportable numeric results (review extraction)")
                 failed.append(pdf.stem)
                 stub(pdf.stem)
                 continue
@@ -180,7 +189,8 @@ def main(argv: list[str] | None = None) -> int:
     if skipped:
         log(f"SKIPPED_SCAN: {len(skipped)} document(s): {', '.join(skipped)}")
     if failed:
-        log(f"INCOMPLETE: {len(failed)} document(s) failed and are missing from CSV: {', '.join(failed)}")
+        log(f"INCOMPLETE: {len(failed)} document(s) failed: {', '.join(failed)}")
+    if stubs:
         return 1
     return 0
 

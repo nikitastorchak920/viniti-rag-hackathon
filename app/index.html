@@ -18,7 +18,7 @@ th{background:#eef1f5;position:sticky;top:0}tr.r:hover{background:#eef6ff;cursor
 <select id="fpub"><option value="">все публикации</option></select>
 <select id="fmetric"><option value="">все метрики</option></select>
 <select id="fdata"><option value="">все датасеты</option></select>
-<select id="fscope"><option value="">in_scope: все</option><option>true</option><option>false</option></select>
+<select id="fscope"><option value="">все статусы области</option><option value="true">в области</option><option value="false">вне области</option><option value="unprocessed">не обработано</option></select>
 <select id="fmodel"><option value="">все модели/конфигурации</option></select>
 <select id="fcheck"><option value="">все правила (issues)</option></select>
 <select id="forig"><option value="">primary+cited</option><option>primary</option><option>cited</option></select>
@@ -28,7 +28,7 @@ th{background:#eef1f5;position:sticky;top:0}tr.r:hover{background:#eef6ff;cursor
 </main>
 <script>
 const T=["publications","configurations","datasets","tasks","experiments","results","issues"];
-const D={};let cur="results";
+let D={},cur="results";
 function parse(s){const rows=[];let r=[],f="",q=false;s=s.replace(/^﻿/,"");
 for(let i=0;i<s.length;i++){const c=s[i];
  if(q){if(c=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
@@ -36,12 +36,21 @@ for(let i=0;i<s.length;i++){const c=s[i];
  else if(c=='\n'||c=='\r'){if(c=='\r'&&s[i+1]=='\n')i++;r.push(f);f="";rows.push(r);r=[]}else f+=c}
 if(f||r.length){r.push(f);rows.push(r)}
 const h=rows.shift()||[];return rows.filter(x=>x.length>1).map(x=>Object.fromEntries(h.map((k,i)=>[k,x[i]||""])))}
+function loadBundle(data){
+ const missing=T.filter(t=>!(t in data));
+ D=missing.length?{}:data;
+ init();
+ if(missing.length)document.getElementById("stat").textContent="Нет файлов: "+missing.map(t=>t+".csv").join(", ");
+}
 window.addEventListener("load",async()=>{
- for(const t of T){try{const r=await fetch("data/"+t+".csv");if(r.ok)D[t]=parse(await r.text())}catch(e){}}
- if(Object.keys(D).length)init()});
+ if(location.protocol==="file:")return;
+ const data={};
+ await Promise.all(T.map(async t=>{try{const r=await fetch("data/"+t+".csv");if(r.ok)data[t]=parse(await r.text())}catch(e){}}));
+ loadBundle(data)});
 document.getElementById("files").onchange=async e=>{
- for(const f of e.target.files){const n=f.name.replace(/\.csv$/,"");if(T.includes(n)&&f.name.endsWith(".csv"))D[n]=parse(await f.text())}
- init()};
+ const data={};
+ for(const f of e.target.files){const n=f.name.replace(/\.csv$/,"");if(T.includes(n)&&f.name.endsWith(".csv"))data[n]=parse(await f.text())}
+ loadBundle(data)};
 function uniq(rows,k){return [...new Set(rows.map(r=>r[k]).filter(Boolean))].sort()}
 function fill(id,vals,all){const s=document.getElementById(id);s.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option>${esc(v)}</option>`).join("")}
 function esc(x){return String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -53,22 +62,29 @@ function init(){
  fill("fcheck",uniq(D.issues||[],"check_name"),"все правила (issues)");
  fill("fmetric",uniq(R,"metric_name"),"все метрики");fill("fdata",uniq(D.datasets||[],"dataset_name"),"все датасеты");
  document.getElementById("tabs").innerHTML=T.map(t=>`<button data-t="${t}" class="${t==cur?"on":""}">${t}</button>`).join("");
- document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{cur=b.dataset.t;init()});
+ document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
+  cur=b.dataset.t;document.querySelector("#tabs .on").classList.remove("on");b.classList.add("on");render()});
  render()}
 ["q","fpub","fmetric","fdata","forig","fstat","fscope","fmodel","fcheck"].forEach(id=>document.getElementById(id).oninput=render);
 function render(){
  const rows=D[cur]||[],v=id=>document.getElementById(id).value,q=v("q").toLowerCase();
- const scope={};(D.publications||[]).forEach(p=>scope[p.publication_id]=p.in_scope);
+ document.getElementById("detail").style.display="none";
+ ["fmetric","fdata","fmodel","forig","fstat"].forEach(id=>document.getElementById(id).hidden=cur!=="results");
+ document.getElementById("fcheck").hidden=cur!=="issues";
+ const scope=new Map((D.publications||[]).map(p=>[p.publication_id,p.exclusion_reason==="Unprocessed: no scope decision"?"unprocessed":p.in_scope]));
  const cfn={};(D.configurations||[]).forEach(c=>cfn[c.publication_id+"|"+c.config_id]=c.rag_variant+(c.generator_model?" | "+c.generator_model:""));
  const dsn={};(D.datasets||[]).forEach(d=>dsn[d.publication_id+"|"+d.dataset_id]=d.dataset_name);
- const out=rows.filter(r=>(!v("fpub")||r.publication_id==v("fpub"))&&(!v("fscope")||scope[r.publication_id]==v("fscope"))&&
+ const out=rows.filter(r=>(!v("fpub")||r.publication_id==v("fpub"))&&(!v("fscope")||scope.get(r.publication_id)==v("fscope"))&&
   (cur!="issues"||!v("fcheck")||r.check_name==v("fcheck"))&&(cur!="results"||!v("fmodel")||cfn[r.publication_id+"|"+r.config_id]==v("fmodel"))&&
   (cur!="results"||((!v("fmetric")||r.metric_name==v("fmetric"))&&(!v("fdata")||dsn[r.publication_id+"|"+r.dataset_id]==v("fdata"))&&
    (!v("forig")||r.result_origin==v("forig"))&&(!v("fstat")||r.extraction_status==v("fstat"))))&&
   (!q||Object.values(r).some(x=>x.toLowerCase().includes(q)))).slice(0,3000);
  document.getElementById("cnt").textContent=out.length+" строк (показано до 3000)";
  const cols=rows.length?Object.keys(rows[0]):[];const t=document.getElementById("t");
- t.innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>"+out.map((r,i)=>`<tr class="r" data-i="${i}">`+cols.map(c=>`<td title="${esc(r[c])}">${esc(r[c])}</td>`).join("")+"</tr>").join("");
+ t.innerHTML="<tr>"+cols.map(c=>`<th>${esc(c)}</th>`).join("")+"</tr>"+out.map((r,i)=>`<tr class="r" data-i="${i}">`+cols.map(c=>{
+  const value=c==="in_scope"&&scope.get(r.publication_id)==="unprocessed"?"не обработано":r[c];
+  return `<td title="${esc(value)}">${esc(value)}</td>`}).join("")+"</tr>").join("");
  t.querySelectorAll("tr.r").forEach(tr=>tr.onclick=()=>{const r=out[tr.dataset.i],d=document.getElementById("detail");d.style.display="block";
-  d.textContent=Object.entries(r).filter(e=>e[1]).map(e=>e[0]+": "+e[1]).join("\n")+((cur=="results"||cur=="issues")&&r.source_page?"\n\n→ Источник: "+r.publication_id+".pdf, стр. "+r.source_page+" (с 1)"+(r.source_table?", "+r.source_table:"")+(r.source_section?", раздел "+r.source_section:"")+(r.source_fragment?"\n→ Цитата: «"+r.source_fragment+"»":""):"")})}
+  const fields=Object.entries(r).filter(e=>e[1]).map(([key,value])=>key+": "+(key==="in_scope"&&scope.get(r.publication_id)==="unprocessed"?"не обработано":value));
+  d.textContent=fields.join("\n")+((cur=="results"||cur=="issues")&&r.source_page?"\n\n→ Источник: "+r.publication_id+".pdf, стр. "+r.source_page+" (с 1)"+(r.source_table?", "+r.source_table:"")+(r.source_section?", раздел "+r.source_section:"")+(r.source_fragment?"\n→ Цитата: «"+r.source_fragment+"»":""):"")})}
 </script></body></html>

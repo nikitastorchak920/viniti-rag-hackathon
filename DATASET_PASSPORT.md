@@ -2,6 +2,22 @@
 
 Формат: UTF-8, запятая, десятичная точка, 7 CSV (колонки и порядок — `submission_template/schema.json`). Пустая ячейка = в статье нет сведений (не 0). Ноль пишется `0`. Везде есть `publication_id` (имя PDF без расширения); остальные ключи уникальны внутри публикации. Номер страницы — страница PDF с 1.
 
+## Измеренный снимок dev-пакета
+
+Пересборка существующего кэша версии 2 без API в `out_dev_mvp/` обработала 17 из 21 PDF. D002, D009, D013 и D021 отмечены как необработанные. Этот снимок описывает локальную демонстрацию. Статистику полного `out_dev/` обновим после проверки на ноутбуке с Tesseract.
+
+| Таблица | Строки |
+|---|---:|
+| `publications` | 21 (включая 4 необработанные) |
+| `configurations` | 417 |
+| `datasets` | 84 |
+| `tasks` | 42 |
+| `experiments` | 104 |
+| `results` | 3 955 |
+| `issues` | 1 451 |
+
+Валидатор запущен с PDF и без OCR. Структурных ошибок 0, из 5 406 цитат найдено 5 393. Открыто 273 замечания (256 пропущенных ссылок у результатов, 13 неподтверждённых цитат, 4 необработанные статьи). Код проверки — 2. Файл `out_dev_mvp/validation.json` содержит разбивку и счётчики для сверки с интерфейсом.
+
 ## Таблицы
 | Таблица | Ключ | Содержание |
 |---|---|---|
@@ -31,31 +47,31 @@
 ## Правила валидации (issues.csv; строки не удаляются)
 | check_name | Условие |
 |---|---|
-| metric_scale | любая метрика (кроме разностей) вне [0,1] при `fraction` / вне [0,100] при `%`; либо значение >1 без указанной единицы (шкала не заявлена) |
+| metric_scale | ограниченная метрика (кроме разностей) вне [0,1] при `fraction` или вне [0,100] при `%`; также ограниченная метрика со значением >1 без указанной единицы |
 | metric_k | в названии `@k`, но целое k не определено |
 | percentage_vs_percentage_point | метрики-разности (Δ, improvement, gain…) в `%`: относительные проценты или п.п. — не установлено |
 | metric_k_gt_top_k | `metric_k` больше `top_k` конфигурации (проверить, к какой стадии — поиск или reranker — относится k) |
 | contradiction | расхождение значений одного ключа или противоречия в параметрах внутри статьи |
+| non_numeric_result | исходное значение не удалось представить числом; оно сохранено в замечании вместо строки результата |
 
-Дополнительно экспортёр: неизвестные ссылки на id обнуляются (с пометкой в `note`); строки без допустимой страницы PDF или без локатора источника исключаются с записью в лог; исключённая статья (`in_scope=false`) имеет строку только в publications.csv. Структурная проверка — `tools/check_submission.py` (код 1 — ошибка, 2 — требуется проверка источников); полнота и научная точность отдельно оцениваются `scripts/evaluate.py` по `dev_gold/`.
+Экспортёр очищает неизвестные ссылки на ID и отмечает это в `note`. Строки без допустимой страницы PDF или без локатора источника исключаются с записью в лог. Исключённая статья имеет только строку в `publications.csv`. Для необработанной статьи булево поле сериализуется как `false` с зарезервированной причиной `Unprocessed: no scope decision`. Интерфейс и оценщик показывают её как отсутствие решения по области исследования. Проверяющий скрипт считает её открытым замечанием.
+
+`tools/check_submission.py` проверяет заголовки, типы, ключи и ссылки, согласованность полей и источники. Код 0 означает чистую проверку, 1 — структурные ошибки, 2 — открытые замечания. `scripts/evaluate.py` отдельно сравнивает извлечение с `dev_gold/`.
 
 ## Источники данных и режимы (поле `mode` в `cache/<id>.json`)
 | mode | Источник | Приоритет при слиянии |
 |---|---|---|
-| `text` / `pdf` | LLM (Gemini или DeepSeek), текстовый слой / PDF целиком | 3 |
-| `ocr_json` | OCR-JSON с ПК тиммейта для сканов + правила (без OCR на сервере) | 2 |
+| `text` / `pdf` | Текстовый слой или Tesseract для Gemini и DeepSeek, исходный PDF для Gemini | 3 |
+| `ocr_json` | Импорт готового OCR-JSON со второго ноутбука | 2 |
 | `local` | только PyMuPDF + регулярные выражения (эвристика, не для сдачи) | 1 |
 
-Формат OCR-JSON: `{"publication_id":"D002","pages":[{"source_page":1,"is_scanned":true,"raw_text":"","normalized_text":"","primary_section":"","tables":[{"caption":"Table 1: ...","rows":[["Method","EM"],["X",".31"]]}]}]}`. Цитаты из OCR на сервере не проверяются по PDF (код 2 у `check_submission.py`, либо `--ocr`).
+Формат OCR-JSON: `{"publication_id":"P001","pages":[{"source_page":1,"is_scanned":true,"raw_text":"","normalized_text":"","primary_section":"","tables":[{"caption":"Table 1: ...","rows":[["Method","EM"],["X",".31"]]}]}]}`. Для независимой проверки цитат на сканах запустите `check_submission.py` с `--ocr` и Tesseract.
 
 ## Воспроизведение
 ```powershell
 python -m pip install -r requirements.txt -r tools/requirements.txt
-python main.py --input dev --output out_dev                         # LLM (ключ в .env)
-python main.py --input dev --output out_dev --local --skip-scans    # без API, эвристика
-python main.py --input dev --output out_dev --ocr-json ocr_dev      # + OCR-JSON для сканов
-python scripts/merge_cache.py incoming.zip --input dev --output out_dev   # слияние чужих кэшей + пересборка + проверка
-python tools/check_submission.py out_dev dev --json-report report.json
-python scripts/evaluate.py out_dev dev_gold
-python scripts/serve_ui.py out_dev                                  # UI: http://127.0.0.1:8000/
+python main.py --input dev --output out_dev --rebuild-csv-only
+python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
+python scripts/evaluate.py out_dev dev_gold --show-diffs 20
+python scripts/serve_ui.py out_dev
 ```

@@ -154,6 +154,7 @@ def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, pa
         if pub['in_scope'] not in {'true', 'false'}: err(pid, 'in_scope must be true or false')
         if pub['in_scope'] == 'false' and not pub['exclusion_reason']: err(pid, 'excluded without a reason')
         if pub['in_scope'] == 'true' and pub['exclusion_reason']: err(pid, 'included with an exclusion reason')
+        if pub['exclusion_reason'] == 'Unprocessed: no scope decision': warn(pid, 'unprocessed publication; scope and extraction are unresolved')
     for table, rows in data.items():
         if table == 'publications': continue
         for row in rows:

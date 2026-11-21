@@ -1,58 +1,49 @@
-# RAG: пайплайн извлечения данных из научных PDF (кейс ВИНИТИ РАН + ЮФУ)
+# RAG · извлечение данных из научных PDF
 
-PDF → Gemini (structured JSON) → `cache/<id>.json` → 7 CSV (`publications, configurations, datasets, tasks, experiments, results, issues`) → проверка (`tools/check_submission.py`) и оценка по `dev_gold/` (`scripts/evaluate.py`).
+Пайплайн извлекает измеренные результаты через Gemini или DeepSeek, хранит ответы в `cache/<id>.json` версии 2 и экспортирует семь связанных CSV. Текущий приоритет — демонстрационный MVP на 21 статье `dev/`. Оптимизация строгого F1 и прогон 111 статей `test/` идут после приёмки MVP. План и критерии демонстрации — в [TODO.md](TODO.md).
 
-## Установка (Windows PowerShell или Linux)
+## Работа на двух ноутбуках
+
+- Codex меняет код, проводит ревью, запускает pytest и проверяет изменения пересборкой из кэша без API.
+- Antigravity обновляется из `origin/main`, запускает целевые извлечения и проверки с PDF, ключами и Tesseract. Инструкции и шаблон отчёта лежат в [handoff/](handoff/).
+- Оператор передаёт задания между ноутбуками, принимает демонстрации и подтверждает переход к следующей фазе.
+
+## Установка
+
 ```powershell
-git pull
+git pull --ff-only origin main
 python -m venv venv
-.\venv\Scripts\Activate.ps1        # Linux: source venv/bin/activate
-python -m pip install -r requirements.txt -r tools/requirements.txt
-Copy-Item .env.example .env        # Linux: cp .env.example .env ; затем впишите GEMINI_API_KEY
+.\venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt -r tools/requirements.txt pytest
+Copy-Item .env.example .env
 ```
 
-## Переменные окружения (`.env`)
-| Переменная | По умолчанию | Назначение |
-|---|---|---|
-| `GEMINI_API_KEY` | — (обязательна) | ключ Google AI Studio (`GOOGLE_API_KEY` тоже подходит) |
-| `DEEPSEEK_API_KEY` | — | если нет ключа Gemini: DeepSeek (`deepseek-flash`, `https://api.deepseek.com/chat/completions`, только текст, thinking отключён; токены логируются, 429 с учётом Retry-After; `DEEPSEEK_MODEL`, `DEEPSEEK_MAX_TOKENS`) |
-| `GEMINI_MODEL` | `gemini-3.8-flash` | модель |
-| `GEMINI_MAX_RETRIES` | 6 | повторы при 429/500/502/503/504, таймаутах, обрыве связи, битом JSON |
-| `GEMINI_BACKOFF_BASE` / `GEMINI_BACKOFF_MAX` | 2 / 60 | экспоненциальная пауза (сек) с jitter ×0.5–1.5 |
-| `GEMINI_TIMEOUT_S` | 300 | таймаут одного запроса |
-| `GEMINI_MAX_OUTPUT_TOKENS` | 65536 | лимит ответа |
-| `GEMINI_TEMPERATURE` | 0 | температура |
+На Linux активируйте окружение через `source venv/bin/activate`. Для `--ocr` установите Tesseract с английскими языковыми данными и выполните `python -m pip install pytesseract`. Для API настройте в локальном `.env` ключ `GEMINI_API_KEY` (также подходит `GOOGLE_API_KEY`) или `DEEPSEEK_API_KEY`. Модели, таймауты и число повторов настраиваются через `.env.example`. Ключи, PDF, кэш и результаты остаются вне Git.
 
-## Запуск
+## Проверка и демонстрация
+
 ```powershell
-# смоук-тест: D001 (текстовый PDF) и D002 (скан)
-python main.py --input dev --output out_dev --only D001 D002
-python tools/check_submission.py out_dev dev
-python scripts/evaluate.py out_dev dev_gold --only D001 D002
-
-# весь dev (уже готовые документы берутся из cache/, упавшие докачиваются)
-python main.py --input dev --output out_dev
-python tools/check_submission.py out_dev dev --json-report report_dev.json
-python scripts/evaluate.py out_dev dev_gold
-
-# пересборка CSV без API (после правки exporter.py)
+python -m pytest tests/test_core.py
 python main.py --input dev --output out_dev --rebuild-csv-only
+python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
+python scripts/evaluate.py out_dev dev_gold --show-diffs 20
+python scripts/serve_ui.py out_dev
 ```
-Для сканов (D002, D013, D021) цитаты проверяются только с OCR: `check_submission.py ... --ocr` (нужен Tesseract); иначе — код 2 («не найдено/проверьте по изображению»), это не ошибка.
 
-Коды `main.py`: `0` — все документы OK; `1` — есть FAIL (в CSV попадают только полностью обработанные документы; пустые/битые CSV не пишутся, если нет ни одного документа). Лог по документу: `D001: OK - ...` / `D001: FAIL - причина`. Ошибки API никогда не кэшируются; прогресс (мета + окна страниц) сохраняется, повторный запуск докачивает только недостающее. `--force` — игнорировать кэш.
+Откройте [http://127.0.0.1:8000/](http://127.0.0.1:8000/). В `results` можно совместить фильтры по публикации, датасету и метрике и открыть строку с номером страницы и цитатой. В `issues` доступен фильтр по правилу. В `publications` статус «не обработано» показывает статьи, для которых решение по области исследования отсутствует. Можно также открыть `app/index.html` напрямую и выбрать папку с семью CSV.
 
-Опции: `--window N` (страниц на запрос результатов, по умолчанию 3), `--pdf-mode auto|text|pdf` (auto: сканы шлются в Gemini как PDF и удаляются из облака после ответа).
+Сначала используйте пересборку из существующего `cache/`: она не обращается к API. При необходимости повторите обработку только проблемных документов. Например, для одной статьи:
 
-## Как это устроено
-- `core/pdf_processor.py` — текстовый слой через PyMuPDF, определение скана.
-- `core/llm_client.py` — Gemini, retry/backoff, кэш.
-- `plugins/rag/{schemas,prompts,pipeline,exporter}.py` — схемы, промпты, проход «мета + окна страниц», сборка CSV, нормализация и проверки.
-- Нормализация: `.204`→`0.204` (`fraction` для ограниченных метрик), `%` сохраняется как `%`, секунды→мс, диапазоны не усредняются, `@k`→`metric_k`; цитаты сверяются с текстом страницы (исправление страницы/дословной цитаты при расхождении).
-- Правила проверки (issues.csv): `metric_scale`, `metric_k`, `percentage_vs_percentage_point`, `contradiction`; повторы → `duplicate_of`.
-- Просмотр результата: откройте `app/index.html` в браузере и выберите папку с CSV (`out_dev`).
+```powershell
+python main.py --input dev --output out_dev_retry --only D021 --ocr --workers 1
+```
 
-## Дополнительно
-- Без API: `--local --skip-scans` (эвристика), сканы — через `--ocr-json DIR` (готовые `<id>.json` с ПК, формат в `DATASET_PASSPORT.md`).
-- Слияние кэшей/OCR-JSON тиммейта (папка или .zip): `python scripts/merge_cache.py incoming.zip --input dev --output out_dev` — пересобирает CSV и запускает `check_submission.py`.
-- UI: `python scripts/serve_ui.py out_dev` → http://127.0.0.1:8000/ (поиск, фильтры in_scope/датасет/модель/метрика, источник: страница/таблица/цитата, вкладка issues). Паспорт: `DATASET_PASSPORT.md`.
+`--force` используйте для выбранных ID только при замене завершённого кэша. Gemini в режиме `auto` читает PDF, если OCR недоступен или его текст недостаточен. DeepSeek принимает текст и сообщает `SKIPPED_SCAN`, если его недостаточно. После выборочного запуска пересоберите полный `out_dev/`.
+
+`main.py` возвращает 1 при неполной обработке. Когда есть успешно обработанные документы, частичный пакет содержит явные заглушки для остальных. `check_submission.py` возвращает 0 при чистой проверке, 1 при структурных ошибках, 2 при открытых замечаниях. Описание таблиц, нормализации и статистика — в [DATASET_PASSPORT.md](DATASET_PASSPORT.md).
+
+## Дополнительные режимы
+
+- `--local --skip-scans`: локальные эвристики без API.
+- `--ocr-json DIR`: импорт локальных OCR-JSON.
+- `scripts/merge_cache.py`: объединение локально переданных кэшей и пересборка экспорта.

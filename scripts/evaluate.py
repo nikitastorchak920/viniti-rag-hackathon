@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare a result folder (e.g. out_dev) with dev_gold (stdlib only).
   python scripts/evaluate.py out_dev dev_gold [--only D001 D002]
-Only publications present in the result folder are scored."""
+Missing gold publications count as zero recall."""
 from __future__ import annotations
 
 import argparse
@@ -150,8 +150,10 @@ def main() -> int:
         print(f"  note: {pid} not in gold, skipped")
 
     print("\n== publications.csv: scope decision")
-    ok = sum(1 for p in pubs if p in pr and pr[p]["in_scope"] == gd[p]["in_scope"])
+    unresolved = {p for p in pubs & pr.keys() if pr[p].get("exclusion_reason") == "Unprocessed: no scope decision"}
+    ok = sum(1 for p in pubs - unresolved if p in pr and pr[p]["in_scope"] == gd[p]["in_scope"])
     print(f"in_scope agreement: {ok}/{len(pubs)} = {ok / max(1, len(pubs)):.1%}")
+    print(f"unprocessed (scope unresolved): {len(unresolved)} {', '.join(sorted(unresolved)) or '-'}")
     inc_g = {p for p in pubs if gd[p]["in_scope"] == "true"}
     inc_p = {p for p in pubs if p in pr and pr[p]["in_scope"] == "true"}
     print(f"included: pred {len(inc_p)} vs gold {len(inc_g)}; wrong: {', '.join(sorted(inc_p ^ inc_g)) or '-'}")

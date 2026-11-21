@@ -68,8 +68,8 @@ def to_page(v) -> int:
 
 
 def stub_publication(doc_id: str) -> dict:
-    return {"publication_id": doc_id, "title": doc_id, "year": "", "DOI": "", "authors": "", "in_scope": "true",
-            "exclusion_reason": ""}  # unprocessed: gold prior is in_scope=true (21/21 on dev); no entities/results emitted
+    return {"publication_id": doc_id, "title": doc_id, "year": "", "DOI": "", "authors": "", "in_scope": "false",
+            "exclusion_reason": "Unprocessed: no scope decision"}
 
 
 def as_int(v: str) -> str | None:

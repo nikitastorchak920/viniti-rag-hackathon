@@ -1,42 +1,23 @@
-# Project Rules (Strict Token Economy)
+# Repository workflow
 
-## Role & Division of Labor
-- You are the surgical code executor.
-- Research, architecture design, prompt engineering, and large-file analysis are handled externally. Do NOT spend tokens brainstorming or exploring alternatives unless explicitly asked.
+## Priority and ownership
 
-## Workflow & Context Discipline
-- Execute strictly ONE atomic task at a time (from `TODO.md` or user prompt).
-- If `TODO.md` exists: complete ONLY the first unchecked `[ ]` item, mark it `[x]`, and stop immediately.
-- Never read entire directories or large files blindly. Use targeted search/line ranges or inspect schemas and first 5 lines only.
-- NEVER read raw datasets, `*.pdf`, `*.csv`, `*.xlsx`, `*.parquet`, `*.log`, lockfiles, or large `*.json` files.
+1. Deliver and sign off on a jury-ready MVP before optimizing strict F1.
+2. **OpenAI Codex, Thunderobot 911 laptop** owns code in `core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/` and the pipeline entry point, plus architecture reviews, pytest, the roadmap, and Git checkpoints. It can inspect PDFs and run local tools, OCR, and cache rebuilds where inputs are available.
+3. **Antigravity, second laptop** has the 21 PDFs in `dev/`, 111 PDFs in `test/`, local API credentials, and Tesseract. It pulls `origin/main`, runs the current handoff, and reports results. It never edits source code manually. Its only handoff edit is the English evidence in `handoff/FROM_ANTIGRAVITY.md`.
+4. **Human operator** relays the English handoff through GitHub, reviews a Russian status report and demo checkpoint after every task, and signs off on the MVP before Phase 2.
 
-## Output & Coding Style
-- Be maximally concise. No greetings, no summaries, no "why this works" explanations, no trailing remarks.
-- Write clean, minimal, working MVP code. No over-engineering.
-- Edit only the specific files required for the current task.
-- When fixing errors, state the root cause in 1 line and apply the minimal patch.
+## Language, demos, and checkpoints
 
-## Project Context
-- Goal: Scientific PDF parsing pipeline (table/formula/entity extraction -> exact source linking -> unit normalization -> consistency validation -> search/filter UI).
-- Stack: [TBD]
-- Run / Test commands: [TBD]
+- Communicate with the operator in Russian. Write code and comments, commit messages, `TODO.md`, `handoff/` files, and inter-agent instructions in English. Preserve source quotations in their original language.
+- After each task, update `TODO.md` with the observed checkpoint, run the relevant checks, and commit and push the intended changes to `origin/main`. Stage explicit paths if unrelated files are present.
+- End every operator response with `[ОТЧЁТ ДЛЯ ПОЛЬЗОВАТЕЛЯ / ЧТО МОЖНО ПОСМОТРЕТЬ СЕЙЧАС]` (Russian, up to 10 lines, with the change, a command or URL, serious blockers, and whether the gate passed), followed by `[PROMPT FOR ANTIGRAVITY]` (English, ready to paste).
+- Codex maintains `handoff/FOR_ANTIGRAVITY.md`. Antigravity uses `handoff/FROM_ANTIGRAVITY.md` to report commands, exit codes, counts, redacted findings, and the demo result.
 
-## Server Hardware & Resource Limits (STRICT)
-- The server has ONLY 1 GB RAM and 10 GB disk space.
-- NEVER install heavy libraries (e.g., `pandas`, `torch`, `tensorflow`, `scipy`, local OCR engines like `tesseract`/`easyocr`, or heavy PDF/image suites). Use Python stdlib (`csv`, `json`, `re`, `sqlite3`) and lightweight parsers only.
-- Process files strictly ONE by one in streaming/sequential mode; never load the full dataset or multiple PDFs into memory at once.
-- Immediately delete any temporary files, caches, and intermediate artifacts after processing.
+## Token economy and data safety
 
-## Safe Testing on This VPS (MANDATORY)
-- Before any test run: `free -m && df -h /`. If free RAM < 300 MB or free disk < 1 GB, clean caches/temp files first.
-- Wrap every test execution with limits, e.g. `timeout 60s python3 <script>`.
-- Run in stages: (1) 1-2 PDFs from `dev/`, inspect output; (2) only after Stage 1 succeeds within memory limits, full `dev/` (21 files) validated against `dev_gold/`; (3) NEVER run on `test/` (90 files) until `dev/` fully passes and the user explicitly confirms.
-- Per PDF: open -> extract -> write output to disk -> explicitly close document -> `gc.collect()`.
-- Image-only scans without a text layer: skip immediately and log with a separate status (e.g. `SKIPPED_SCAN`). No OCR or heavy image rendering on this server.
-- Do not keep text dumps or debug artifacts in the repository; clean `/tmp` and caches right after testing.
-- After every test run report concisely: files processed, files skipped, peak RAM, errors, validation mismatches.
-
-## Autonomy & Package Policy
-- Pre-approved: installing lightweight system/Python packages (e.g. `python3-pymupdf`, `pypdf`, `pydantic`) via `apt install -y` or `pip --no-cache-dir`; run `apt clean` / clear pip caches afterwards.
-- Still banned: heavy ML/OCR packages (`torch`, `tensorflow`, `pandas`, `scipy`, `tesseract`, `easyocr`) and running the full 90-file `test/` set without explicit user approval.
-- Do small technical fixes and Stage 1-2 tests autonomously; do not pause to ask for minor confirmations.
+- Always test parser, exporter, and UI changes using `main.py --rebuild-csv-only` against the existing `cache/` before asking for live extraction. This spends zero API tokens. Run `python -m pytest tests/test_core.py` for code changes.
+- Live dev retries must target identified failing or low-F1 papers using `--only`. Use `--force` only for affected IDs whose completed cache must be replaced. Resume partial extractions before forcing a restart. The first full 111-paper test run requires Phase 1 sign-off and operator approval. Resume test failures by ID.
+- Preserve raw per-document cache version 2 and offline rebuild compatibility. Keep the seven CSVs conformant to `submission_template/schema.json`. Use an empty string for missing source evidence. Never guess.
+- Generalize from document structure. Never hardcode dev paper IDs, dataset names, model names, or ablation strings from `dev_gold/` in extraction logic. IDs are allowed in targeted verification commands and their reports.
+- Check `.gitignore` and the staged file list before committing. Never commit `.env`, keys, raw PDFs, `dev/`, `test/`, `cache/`, `out_dev/`, `out_test/`, or raw logs with sensitive material. Use `.env.example` for placeholders.

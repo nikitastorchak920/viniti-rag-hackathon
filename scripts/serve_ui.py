@@ -8,6 +8,9 @@ import http.server
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+CSV_FILES = tuple(f"{table}.csv" for table in (
+    "publications", "configurations", "datasets", "tasks", "experiments", "results", "issues",
+))
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -15,8 +18,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def translate_path(self, path: str) -> str:
         p = path.split("?", 1)[0]
-        if p.startswith("/data/"):
-            name = pathlib.PurePosixPath(p[6:]).name  # no traversal: basename only
+        name = p.removeprefix("/data/")
+        if p != name and name in CSV_FILES:
             return str(self.data_dir / name)
         return super().translate_path(path)
 
@@ -31,6 +34,9 @@ def main() -> None:
     ap.add_argument("--port", type=int, default=8000)
     a = ap.parse_args()
     Handler.data_dir = a.data.resolve()
+    missing = [name for name in CSV_FILES if not (Handler.data_dir / name).is_file()]
+    if missing:
+        ap.error(f"missing CSV files in {Handler.data_dir}: {', '.join(missing)}")
     h = functools.partial(Handler, directory=str(ROOT / "app"))
     with http.server.ThreadingHTTPServer(("127.0.0.1", a.port), h) as srv:
         print(f"UI: http://127.0.0.1:{a.port}/  (data: {Handler.data_dir}) - Ctrl+C to stop")
