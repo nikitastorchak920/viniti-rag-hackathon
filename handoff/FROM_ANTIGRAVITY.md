@@ -21,6 +21,143 @@ Antigravity prepends replies under **Reports** and pushes this file to `origin/m
 
 <!-- Prepend replies here. The template above is not a task response. -->
 
+## RECALL-DEV-001
+
+- Status (`complete` or `blocked`): `complete`
+- Acceptance check: **PASS WITH AUDIT FINDINGS** (zero API tokens spent; `out_dev/` jury bundle and `test/` untouched; `0` structural errors on both bundles; `0` per-paper Strict F1 regressions; `--recover-table-cells` adds `+10` Strict TP on `D007`; `--recover-plot-points` boosts overall Loose Recall `9.5% → 61.8%` / Loose F1 `0.152 → 0.623` (`+10,147` Loose TP) with accurate linear axis calibration, but dilutes overall Strict P/F1 `0.060 → 0.039` because D014 vector rows lack `rag_variant` and add `1,166` missing `config_id` + `704` missing `task_id` review warnings).
+- Git commit (from `git rev-parse --short HEAD`): `dae1acc`
+- Environment, cache, and unit tests:
+  - Cache used: `out_dev_domain2_scan_cache` (all `21/21` complete JSONs from `DOMAIN2-DEV-001`; no fallback to `cache/` needed).
+  - Tesseract: `v5.4.0.20240606` (`C:\Program Files\Tesseract-OCR` prepended to session `PATH`).
+  - `python -m pytest tests/test_core.py`: not installed in `.venv`; ran `python -m unittest discover -s tests -p "test_core.py" -v` → exit **`0`**, **`Ran 44 tests in 1.381s — OK (skipped=1: test_gemini_retries_remote_protocol_error 'httpx missing')`**.
+  - API tokens spent: **`0`** (`--rebuild-csv-only --ocr` only; configured LLM unchanged; `test/` 111 PDFs not touched).
+- **Side-by-side comparison (`out_dev_recall21_default` vs `out_dev_recall21_candidate`, both on `out_dev_domain2_scan_cache`)**:
+  - **Exit codes & runtimes** (note: `default` rebuild elapsed time `379.9s` included laptop sleep/wake; active OCR runtime was similar to `candidate`):
+    - `out_dev_recall21_default`: rebuild exit `0` (`379.9s`), checker `--ocr` exit `2` (`367.8s`), evaluator exit `0` (`1.1s`).
+    - `out_dev_recall21_candidate` (`--recover-table-cells --recover-plot-points`): rebuild exit `0` (`313.4s`; recovered `+34` table cells on `D007` and `+14,124` vector plot observations on `D014`), checker `--ocr` exit `2` (`450.1s`), evaluator exit `0` (`2.8s`).
+  - **Coverage & row counts**:
+    - Both: `21/21` publications (`in_scope agreement = 21/21 = 100.0%`, `stubs=0`).
+    - `default`: `publications=21, configurations=492, datasets=106, tasks=54, experiments=132, results=5079, issues=2608` (scored numeric predictions: `4911`).
+    - `candidate`: `publications=21, configurations=495 (+3: PC1/PC2/PC3), datasets=106, tasks=54, experiments=132, results=19237 (+14158), issues=2634 (+26)` (scored numeric predictions: `19069`, `+14158`).
+  - **Strict & Loose P / R / F1 and TP** (vs `DOMAIN2-DEV-001` baseline `Strict TP=579 / F1=0.048`, `without D014 TP=579 / F1=0.093`, `Loose TP=1721 / F1=0.142`):
+    - **`default` (`dae1acc` without recovery flags — already `+152` Strict TP over `b5cb065`!)**:
+      - `datasets (by name)`: `P=0.604 R=0.266 F1=0.369 (tp=64)`
+      - `models (rag_variant+generator)`: `P=0.419 R=0.044 F1=0.079 (tp=206)`
+      - `Strict value`: **`P=0.149 R=0.038 F1=0.060 (tp=731, pred=4911, gold=19392)`** (`+152 TP` vs `DOMAIN2-DEV-001`!)
+      - `Loose value`: **`P=0.375 R=0.095 F1=0.152 (tp=1842, pred=4911, gold=19392)`** (`+121 TP` vs `DOMAIN2-DEV-001`)
+      - `without D014`: Strict `P=0.152 R=0.096 F1=0.117 (tp=731, pred=4820, gold=7632)`; Loose `P=0.378 R=0.239 F1=0.293 (tp=1824)`
+      - Loose-to-strict mismatches: `Paired rows: 1111; dataset_name=644, rag_variant=467, generator_model=577, metric_k=51`
+    - **`candidate` (`--recover-table-cells --recover-plot-points`)**:
+      - `datasets (by name)`: `P=0.604 R=0.266 F1=0.369 (tp=64)` (`+0`)
+      - `models (rag_variant+generator)`: `P=0.416 R=0.044 F1=0.079 (tp=206, pred=495)` (`+0 TP`, `+3 pred`)
+      - `Strict value`: **`P=0.039 R=0.038 F1=0.039 (tp=741, pred=19069, gold=19392)`** (`+10 TP` vs `default`, `-0.021 F1` due to `+14,124` D014 rows having `0` Strict TP)
+      - `Loose value`: **`P=0.629 R=0.618 F1=0.623 (tp=11989, pred=19069, gold=19392)`** (**`+10,147 TP`**, **`+52.3 pp` Loose Recall**, **`+0.471` Loose F1** vs `default`!)
+      - `without D014`: Strict **`P=0.153 R=0.097 F1=0.119 (tp=741, pred=4854, gold=7632)`** (`+10 TP / +0.002 F1` vs `default`); Loose **`P=0.378 R=0.241 F1=0.294 (tp=1836)`** (`+12 TP`)
+      - Loose-to-strict mismatches: `Paired rows: 11248; dataset_name=4391, rag_variant=10602, generator_model=6498, metric_k=51`
+  - **Per-paper regressions (`default` vs `candidate`)**:
+    - **`0` per-paper Strict F1 regressions!**
+    - `D007` improved `F1=0.276 → 0.283` (`pred=698 → 732`, `+10` Strict TP from `--recover-table-cells`; also vs `b5cb065`, `default` improved `D006` `0.219 → 0.273` and `D007` `0.102 → 0.276`).
+    - All other 20 publications had identical per-paper Strict F1 between `default` and `candidate`.
+  - **Checker structural errors & review item categories (`check_submission.py --ocr`)**:
+    - Structural errors: **`0`** on both `default` and `candidate`.
+    - `default`: `550` review items — `dataset_id=210`, `task_id=165`, `config_id=146`, `quote not found=28`, `quote found on page 9=1`; quotes **`7,639 / 7,668 (99.62%)` matched**, `unresolved=29`.
+    - `candidate`: **`2,420`** review items (`+1,870`) — **`config_id=1,312 (+1,166)`**, **`task_id=869 (+704)`**, `dataset_id=210 (+0)`, `quote not found=28 (+0)`, `quote found on page 9=1 (+0)`; quotes `21,823 / 21,852 (99.87%)` matched (`unresolved=29` — note checker confirms only caption text for vector observations).
+- **D014 Vector Plot Spot-Check (rendered `dev/D014.pdf` pages 5, 6, 13, 14 at 180 DPI and visually inspected printed axis ticks & panel titles)**:
+  - Total D014 vector observations recovered: **`14,124`** across 8 figures (`Figure 2` p.5: `2,442`; `Figure 3` p.6: `3,520`; `Figure 5` p.13: `704`; `Figure 8` p.14: `1,166`; `Figure 9` p.14: `1,166`; `Figure 10` p.16: `2,211`; `Figure 11` p.17: `1,166`; `Figure 12` p.18: `1,749`).
+  - **Calibration against printed linear axis ticks (PASS — accurate on inspected panels)**:
+    - `Figure 2` (p.5): printed linear x/y ticks `0.0, 0.2, 0.4, 0.6, 0.8, 1.0` (`Knowledge Precision`, `Knowledge Recall`); recovered min/max `0.0000..1.0000` across WoW (`231` pts/panel) and HotpotQA (`352` pts/panel). Dataset and credited generator (`GPT-4o-mini`, `LLaMA 3.1 8B`, `Mistral 7B-Instruct`) all appear verbatim in the corresponding panel titles.
+    - `Figure 3` (p.6): printed y-axis (`Answer F1`) ticks are `0.3..0.8` for `HotpotQA GPT-4o-mini` (top dots visibly just above `0.8`, bottom dot at `~0.30`) and `0.1..0.6` for `HotpotQA Mistral 7B-Instruct` (top dots visibly just above `0.6`, bottom dot at `~0.10`). Recovered `Answer F1` ranges are **`0.3015..0.8379`** (`GPT-4o-mini`) and **`0.0987..0.6209`** (`Mistral 7B-Instruct`) — accurate linear calibration! Panel titles verbatim match dataset (`HotpotQA`) and generator.
+    - `Figure 5` (p.13): panel title `Noisy HotpotQA GPT-4o-mini`; printed ticks `0.0..1.0` (`Knowledge Precision`, `Knowledge Recall`); recovered `n=352` each, `0.0000..1.0000`.
+    - `Figure 9` (p.14): panel title `HotpotQA GPT-4o-mini k=3`; printed y-axis visibly peaks just below `1.0` (`~0.96`); recovered `Knowledge Recall max=0.9626` (`n=352`) — accurate!
+  - **Calibration / panel coverage discrepancies**:
+    - `Figure 2` (p.5): `HotpotQA GPT-4o-mini` recovered `Knowledge Precision` (`352`) but **missed `Knowledge Recall` (`0`)**, and `HotpotQA Mistral 7B-Instruct` (bottom-right panel) was **completely missed (`0` rows)**; colorbars (`Answer F1` on Figures 2, 5, 9 and sentence count on Figure 8) are not extracted.
+    - `Figure 3` (p.6): `HotpotQA GPT-4o-mini` emitted `Answer F1` from only 1 of 3 vertical panels (`n=352`), whereas `HotpotQA Mistral 7B-Instruct` emitted `Answer F1` from all 3 vertical panels (`n=1,056`).
+  - **Unsupported / dropped context**:
+    - `Figure 9` (p.14) panel titles explicitly include **`k=3`** (`Wizard of Wikipedia GPT-4o-mini k=3`, `HotpotQA GPT-4o-mini k=3` — length-constrained selection up to 3 sentences), yet those `1,166` rows are credited to the same unconstrained `PC1` (`generator_model='GPT-4o-mini', rag_variant=''`) with `metric_k=''`, losing the `k=3` experimental condition.
+  - **Repeated series**:
+    - Intra-figure: `Figure 3` `HotpotQA Mistral 7B-Instruct` repeats the same `352`-point `Answer F1` series **3x** (`1,056` rows across the KP/KR/KF1 panels).
+    - Cross-figure: `HotpotQA GPT-4o-mini` `Knowledge Precision` (`352` pts) is **100% identical (`352/352` overlap)** between `Figure 2` and `Figure 3` (and substantially overlaps `Figure 8`: `303/352`, `Figure 3 Mistral`: `279/352`); `HotpotQA LLaMA 3.1 8B` KP is identical between `Figure 2` and `Figure 10` (same underlying meta-experiment replotted across figures).
+  - **Points without complete configuration / links**:
+    - **`1,166` rows with `config_id=""`** (all from `Figure 8` p.14, whose panel titles `Wizard of Wikipedia / HotpotQA Number of Knowledge Sentences` legitimately omit any generator model — accounts for 100% of the `+1,166` checker `primary result without config_id` jump).
+    - **`704` rows with `task_id=""`** (all from `Figure 5` p.13 `Noisy HotpotQA` — accounts for 100% of the `+704` checker `primary result without task_id` jump).
+    - **`12,958` rows (`PC1=5137, PC2=4323, PC3=3498`) have `rag_variant=""`** (generator-only configs; `0` missing `dataset_id`, `0` missing `experiment_id`). Because every D014 vector row lacks `rag_variant` (and `Wizard of Wikipedia` vs gold `WoW`), `D014` contributes **`+10,135` Loose TP** but **`0` Strict TP**, explaining the global Strict F1 dilution (`0.060 → 0.039`).
+- **Exact `scripts/evaluate.py out_dev_recall21_candidate dev_gold --show-diffs 20` Output**:
+  ```text
+  Scored publications: 21 (D001, D002, D003, D004, D005, D006, D007, D008, D009, D010, D011, D012, D013, D014, D015, D016, D017, D018, D019, D020, D021)
+  MISSING from result (recall=0): 0 -
+
+  == publications.csv: scope decision
+  in_scope agreement: 21/21 = 100.0%
+  unprocessed (scope unresolved): 0 -
+  included: pred 21 vs gold 21; wrong: -
+
+  == row counts (result vs gold, scored pubs only)
+  publications         21 vs      21  (+0)
+  configurations      495 vs    4733  (-4238)
+  datasets            106 vs     241  (-135)
+  tasks                54 vs      90  (-36)
+  experiments         132 vs     142  (-10)
+  results           19237 vs   37616  (-18379)
+  issues             2634 vs     134  (+2500)
+
+  == Precision / Recall / F1
+  datasets (by name)                                         P=0.604 R=0.266 F1=0.369  (tp=64, pred=106, gold=241)
+  models (rag_variant+generator)                             P=0.416 R=0.044 F1=0.079  (tp=206, pred=495, gold=4733)
+  metric values (strict: dataset+model+metric+k+value)       P=0.039 R=0.038 F1=0.039  (tp=741, pred=19069, gold=19392)
+  metric values (loose: metric name+value)                   P=0.629 R=0.618 F1=0.623  (tp=11989, pred=19069, gold=19392)
+
+  == loose matches that fail strict matching
+    D001 em=0.172: rag_variant pred='threadrag w o stm llm extracted triplets' gold='threadrag ablation no sn no stg no edp'
+    D001 em=0.206: rag_variant pred='graph free' gold='graph free controlled graph free ablation'
+    D001 em=0.224: rag_variant pred='threadrag w o stm llm extracted triplets' gold='threadrag ablation no sn no stg no edp'
+    D001 em=0.232: rag_variant pred='threadrag w o sn fixed length chunks' gold='threadrag ablation edp only no sn or stg'
+    D001 em=0.238: rag_variant pred='threadrag w o stm llm extracted triplets' gold='threadrag ablation no sn no stg no edp'
+    D001 em=0.258: rag_variant pred='graph free' gold='graph free controlled graph free ablation'
+    D001 em=0.274: rag_variant pred='graph free' gold='graph free controlled graph free ablation'
+    D001 em=0.286: rag_variant pred='no subgraph' gold='threadrag selection no subgraph'
+    D001 em=0.286: rag_variant pred='threadrag w o edp' gold='threadrag ablation sn stg no edp'
+    D001 em=0.292: rag_variant pred='threadrag full' gold='threadrag ablation stg edp no sn'
+    D001 em=0.294: rag_variant pred='bfs depth 3' gold='threadrag selection bfs depth 3'
+    D001 em=0.302: rag_variant pred='dfs depth 3' gold='threadrag selection dfs depth 3'
+    D001 em=0.304: rag_variant pred='kg paths' gold='threadrag representation kg paths'
+    D001 em=0.308: rag_variant pred='threadrag w o sn fixed length chunks' gold='threadrag ablation edp only no sn or stg'
+    D001 em=0.31: rag_variant pred='kg triplets' gold='threadrag representation kg triplets'
+    D001 em=0.316: rag_variant pred='kg texts' gold='threadrag representation kg texts'
+    D001 em=0.324: generator_model pred='' gold='llama3 8b instruct'
+    D001 em=0.324: rag_variant pred='edp' gold='threadrag selection edp'
+    D001 em=0.324: rag_variant pred='threadrag full' gold='threadrag ablation sn stg edp'
+    D001 em=0.326: rag_variant pred='threadrag w o sn fixed length chunks' gold='threadrag ablation edp only no sn or stg'
+  Paired rows: 11248; shown: 20
+  Field mismatches: dataset_name=4391, rag_variant=10602, generator_model=6498, metric_k=51
+
+  == without D014
+  value        P=0.153 R=0.097 F1=0.119  (tp=741, pred=4854, gold=7632)
+  value_loose  P=0.378 R=0.241 F1=0.294  (tp=1836, pred=4854, gold=7632)
+
+  == per publication (strict value F1)
+  D001: F1=0.231 P=0.465 R=0.154 pred=127 gold=383
+  D002: F1=0.000 P=0.000 R=0.000 pred=216 gold=316
+  D003: F1=0.024 P=0.118 R=0.013 pred=76 gold=673
+  D004: F1=0.000 P=0.000 R=0.000 pred=225 gold=207
+  D005: F1=0.000 P=0.000 R=0.000 pred=262 gold=346
+  D006: F1=0.273 P=0.332 R=0.232 pred=394 gold=565
+  D007: F1=0.283 P=0.288 R=0.278 pred=732 gold=758
+  D008: F1=0.282 P=0.576 R=0.187 pred=125 gold=385
+  D009: F1=0.275 P=0.300 R=0.254 pred=609 gold=721
+  D010: F1=0.000 P=0.000 R=0.000 pred=62 gold=152
+  D011: F1=0.216 P=0.302 R=0.168 pred=192 gold=345
+  D012: F1=0.016 P=0.019 R=0.013 pred=525 gold=765
+  D013: F1=0.006 P=0.011 R=0.004 pred=188 gold=486
+  D014: F1=0.000 P=0.000 R=0.000 pred=14215 gold=11760
+  D015: F1=0.000 P=0.000 R=0.000 pred=193 gold=222
+  D016: F1=0.000 P=0.000 R=0.000 pred=8 gold=72
+  D017: F1=0.000 P=0.000 R=0.000 pred=221 gold=232
+  D018: F1=0.000 P=0.000 R=0.000 pred=242 gold=317
+  D019: F1=0.030 P=0.048 R=0.021 pred=126 gold=280
+  D020: F1=0.000 P=0.000 R=0.000 pred=312 gold=343
+  D021: F1=0.000 P=0.000 R=0.000 pred=19 gold=64
+  ```
+
 ## DOMAIN2-DEV-001
 
 - Status (`complete` or `blocked`): `complete`
