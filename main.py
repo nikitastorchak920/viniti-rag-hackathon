@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="skip image-only PDFs (status SKIPPED_SCAN); enabled automatically when GEMINI_API_KEY is not set")
     ap.add_argument("--ocr-json", type=pathlib.Path, default=None, metavar="DIR",
                     help="folder with <id>.json OCR files from the teammate's PC (scanned PDFs); no OCR is run here")
+    ap.add_argument("--workers", type=int, default=None,
+                    help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
     a = ap.parse_args(argv)
     if a.cache is None:
@@ -107,16 +109,18 @@ def main(argv: list[str] | None = None) -> int:
         else:
             a.skip_scans = True
             log("WARN: no GEMINI_API_KEY / DEEPSEEK_API_KEY: --skip-scans enabled automatically; only cached documents can be exported")
-        from plugins.rag.pipeline import process_document
+        from plugins.rag.pipeline import process_document, run_documents
 
-        for pdf in pdfs_todo:
-            ok, msg = process_document(pdf, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans)
-            log(f"{pdf.stem}: {'SKIP' if ok is None else 'OK' if ok else 'FAIL'} - {msg}")
+        workers = a.workers if a.workers is not None else int(os.environ.get("WORKERS") or 4)
+        workers = max(1, min(workers, len(pdfs_todo) or 1))
+        log(f"workers={workers}")
+        for stem, ok, msg in run_documents(
+                pdfs_todo, lambda p: process_document(p, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans),
+                workers):
             if ok is None:
-                skipped.append(pdf.stem)
+                skipped.append(stem)
             elif not ok:
-                failed.append(pdf.stem)
-            gc.collect()
+                failed.append(stem)
 
     if getattr(locals().get("client"), "tokens_in", 0):
         log(f"TOKENS total in={client.tokens_in} out={client.tokens_out}")

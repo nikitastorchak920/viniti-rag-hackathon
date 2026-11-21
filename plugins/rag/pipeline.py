@@ -150,3 +150,43 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
     finally:
         if uploaded is not None:
             client.delete_file(uploaded)
+
+
+def run_documents(pdfs: list[pathlib.Path], fn, workers: int) -> list[tuple[str, bool | None, str]]:
+    """Run fn(pdf)->(ok,msg) over documents with `workers` threads (1 = plain sequential loop).
+    Each document is handled by exactly one thread (its cache file has a single writer). Progress lines
+    are printed as documents finish; the returned list keeps the INPUT order (deterministic)."""
+    import gc
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    total, t0, done = len(pdfs), time.time(), 0
+    results: dict[str, tuple[bool | None, str]] = {}
+
+    def report(pdf: pathlib.Path, ok, msg: str) -> None:
+        nonlocal done
+        done += 1
+        el = time.time() - t0
+        eta = el / done * (total - done)
+        log(f"[{done}/{total}] {pdf.stem}: {'SKIP' if ok is None else 'OK' if ok else 'FAIL'} - {msg} "
+            f"(elapsed {el:.0f}s, ETA {eta:.0f}s)")
+
+    def safe(pdf: pathlib.Path):
+        try:
+            return fn(pdf)
+        except Exception as exc:  # noqa: BLE001
+            return False, f"{type(exc).__name__}: {exc}"
+
+    if workers <= 1:
+        for pdf in pdfs:
+            ok, msg = safe(pdf)
+            results[pdf.stem] = (ok, msg)
+            report(pdf, ok, msg)
+            gc.collect()
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futs = {ex.submit(safe, p): p for p in pdfs}
+            for f in as_completed(futs):  # report runs only in the main thread
+                ok, msg = f.result()
+                results[futs[f].stem] = (ok, msg)
+                report(futs[f], ok, msg)
+    return [(p.stem, *results[p.stem]) for p in pdfs]

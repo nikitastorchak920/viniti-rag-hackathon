@@ -9,6 +9,7 @@ import random
 import re
 import ssl
 import sys
+import threading
 import time
 import urllib.error
 from typing import Any
@@ -17,8 +18,37 @@ DEFAULT_MODEL = "gemini-3.8-flash"
 RETRYABLE_CODES = {408, 429, 500, 502, 503, 504}
 
 
+_LOG_LOCK = threading.Lock()
+
+
 def log(msg: str) -> None:
-    print(msg, flush=True)
+    with _LOG_LOCK:  # whole lines only, even with parallel workers
+        print(msg, flush=True)
+
+
+class TokenCounter:
+    """Thread-safe token totals shared by all workers."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._in = 0
+        self._out = 0
+
+    def add(self, n_in: int, n_out: int) -> tuple[int, int]:
+        with self._lock:
+            self._in += n_in or 0
+            self._out += n_out or 0
+            return self._in, self._out
+
+    @property
+    def tokens_in(self) -> int:
+        with self._lock:
+            return self._in
+
+    @property
+    def tokens_out(self) -> int:
+        with self._lock:
+            return self._out
 
 
 def load_env() -> None:
@@ -81,6 +111,7 @@ class GeminiClient:
         from google.genai import types
 
         self.types = types
+        self._tok = TokenCounter()
         self.model = os.environ.get("GEMINI_MODEL", "").strip() or DEFAULT_MODEL
         self.max_retries = int(_f("GEMINI_MAX_RETRIES", 6))
         self.base = _f("GEMINI_BACKOFF_BASE", 2)
@@ -89,6 +120,9 @@ class GeminiClient:
         self.temperature = _f("GEMINI_TEMPERATURE", 0)
         timeout_ms = int(_f("GEMINI_TIMEOUT_S", 300) * 1000)
         self.client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=timeout_ms))
+
+    tokens_in = property(lambda self: self._tok.tokens_in)
+    tokens_out = property(lambda self: self._tok.tokens_out)
 
     def preflight(self) -> None:
         """Cheap availability check of the chosen model; clear error on 404/401/403."""
@@ -119,6 +153,9 @@ class GeminiClient:
             try:
                 resp = self.client.models.generate_content(
                     model=self.model, contents=contents, config=cfg)
+                um = getattr(resp, "usage_metadata", None)
+                if um is not None:
+                    self._tok.add(getattr(um, "prompt_token_count", 0), getattr(um, "candidates_token_count", 0))
                 try:
                     fr = getattr(resp.candidates[0].finish_reason, "name", str(resp.candidates[0].finish_reason))
                 except (TypeError, IndexError, AttributeError):
@@ -197,7 +234,7 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
     cache_dir = pathlib.Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
     p = cache_path(cache_dir, doc_id)
-    tmp = p.with_suffix(".json.tmp")
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
     os.replace(tmp, p)
 
@@ -205,6 +242,8 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
 # ---- DeepSeek (OpenAI-compatible chat API, stdlib urllib only; text-only) ----
 class DeepSeekClient:
     text_only = True
+    tokens_in = property(lambda self: self._tok.tokens_in)
+    tokens_out = property(lambda self: self._tok.tokens_out)
     BASE_URL = "https://api.deepseek.com"
 
     def __init__(self) -> None:
@@ -222,8 +261,7 @@ class DeepSeekClient:
         self.max_out = int(_f("DEEPSEEK_MAX_TOKENS", 8192))
         self.temperature = _f("DEEPSEEK_TEMPERATURE", 0)
         self.freq_penalty = _f("DEEPSEEK_FREQUENCY_PENALTY", 0)
-        self.tokens_in = 0
-        self.tokens_out = 0
+        self._tok = TokenCounter()
 
     def preflight(self) -> None:
         import urllib.error
@@ -273,10 +311,9 @@ class DeepSeekClient:
             try:
                 resp = self._post(payload)
                 u = resp.get("usage") or {}
-                self.tokens_in += u.get("prompt_tokens", 0)
-                self.tokens_out += u.get("completion_tokens", 0)
+                t_in, t_out = self._tok.add(u.get("prompt_tokens", 0), u.get("completion_tokens", 0))
                 log(f"  [{tag}] tokens in={u.get('prompt_tokens', 0)} out={u.get('completion_tokens', 0)} "
-                    f"(total in={self.tokens_in} out={self.tokens_out})")
+                    f"(total in={t_in} out={t_out})")
                 ch = (resp.get("choices") or [{}])[0]
                 if ch.get("finish_reason") == "length":
                     raise TruncatedResponseError("output truncated (finish_reason=length): window will be split")
