@@ -1,6 +1,10 @@
 # PROMPT FOR ANTIGRAVITY
 
-Verify the Phase 1 MVP on the laptop that has the 21 dev PDFs, local credentials, and Tesseract. Use PowerShell from the repository root with the project environment active. Leave source files untouched and keep credentials, PDFs, caches, generated bundles, and full logs local. The operator will relay your English report.
+After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGRAVITY.md`. Tasks are listed newest first. Run the first task without a report for its ID. If every ID has a report, wait for a new task.
+
+## MVP-DEV-001 · Verify the Phase 1 dev bundle
+
+Verify the Phase 1 MVP on the laptop that has the 21 dev PDFs, local credentials, and Tesseract. Use PowerShell from the repository root with the project environment active. Leave source files untouched and keep credentials, PDFs, caches, generated bundles, and full logs local.
 
 1. Sync and record the versions. Use Gemini if available for the PDF fallback.
 
@@ -52,4 +56,13 @@ Verify the Phase 1 MVP on the laptop that has the 21 dev PDFs, local credentials
 
 5. Start `python scripts/serve_ui.py out_dev` and open `http://127.0.0.1:8000/`. In `results`, combine paper, dataset, and metric filters, then open a row and check the PDF page and a source quote. In `issues`, filter by rule. In `publications`, verify the unprocessed filter is empty for a complete bundle. Compare the table counts with `out_dev/validation.json`.
 
-6. Fill `handoff/FROM_ANTIGRAVITY.md` in English and relay it to the operator. Include mode and numeric row counts for each of the four target papers, counts for all seven tables, unresolved IDs, structural errors, review categories, quote counts, evaluator strict and loose TP/F1, and the UI checkpoint. Summarize any blockers with short redacted excerpts.
+6. Prepend an English report titled `## MVP-DEV-001` to the reports section in `handoff/FROM_ANTIGRAVITY.md`. Use `complete` if you ran the verification and `blocked` if a prerequisite prevented it. Report whether the MVP passed separately. Include the four papers' modes and numeric row counts, counts for all seven tables, unresolved IDs, structural errors, review categories, quote counts, evaluator strict and loose TP/F1, and the UI checkpoint. Summarize any blockers with short redacted excerpts. Commit and push only the report:
+
+   ```powershell
+   git add -- handoff/FROM_ANTIGRAVITY.md
+   git diff --cached --name-only
+   git commit --only -m "Report MVP-DEV-001 verification" -- handoff/FROM_ANTIGRAVITY.md
+   git push origin main
+   ```
+
+   If the push is rejected because `main` advanced, run `git pull --rebase origin main` and retry. Preserve existing reports if the inbox needs a merge. Codex reads the pushed report directly.

@@ -1,7 +1,10 @@
-# Antigravity report template
+# Antigravity reports
 
-Return this report in English to the operator. Replace placeholders with observed values. Include only redacted excerpts. Keep API keys, raw PDFs, caches, generated CSVs, and full raw logs local.
+Antigravity prepends replies under **Reports** and pushes this file to `origin/main` for Codex. Use `## <task ID>` as the reply heading and preserve older replies. Include only redacted excerpts. Keep API keys, raw PDFs, caches, generated CSVs, and full raw logs local.
 
+### Report template
+
+- Status (`complete` or `blocked`):
 - Git commit (from `git rev-parse --short HEAD`):
 - Python and Tesseract versions:
 - Cache-only rebuild exit code and unresolved IDs:
@@ -13,3 +16,7 @@ Return this report in English to the operator. Replace placeholders with observe
 - UI URL and observed paper/dataset/metric/issue filters, source page/quote, and row counts:
 - MVP checkpoint for 1.1 and 1.2 (pass/pending and exact blockers):
 - Redacted failure or review excerpts:
+
+### Reports
+
+<!-- Prepend replies here. The template above is not a task response. -->
