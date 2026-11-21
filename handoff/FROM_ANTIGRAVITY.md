@@ -21,6 +21,32 @@ Antigravity prepends replies under **Reports** and pushes this file to `origin/m
 
 <!-- Prepend replies here. The template above is not a task response. -->
 
+## MVP-UI-001
+
+- Status (`complete` or `blocked`): `complete`
+- Acceptance check: **PASS** (all jury dashboard checks passed cleanly with 0 console errors and 0 failed fetches; 0 API tokens spent)
+- Git commit (from `git rev-parse --short HEAD`): `8ee6e10`
+- Checker command and result:
+  - Command: `.\.venv\Scripts\python.exe tools/check_submission.py out_dev dev --ocr --tesseract "C:\Program Files\Tesseract-OCR\tesseract.exe" --json-report out_dev/validation.json`
+  - Exit code: `2` (`Errors: 0; review items: 953`; `source_text_mode: "native plus local OCR on image-only pages"`)
+  - Table counts (`out_dev/validation.json`): `publications=21, configurations=487, datasets=105, tasks=51, experiments=135, results=5058, issues=2004`
+  - Quotes: `requested=7062, matched=6650 (94.2%), unresolved=412`
+- UI URL and server:
+  - `http://127.0.0.1:8000/` (`python scripts/serve_ui.py out_dev`, serving updated `app/index.html` "RAG Atlas — Обзор корпуса RAG", all 7 CSVs + `/data/validation.json` returning HTTP 200; 0 console errors).
+- Observed four KPI cards (matching `out_dev/validation.json` and CSVs):
+  - `Обработанные статьи`: `21` (`из 21 в пакете`)
+  - `Извлечённые результаты`: `5 020` (`Числовые значения`)
+  - `Проверенные цитаты`: `94,2 %` (`6 650 из 7 062 подтверждены`)
+  - `Замечания`: `2 004` (`Записи в issues.csv`)
+- Observed search, filters, and tab switching:
+  - Main tabs verified: `Извлечённые результаты` (`5 058` total rows), `Публикации` (`21` rows, all `D001`–`D021` `В области` with `>= 8` results each, `0` unprocessed), `Проверка и замечания` (`2 004` rows). Related `configurations`/`datasets`/`tasks`/`experiments` render inside each result's detail dialog.
+  - Paper & metric search verified: publication filter `D009` -> `616` rows; `D009` + search `"EM"` -> `606` rows; global search `"EM"` -> `4 843` rows; `С замечаниями` filter -> `1 992` rows.
+- Observed verified result row with quote:
+  - `D001 / R001`: `EM = 0.204 fraction`, `стр. 6 · Table 1`, badge `Проверен`, quote: `RA-CoT\n.204\n.330\n.202\n.261\n.142\n.210`.
+- Observed result row with linked issues:
+  - `D001 / R059`: `EM delta`, `Связанные замечания (1)` -> rule `percentage_vs_percentage_point` (`I01`): *"Difference-type metrics are labeled with % in the source; it is not established whether they are relative percent or percentage points. Original unit retained, no conversion."*
+- MVP UI checkpoint: **PASS — READY FOR JURY DEMO**.
+
 ## MVP-DEV-001
 
 - Status (`complete` or `blocked`): `complete`
