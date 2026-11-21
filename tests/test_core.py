@@ -97,6 +97,19 @@ class Normalization(unittest.TestCase):
         self.assertEqual(exporter.k_from_name("Recall@10 (avg)"), "10")
         self.assertEqual(exporter.k_from_name("OC@0.8"), "")
         self.assertEqual(exporter.k_from_name("Accuracy"), "")
+        self.assertEqual(exporter.k_from_name("Recall", "top-20"), "20")
+        self.assertEqual(exporter.k_from_name("Recall", "k = 7."), "7")
+        self.assertEqual(exporter.k_from_name("Recall@3", "k = 7"), "")
+        self.assertEqual(exporter.k_from_name("OC@0,8", "top-5.5"), "")
+
+    def test_family_labels_require_source_evidence_and_keep_ids(self):
+        rows = [{"dataset_id":"DS1", "dataset_name":"Corpus - Biology", "dataset_version":"", "note":""},
+                {"dataset_id":"DS2", "dataset_name":"Corpus - Physics", "dataset_version":"", "note":""}]
+        exporter._canonicalize_datasets(rows, ["Corpus subsets Biology 100"])
+        self.assertEqual(rows[0]["dataset_name"], "Corpus - Biology")
+        exporter._canonicalize_datasets(rows, ["Corpus subsets Biology 100 Physics 200"])
+        self.assertEqual([(r["dataset_id"], r["dataset_name"]) for r in rows], [("DS1", "Biology"), ("DS2", "Physics")])
+        self.assertEqual(rows[0]["note"], "Dataset family: Corpus")
 
     def test_doc_variant_and_k(self):
         d = build(make_cache([result(metric_name="nDCG @ 5", config_id="C01", dataset_id="DS1", experiment_id="E1", task_id="T1")]))
@@ -162,10 +175,47 @@ class Linking(unittest.TestCase):
         d = build(make_cache(rs))["results"]
         self.assertEqual(d[1]["experiment_id"], "E2")
 
-    def test_non_numeric_goes_to_issues(self):
+    def test_non_numeric_is_retained_and_linked_to_issue(self):
         d = build(make_cache([result(raw_value="significantly better")]))
-        self.assertEqual(d["results"], [])
-        self.assertTrue(any(i["check_name"] == "non_numeric_result" for i in d["issues"]))
+        self.assertEqual(len(d["results"]), 1)
+        row = d["results"][0]
+        self.assertEqual((row["raw_value"], row["metric_value"], row["extraction_status"]),
+                         ("significantly better", "", "present_not_extractable"))
+        self.assertTrue(any(i["check_name"] == "non_numeric_result" and i["record_ids"] == row["result_id"] for i in d["issues"]))
+
+    def test_table_dataset_inheritance_keeps_ambiguity_and_explicit_ids(self):
+        rows = [result(source_table="Table 7", dataset_id="DS1"), result(source_table="Table 7"),
+                result(source_table="Table 8", dataset_id="DS1"), result(source_table="Table 8", dataset_id="DS2"),
+                result(source_table="Table 8"), result(source_table="Table 9")]
+        doc = build(make_cache(rows))
+        self.assertEqual([r["dataset_id"] for r in doc["results"]], ["DS1", "DS1", "DS1", "DS2", "", ""])
+
+    def test_duplicate_marking_preserves_experiments_and_variants(self):
+        shared = {"config_id": "C01", "dataset_id": "DS1", "task_id": "T1"}
+        doc = build(make_cache([result(experiment_id="E1", **shared), result(experiment_id="E1", **shared),
+                                result(experiment_id="E2", **shared),
+                                result(experiment_id="E1", metric_variant="strict", **shared)]))
+        self.assertEqual([r["duplicate_of"] for r in doc["results"]], ["", "R001", "", ""])
+
+    def test_domain_rules_keep_rows_and_clear_unverified_issue_quotes(self):
+        rows = [result(metric_name="Recall@5", metric_variant="top-7", raw_value="120%", config_id="C01", dataset_id="DS1"),
+                result(metric_name="Latency", raw_value="0", raw_unit="s", baseline_value="0.5"),
+                result(metric_name="Accuracy", source_page=9, raw_value="0.5"),
+                result(metric_name="Accuracy", raw_value="0.5", baseline_value="50%")]
+        cache = make_cache(rows)
+        cache["meta"]["issues"] = [{"check_name":"manual_review", "description":"Review", "source_page":1,
+                                      "source_fragment":"quoted text absent"}]
+        doc = exporter.build_doc("P1", cache, [exporter.norm(TEXT), ""], Mock())
+        self.assertEqual([r["metric_value"] for r in doc["results"]], ["120", "0", "", "0.5"])
+        self.assertEqual(doc["results"][1]["baseline_value"], "500")
+        self.assertEqual(doc["results"][2]["raw_value"], "0.5")
+        self.assertEqual(doc["results"][3]["baseline_value"], "")
+        rules = {(i["check_name"], i["record_ids"]) for i in doc["issues"]}
+        self.assertTrue({("RULE_SCALE_BOUNDS", "R001"), ("RULE_SCALE_BOUNDS", "R002"),
+                         ("RULE_AT_K_CONSISTENCY", "R001"), ("RULE_PROVENANCE_COMPLETE", "R003"),
+                         ("RULE_UNIT_AMBIGUITY", "R004")} <= rules)
+        manual = next(i for i in doc["issues"] if i["check_name"] == "manual_review")
+        self.assertEqual((manual["source_page"], manual["source_fragment"]), ("1", ""))
 
     def test_verify_rows_exported(self):
         c = make_cache([result()])

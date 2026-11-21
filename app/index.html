@@ -70,6 +70,16 @@ tbody tr:hover,tbody tr:focus-within{background:var(--tone)}
 .state::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
 .state.verified{color:var(--verified)}
 .state.issue{color:var(--issue)}
+.comparison{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 15px 14px}
+.comparison select{max-width:100%;min-width:0}
+.passport{padding:clamp(16px,4vw,36px);display:grid;gap:20px}
+.passport details{border:1px solid var(--line);border-radius:9px;padding:10px 14px;overflow-wrap:anywhere}
+.passport details+details{margin-top:7px}
+.passport summary{cursor:pointer;font-weight:650}
+.passport code{font-size:12px}
+.passport li+li{margin-top:7px}
+.delta-good{color:var(--verified);font-weight:650}
+.delta-bad{color:var(--issue);font-weight:650}
 .empty{text-align:center;padding:43px 16px;color:var(--muted);border-top:1px solid var(--line)}
 .pagination{border-top:1px solid var(--line);padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:12px}
 .paging-buttons{display:flex;gap:7px}
@@ -116,11 +126,12 @@ dt{color:var(--muted);padding-right:12px}
     <div class="kpi"><p class="kpi-label">Замечания</p><strong id="issue-count" class="num attention">—</strong><small>Записи в issues.csv</small></div>
   </section>
   <nav class="tabs" aria-label="Разделы данных">
-    <button type="button" data-tab="results" aria-pressed="true">Извлечённые результаты</button>
+    <button type="button" data-tab="results" aria-pressed="true">Результаты и сравнение</button>
     <button type="button" data-tab="publications" aria-pressed="false">Публикации</button>
     <button type="button" data-tab="issues" aria-pressed="false">Проверка и замечания</button>
+    <button type="button" data-tab="passport" aria-pressed="false">Паспорт данных</button>
   </nav>
-  <section class="panel" aria-label="Обозреватель данных">
+  <section id="explorer" class="panel" aria-label="Обозреватель данных">
     <div class="toolbar">
       <label class="search"><input id="q" type="search" aria-label="Поиск" placeholder="Статья, датасет, модель или метрика"></label>
       <div class="filters" aria-label="Фильтры">
@@ -128,7 +139,13 @@ dt{color:var(--muted);padding-right:12px}
         <button class="pill" type="button" data-filter="verified" aria-pressed="false">Проверенные</button>
         <button class="pill" type="button" data-filter="issues" aria-pressed="false">С замечаниями</button>
         <select id="paper" aria-label="ID статьи"><option value="">Все статьи</option></select>
+        <select id="rule" aria-label="Код правила" hidden><option value="">Все правила</option></select>
       </div>
+    </div>
+    <div id="comparison" class="comparison">
+      <button id="compare" type="button" class="pill" aria-pressed="false">Сравнить с baseline</button>
+      <select id="compare-group" aria-label="Контекст сравнения" hidden></select>
+      <span id="compare-note" class="muted" hidden>Положительная дельта означает улучшение.</span>
     </div>
     <table id="grid"><thead></thead><tbody></tbody></table>
     <p id="empty" class="empty" hidden></p>
@@ -136,6 +153,22 @@ dt{color:var(--muted);padding-right:12px}
       <span id="range" class="num" aria-live="polite"></span>
       <div class="paging-buttons"><button type="button" id="prev">Назад</button><button type="button" id="next">Далее</button></div>
     </div>
+  </section>
+  <section id="passport" class="panel passport" aria-label="Паспорт данных" hidden>
+    <div><h2>Паспорт данных</h2><p class="muted">Семь связанных таблиц CSV. Ссылки на сущности действуют внутри одной публикации.</p></div>
+    <div><h3>Схема загруженного пакета</h3><div id="passport-schema"></div></div>
+    <div><h3>Типы, значения и источники</h3><ul>
+      <li>Идентификаторы и исходные значения — текст. Год, глубина поиска и номер страницы — целые числа. Нумерация страниц PDF начинается с 1.</li>
+      <li><code>raw_value</code> и <code>raw_unit</code> сохраняют исходную запись. <code>normalized_value</code> и <code>normalized_unit</code> содержат число и единицу после нормализации. Пустое поле означает, что значение неизвестно.</li>
+      <li><code>%</code> и <code>fraction</code> сохраняют свою шкалу. Явно указанные секунды переводятся в миллисекунды.</li>
+      <li><code>result_origin</code> различает результаты авторов и заимствованные результаты. <code>source_fragment</code> хранит цитату рядом с локатором источника.</li>
+    </ul></div>
+    <div><h3>Правила проверки</h3><ul>
+      <li><code>RULE_SCALE_BOUNDS</code> · значение вне шкалы или неположительная задержка.</li>
+      <li><code>RULE_AT_K_CONSISTENCY</code> · пропущенная глубина, конфликт значений k или превышение top_k.</li>
+      <li><code>RULE_UNIT_AMBIGUITY</code> · шкала или смысл процентной разницы не установлен.</li>
+      <li><code>RULE_PROVENANCE_COMPLETE</code> · пропущен локатор, ссылка на цитируемую работу или обязательное имя метрики.</li>
+    </ul></div>
   </section>
 </main>
 <dialog id="detail" aria-labelledby="detail-title">
@@ -173,7 +206,7 @@ const quote = row => row.source_quote || row.source_fragment || "";
 const scope = row => row.exclusion_reason === "Unprocessed: no scope decision"
   ? "Не обработана" : row.in_scope === "true" ? "В области" : "Вне области";
 const extracted = row => row.extraction_status === "extracted" && row.metric_value !== "";
-let view = "results", filter = "all", page = 0, pageRows = [], bundle = null, loadVersion = 0;
+let view = "results", filter = "all", page = 0, pageRows = [], bundle = null, loadVersion = 0, comparing = false;
 
 function parseCsv(text) {
   const rows = [];
@@ -198,7 +231,25 @@ function parseCsv(text) {
   if (row.length || field) { row.push(field); rows.push(row); }
   const columns = rows.shift();
   if (!columns?.includes("publication_id")) throw new Error("Отсутствует заголовок CSV");
-  return rows.map(cells => Object.fromEntries(columns.map((column, i) => [column, cells[i] ?? ""])));
+  const records = rows.map(cells => Object.fromEntries(columns.map((column, i) => [column, cells[i] ?? ""])));
+  records.columns = columns;
+  return records;
+}
+
+function comparisonKey(item) {
+  const row = item.row, protocol = item.related.experiments?.evaluation_protocol;
+  if (!extracted(row) || row.duplicate_of || !item.related.datasets || !item.related.tasks || !row.metric_name || !protocol || !row.metric_unit) return "";
+  if (row.result_origin === "cited" && (!row.cited_publication_id || row.cited_publication_id === "unspecified")) return "";
+  return JSON.stringify([row.publication_id, row.dataset_id, row.task_id, row.metric_name, row.metric_k,
+    row.metric_variant, protocol, row.metric_unit, row.aggregation, row.metric_direction, row.result_origin, row.cited_publication_id]);
+}
+
+function baselineDelta(row) {
+  if (!row.baseline_value?.trim() || !row.metric_value?.trim()) return null;
+  if (!["higher_is_better", "lower_is_better"].includes(row.metric_direction)) return null;
+  const value = Number(row.metric_value), baseline = Number(row.baseline_value);
+  return Number.isFinite(value) && Number.isFinite(baseline)
+    ? (row.metric_direction === "lower_is_better" ? baseline - value : value - baseline) : null;
 }
 
 function addTo(index, id, row) {
@@ -253,6 +304,7 @@ function prepare(data, report) {
       search: normalize([paper?.title, paper?.authors, ...Object.values(row),
         ...Object.values(related).flatMap(entity => Object.values(entity || {}))].join(" "))};
     addTo(byPaper, row.publication_id, item);
+    item.comparison = comparisonKey(item);
     return item;
   });
   const papers = data.publications.map(row => {
@@ -285,6 +337,10 @@ function showBundle(data, report, label) {
   $("issue-count").textContent = fmt.format(data.issues.length);
   $("paper").replaceChildren(new Option("Все статьи", ""), ...[...new Set(data.publications.map(row => row.publication_id))]
     .sort((a,b) => a.localeCompare(b, undefined, {numeric:true})).map(id => new Option(id,id)));
+  $("rule").replaceChildren(new Option("Все правила", ""), ...[...new Set(data.issues.map(row => row.check_name).filter(Boolean))]
+    .sort().map(rule => new Option(rule,rule)));
+  $("passport-schema").innerHTML = tables.map(table =>
+    `<details><summary>${table} · ${fmt.format(data[table].length)}</summary><code>${data[table].columns.map(escapeHtml).join(", ")}</code></details>`).join("");
   showNotice();
   page = 0;
   render();
@@ -316,6 +372,31 @@ function stateLabel(item) {
   return [quote(item.row) ? "Не проверен" : "Без цитаты", ""];
 }
 
+function deltaDisplay(delta) {
+  if (delta === null) return "—";
+  const formatted = new Intl.NumberFormat("ru", {maximumSignificantDigits: 7, signDisplay: "exceptZero"});
+  return formatted.format(delta);
+}
+
+function comparisonRows(rows) {
+  const selector = $("compare-group"), previous = selector.value;
+  const groups = new Map();
+  for (const item of rows) if (item.comparison) addTo(groups, item.comparison, item);
+  for (const [id, items] of groups) {
+    if (items.length === 1 && baselineDelta(items[0].row) === null) groups.delete(id);
+  }
+  selector.replaceChildren(...[...groups].map(([id, items]) => {
+    const {row, related} = items[0];
+    const label = [row.publication_id, related.datasets.dataset_name, related.tasks.task_type || row.task_id,
+      row.metric_name, row.metric_variant, row.metric_k && `k=${row.metric_k}`, row.metric_unit,
+      related.experiments.evaluation_protocol].filter(Boolean).join(" · ");
+    return new Option(`${label} (${items.length})`, id);
+  }));
+  if (groups.has(previous)) selector.value = previous;
+  if (!groups.size) selector.add(new Option("Нет сопоставимых результатов", ""));
+  return groups.get(selector.value) || [];
+}
+
 const labelCell = (value, css = "") => `<td class="${css}"><span class="cell-label">${escapeHtml(value || "—")}</span></td>`;
 const buttonCell = value => `<td class="num"><button type="button" class="row-button">${escapeHtml(value || "Открыть")}</button></td>`;
 const endCell = '<td class="row-end" aria-hidden="true">›</td>';
@@ -326,7 +407,9 @@ function rowCells(item) {
     const method = item.related.configurations;
     const model = method?.generator_model || method?.rag_variant;
     const dataset = item.related.datasets?.dataset_name;
-    const source = `<td class="hide-small"><span class="state ${tone}">${label}</span></td>`;
+    const delta = comparing ? baselineDelta(row) : null;
+    const source = comparing ? labelCell(deltaDisplay(delta), `num ${delta > 0 ? "delta-good" : delta < 0 ? "delta-bad" : ""}`)
+      : `<td class="hide-small"><span class="state ${tone}">${label}</span></td>`;
     return buttonCell(row.publication_id) + labelCell(row.metric_name) + labelCell(dataset, "hide-medium")
       + labelCell(model, "hide-medium") + labelCell([row.metric_value, row.metric_unit].filter(Boolean).join(" "), "num") + source + endCell;
   }
@@ -338,18 +421,29 @@ function rowCells(item) {
     + labelCell(fmt.format(item.ids.length), "num hide-small") + endCell;
 }
 function render() {
+  $("passport").hidden = view !== "passport";
+  $("explorer").hidden = view === "passport";
+  if (view === "passport") return;
+  $("comparison").hidden = view !== "results";
+  $("rule").hidden = view !== "issues";
+  $("compare-group").hidden = $("compare-note").hidden = !comparing;
   const terms = normalize($("q").value).trim().split(/\s+/).filter(Boolean);
   const paper = $("paper").value;
-  const rows = (bundle?.[view] || []).filter(item =>
+  const rule = $("rule").value;
+  let rows = (bundle?.[view] || []).filter(item =>
     (!paper || item.row.publication_id === paper) &&
+    (view !== "issues" || !rule || item.row.check_name === rule) &&
     (filter !== "verified" || item.verified === true) &&
     (filter !== "issues" || view === "issues" || item.links.length > 0) &&
     terms.every(term => item.search.includes(term)));
+  if (view === "results" && comparing) rows = comparisonRows(rows);
   page = Math.min(page, Math.max(0, Math.ceil(rows.length / pageSize) - 1));
   const start = page * pageSize;
   pageRows = rows.slice(start, start + pageSize);
-  grid.tHead.innerHTML = "<tr>" + headers[view].map(([title, width, css]) =>
-    `<th scope="col" class="${css || ""}" style="width:${width}%">${title}</th>`).join("") + "</tr>";
+  grid.tHead.innerHTML = "<tr>" + headers[view].map(([title, width, css]) => {
+    if (view === "results" && comparing && title === "Источник") { title = "Δ к baseline"; css = ""; }
+    return `<th scope="col" class="${css || ""}" style="width:${width}%">${title}</th>`;
+  }).join("") + "</tr>";
   grid.tBodies[0].innerHTML = pageRows.map((item,i) => `<tr data-row="${i}">${rowCells(item)}</tr>`).join("");
   $("empty").hidden = rows.length > 0;
   $("empty").textContent = bundle
@@ -373,6 +467,8 @@ function openDetail(item) {
   $("detail-kicker").textContent = [row.publication_id, row.result_id || row.issue_id].filter(Boolean).join(" · ");
   $("detail-title").textContent = row.metric_name || row.title || row.check_name || row.publication_id;
   const value = [row.metric_value,row.metric_unit].filter(Boolean).join(" ");
+  const raw = [row.raw_value,row.raw_unit && !row.raw_value?.includes(row.raw_unit) ? row.raw_unit : ""].filter(Boolean).join(" ");
+  const origin = row.result_origin === "cited" ? "Цитируемый · Cited" : row.result_origin === "primary" ? "Первичный · Primary" : "";
   const bounds = row.source_bbox || row.bounding_box || row.source_bounding_box || row.bbox;
   const location = [row.source_page && `стр. ${row.source_page}`, row.source_table, row.source_figure, row.source_section,
     bounds && `координаты: ${bounds}`].filter(Boolean).join(" · ");
@@ -384,7 +480,9 @@ function openDetail(item) {
     <ul class="issue-list">${item.links.map(({row:issue}) => `<li><strong>${escapeHtml(issue.check_name)}</strong> <span class="muted num">${escapeHtml(issue.issue_id)}</span><br>${escapeHtml(issue.description)}</li>`).join("")}</ul></section>`
     : view === "results" ? '<section class="drawer-section"><h3>Связанные замечания</h3><p class="muted">Нет записей, привязанных к результату.</p></section>' : "";
   const relatedTitles = {configurations:"Конфигурация", datasets:"Датасет", tasks:"Задача", experiments:"Эксперимент"};
-  $("detail-body").innerHTML = (value ? `<section class="drawer-section"><h3>Значение метрики</h3><h2 class="num">${escapeHtml(value)}</h2></section>` : "")
+  $("detail-body").innerHTML = (value || raw ? `<section class="drawer-section"><h3>Значение метрики</h3>
+    ${origin ? `<p class="state">${origin}</p>` : ""}<dl><dt>Исходное</dt><dd class="num">${escapeHtml(raw || "—")}</dd>
+    <dt>Нормализованное</dt><dd class="num">${escapeHtml(value || "—")}</dd><dt>Baseline</dt><dd class="num">${escapeHtml(row.baseline_value || "—")}</dd></dl></section>` : "")
     + source + links + metadata(row, "Метаданные")
     + Object.entries(item.related || {}).map(([table, entity]) => metadata(entity, relatedTitles[table])).join("");
   dialog.showModal();
@@ -395,7 +493,10 @@ for (const button of tabs) button.addEventListener("click", () => {
 for (const button of pills) button.addEventListener("click", () => {
   filter = button.dataset.filter; select(pills, "filter", filter); page = 0; render();
 });
-for (const id of ["q","paper"]) $(id).addEventListener("input", () => { page = 0; render(); });
+for (const id of ["q","paper","rule","compare-group"]) $(id).addEventListener("input", () => { page = 0; render(); });
+$("compare").addEventListener("click", () => {
+  comparing = !comparing; $("compare").setAttribute("aria-pressed", String(comparing)); page = 0; render();
+});
 $("prev").addEventListener("click", () => { page--; render(); });
 $("next").addEventListener("click", () => { page++; render(); });
 grid.tBodies[0].addEventListener("click", event => {

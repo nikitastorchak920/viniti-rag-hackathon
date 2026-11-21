@@ -1,7 +1,4 @@
-"""Build the 7 submission CSVs from cache/<doc_id>.json (stdlib csv only) and run
-deterministic validation. Rows are never deleted because of a validation finding; findings
-become rows of issues.csv. Rows that cannot satisfy the format (no valid page / locator)
-are dropped with an explicit log line."""
+"""Build the seven submission CSVs from cached extraction and report validation findings."""
 from __future__ import annotations
 
 import csv
@@ -10,7 +7,9 @@ import pathlib
 import re
 import unicodedata
 from collections import defaultdict
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
+
+from core.validator import RULE_PROVENANCE_COMPLETE, check_result, finding
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parents[2] / "submission_template" / "schema.json"
 TABLES = ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"]
@@ -167,15 +166,17 @@ def strip_names(variant: str, *names: str) -> str:
     """Remove generator/retriever names (and 'with/using/+/()' glue) from a rag_variant."""
     v = (variant or "").strip()
     for nm in sorted({x.strip() for x in names if x and x.strip()}, key=len, reverse=True):
-        v2 = re.sub(r"[\s(\[,;:+/&-]*(?:with|using|w/|on|over|\+)?[\s(\[]*" + re.escape(nm) + r"[\s)\]]*", " ", v, flags=re.I).strip(" -+,;:/()[]")
+        v2 = re.sub(r"[\s(\[,;:+/&-]*(?:with|using|w/|on|over|\+)?[\s(\[]*(?<!\w)" + re.escape(nm)
+                    + r"(?!\w)[\s)\]]*", " ", v, flags=re.I).strip(" -+,;:/()[]")
         if v2:
             v = re.sub(r"\s+", " ", v2)
     return v
 
 
 def canon_space(t: str) -> str:
-    t = re.sub(r"\[?模型名称已隐藏\]?", "GPT", t or "")  # masked vendor token in some PDF text layers
-    return re.sub(r"\s+", " ", t.replace("\u00a0", " ")).strip()
+    t = unicodedata.normalize("NFKC", t or "")
+    t = re.sub(r"\[?模型名称已隐藏\]?", "GPT", t)  # masked vendor token in some PDF text layers
+    return re.sub(r"\s+", " ", re.sub(r"[‐‑‒–]", "-", t)).strip()
 
 
 def dataset_display_name(name: str, version: str) -> str:
@@ -187,15 +188,48 @@ def dataset_display_name(name: str, version: str) -> str:
     return re.sub(rf"(?:\s+{suffix}|\s*\({suffix}\)|\s*\[{suffix}\])$", "", name, flags=re.I).strip() or name
 
 
+def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -> None:
+    """Use a printed subset label when the paper explicitly lists the family and its members."""
+    families = defaultdict(list)
+    name_counts = defaultdict(int)
+    for row in datasets:
+        row["dataset_name"] = dataset_display_name(row["dataset_name"], row["dataset_version"])
+        name = row["dataset_name"]
+        name_counts[name.casefold()] += 1
+        parts = re.split(r"\s+[-/]\s+", name, maxsplit=1)
+        if len(parts) == 2:
+            parent, child = parts
+            name_counts[child.casefold()] += 1
+            families[parent].append((row, child))
+    for parent, members in families.items():
+        if len(members) < 2 or any(name_counts[child.casefold()] != 1 for _, child in members):
+            continue
+        heading = re.compile(rf"(?<!\w){re.escape(parent)}\s+(?:subsets|splits|sub[- ]?corpora)\b", re.I)
+        labels = [re.compile(rf"(?<!\w){re.escape(child)}(?!\w)", re.I) for _, child in members]
+        if not any(all(label.search(page, found.end(), min(found.end() + 600, len(page))) for label in labels)
+                   for page in pages_norm or () for found in heading.finditer(page)):
+            continue
+        for row, child in members:
+            row["dataset_name"] = child
+            row["note"] = (row["note"] + " | " if row["note"] else "") + f"Dataset family: {parent}"
+
+
 def canon_metric(name: str) -> str:
     """'nDCG @ 5' -> 'nDCG@5'; collapse whitespace; keep the paper's casing."""
     return re.sub(r"\s*@\s*(?=\d)", "@", canon_space(name))
 
 
-def k_from_name(name: str) -> str:
-    """k of an @k metric ('NDCG@5' -> '5'); a fractional threshold (OC@0.8) is not k."""
-    m = re.search(r"@(\d+)(?![\d.]*\d)(?!\.\d)", name)
-    return m.group(1) if m else ""
+CUTOFF = re.compile(r"(?i)(?:@\s*|\bk\s*=\s*|\btop[-\s]*)([0-9]+)(?!\w|[.,]\d|[-–]\d)")
+
+
+def printed_cutoffs(*labels: str) -> set[str]:
+    return {m.lstrip("0") or "0" for label in labels for m in CUTOFF.findall(label)}
+
+
+def k_from_name(name: str, variant: str = "") -> str:
+    """Read an unambiguous integer cutoff from the metric name and variant."""
+    cutoffs = printed_cutoffs(name, variant)
+    return next(iter(cutoffs)) if len(cutoffs) == 1 else ""
 
 
 def iter_results(cache: dict):
@@ -220,7 +254,7 @@ def _unique_best(cands: list[tuple[int, str]]) -> str:
 
 def _fill_ids(rows: list[dict], out: dict) -> None:
     """Fill blank ids of primary results: (1) single entity of a kind; (2) table named in one experiment's
-    protocol; (3) config/dataset by name match in the row's own quote/table text; (4) experiment/task
+    protocol; (3) config/dataset by name match in the row's own quote/table text; (4) experiment/task/dataset
     inherited from the same source_table when every labelled row of that table agrees."""
     only = {k: out[t][0][k] for t, k in (("experiments", "experiment_id"), ("configurations", "config_id"),
                                           ("datasets", "dataset_id"), ("tasks", "task_id")) if len(out[t]) == 1}
@@ -248,14 +282,14 @@ def _fill_ids(rows: list[dict], out: dict) -> None:
     for r in rows:
         tb = canon_space(r["source_table"]).lower()
         if tb:
-            for k in ("experiment_id", "task_id"):
+            for k in ("experiment_id", "task_id", "dataset_id"):
                 if r[k]:
                     by_tab[tb][k].add(r[k])
     for r in rows:
         if r["result_origin"] != "primary":
             continue
         tb = canon_space(r["source_table"]).lower()
-        for k in ("experiment_id", "task_id"):
+        for k in ("experiment_id", "task_id", "dataset_id"):
             if not r[k] and tb and len(by_tab[tb][k]) == 1:
                 r[k] = next(iter(by_tab[tb][k]))
         for k, v in only.items():
@@ -357,25 +391,29 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     n_pages = cache.get("n_pages", 0)
     ocr_pages_norm = pages_norm if cache.get("ocr") else None
     rows: list[dict] = []
-    drops = defaultdict(int)
     fstat = defaultdict(int)
-    nonnum: list[dict] = []
+    issues: list[dict] = []
+    validations = []
     for r in iter_results(cache):
         if True:
             note = (r.get("note") or "").strip()
             name = canon_metric(r.get("metric_name") or "")
-            if not name:
-                drops["no metric_name"] += 1
-                continue
             page = to_page(r.get("source_page"))
-            if not 1 <= page <= n_pages:
-                drops["invalid source_page"] += 1
+            page = page if 1 <= page <= n_pages else 0
+            if not name:
+                evidence = {"source_page": str(page or ""), "source_fragment": (r.get("source_fragment") or "").strip() if page else ""}
+                issues.append(finding(evidence, RULE_PROVENANCE_COMPLETE,
+                                      f"Cached observation has no metric name; raw value was {r.get('raw_value', '')!r}."))
                 continue
             row = {c: "" for c in columns()["results"]}
-            row.update(publication_id=doc_id, metric_name=name, source_page=str(page))
+            row.update(publication_id=doc_id, result_id=f"R{len(rows) + 1:03d}", metric_name=name, source_page=str(page or ""))
             for k in ("metric_group", "metric_variant", "aggregation", "source_section", "source_table",
                       "source_figure", "source_fragment"):
                 row[k] = (r.get(k) or "").strip()
+            provenance = []
+            if not page:
+                provenance.append(f"Invalid or missing PDF page: {r.get('source_page')!r}. Original quote: {row['source_fragment']!r}.")
+                row["source_fragment"] = ""
             for k, valid in (("experiment_id", eset), ("config_id", cset), ("dataset_id", dset), ("task_id", tset)):
                 v = (r.get(k) or "").strip()
                 v = idmap[k].get(v, v) if v not in valid else v
@@ -391,30 +429,36 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
             raw_unit = (r.get("raw_unit") or "").strip()
             if status == "extracted" and not raw:
                 status = "absent"
-            if status == "extracted" and not (row["source_fragment"] or row["source_table"] or row["source_figure"]):
-                drops["extracted without locator"] += 1
-                continue
+            if status != "absent" and not (row["source_fragment"] or row["source_table"] or row["source_figure"]):
+                provenance.append("Source quote, table, and figure locator are missing.")
+            if status == "extracted" and provenance:
+                status = "present_not_extractable"
             origin = (r.get("result_origin") or "primary").strip()
             cref = (r.get("cited_ref") or "").strip()
             if origin != "cited" and cref:
                 origin = "cited"
             if origin == "cited":
+                if not cref or cref == "unspecified":
+                    provenance.append("Cited result has no identified reference in the extraction.")
                 cref = cref or "unspecified"
             else:
                 origin, cref = "primary", ""
             sample = as_int(r.get("sample_size") or "")
             if (r.get("sample_size") or "").strip() and sample is None:
                 note = (note + " | " if note else "") + f"sample_size: {r['sample_size'].strip()}"
-            k = (r.get("metric_k") or "").strip()
-            k = as_int(k) or k_from_name(name)
+            explicit_k = (r.get("metric_k") or "").strip()
+            cutoffs = printed_cutoffs(name, row["metric_variant"])
+            k = explicit_k if re.fullmatch(r"[0-9]+", explicit_k) else (next(iter(cutoffs)) if len(cutoffs) == 1 else "")
             direction = (r.get("metric_direction") or "").strip()
             if direction not in DIRECTIONS:
                 direction = "lower_is_better" if LOWER.search(name) else ("higher_is_better" if HIGHER.search(name) else "")
             value, unit = "", ""
+            nonnumeric = False
             if status == "extracted":
                 value = parse_num(raw) or ""
                 if not value:
                     note = (note + " | " if note else "") + "numeric value not parsed from raw_value (range/text)"
+                    status, nonnumeric = "present_not_extractable", True
                 else:
                     ru = raw_unit.lower()
                     if "%" in raw or raw_unit == "%":
@@ -429,6 +473,12 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                         unit = "fraction"
             bl = (r.get("baseline_value") or "").strip()
             blv = parse_num(bl) if bl else ""
+            baseline_conflict = bool(blv and value and "%" in bl and unit != "%")
+            if baseline_conflict:
+                blv = None
+            if blv and unit == "ms" and raw_unit.lower() in {"s", "sec", "secs", "second", "seconds"}:
+                blv = format((Decimal(blv) * 1000).normalize(), "f")
+                note = (note + " | " if note else "") + f"baseline converted from {bl!r} seconds"
             if bl and blv is None:
                 note = (note + " | " if note else "") + f"baseline_value: {bl}"
             frag, fpage = row["source_fragment"], page
@@ -443,48 +493,23 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                         note = (note + " | " if note else "") + "quote not verified in text layer"
                         if row["source_table"] or row["source_figure"]:
                             frag = ""  # keep a table/figure locator instead of an unverifiable quote
-            if status == "extracted" and not value:
-                drops["non-numeric metric_value (routed to issues.csv)"] += 1
-                nonnum.append({"page": str(page), "name": name, "raw": raw, "frag": row["source_fragment"], "note": note})
-                continue
             row.update(metric_direction=direction, metric_k=k, metric_value=value, metric_unit=unit,
                        baseline_value=blv or "", sample_size=sample or "", raw_value=raw, raw_unit=raw_unit,
                        normalized_value=value, normalized_unit=unit, result_origin=origin,
-                       cited_publication_id=cref, source_page=str(fpage), source_fragment=frag,
+                       cited_publication_id=cref, source_page=str(fpage or ""), source_fragment=frag,
                        extraction_status=status, note=note)
             rows.append(row)
+            validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
     _fill_ids(rows, out)
-    for dataset in out["datasets"]:
-        dataset["dataset_name"] = dataset_display_name(dataset["dataset_name"], dataset["dataset_version"])
-    if len(nonnum) > 40:  # keep issues.csv readable: group the rest per page
-        by_page: dict[str, list[dict]] = defaultdict(list)
-        for x in nonnum[40:]:
-            by_page[x["page"]].append(x)
-        nonnum = nonnum[:40] + [{"page": pg, "name": "; ".join(sorted({y["name"] for y in xs}))[:200],
-                                 "raw": f"{len(xs)} qualitative values", "frag": xs[0]["frag"], "note": ""}
-                                for pg, xs in by_page.items()]
-    for why, n in drops.items():
-        log(f"  {doc_id}: dropped {n} result rows ({why})")
-
+    _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
     groups: dict[tuple, list[dict]] = defaultdict(list)
-    keep: list[dict] = []
     for r in rows:
         if r["extraction_status"] == "extracted" and r["metric_value"] and r["experiment_id"] and r["config_id"] and r["dataset_id"]:
             key = tuple(r[c] for c in ("experiment_id", "config_id", "dataset_id", "task_id", "metric_name", "metric_variant",
-                                        "metric_k", "metric_unit", "aggregation", "sample_size", "result_origin",
-                                        "cited_publication_id"))
-            first = groups[key][0] if groups[key] else None
-            loc = (r["source_page"], r["source_table"], r["source_fragment"])
-            if first is not None and any(loc == (g["source_page"], g["source_table"], g["source_fragment"]) and
-                                         r["metric_value"] == g["metric_value"] for g in groups[key]):
-                drops["repeat of same extraction"] += 1
-                continue
+                                        "metric_group", "metric_direction", "metric_k", "metric_unit", "aggregation",
+                                        "sample_size", "result_origin", "cited_publication_id", "baseline_value"))
             groups[key].append(r)
-        keep.append(r)
-    rows = keep
-    if drops.get("repeat of same extraction"):
-        log(f"  {doc_id}: dropped {drops['repeat of same extraction']} repeated rows (same value, same location)")
     if ocr_pages_norm is not None:
         # Keep linking and duplicate detection based on the original extraction evidence.
         for row in rows:
@@ -496,61 +521,28 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                     row["note"] = (row["note"] + " | " if row["note"] else "") + "quote not verified in OCR text"
     if fstat:
         log(f"  {doc_id}: quote check {dict(fstat)}")
-    for i, r in enumerate(rows, 1):
-        r["result_id"] = f"R{i:03d}"
-    issues: list[dict] = []
     for g in groups.values():
         base = g[0]
+        seen_values = {Decimal(base["metric_value"]): base["result_id"]}
         for r in g[1:]:
-            try:
-                same = Decimal(r["metric_value"]) == Decimal(base["metric_value"])
-            except InvalidOperation:
-                same = False
-            if same:
-                r["duplicate_of"] = base["result_id"]
+            numeric = Decimal(r["metric_value"])
+            if numeric in seen_values:
+                r["duplicate_of"] = seen_values[numeric]
             else:
+                seen_values[numeric] = r["result_id"]
                 issues.append({"check_name": "contradiction", "record_ids": f"{base['result_id']};{r['result_id']}",
                                "description": f"{base['metric_name']}: {base['metric_value']} (p.{base['source_page']}) vs "
                                               f"{r['metric_value']} (p.{r['source_page']}) for the same experiment/configuration/dataset; both kept.",
                                "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
     # ---- deterministic checks ----
-    pp = defaultdict(list)
-    for r in rows:
-        v = r["metric_value"]
-        if v and not DELTA.search(r["metric_name"]) and (BOUNDED.match(r["metric_name"]) or r["metric_unit"] in ("fraction", "%")):
-            x = Decimal(v)
-            lim = {"fraction": 1, "%": 100}.get(r["metric_unit"])
-            if lim is not None and not 0 <= x <= lim:
-                issues.append({"check_name": "metric_scale", "record_ids": r["result_id"],
-                               "description": f"{r['metric_name']}={v} {r['metric_unit']} is outside the declared scale [0, {lim}]; value preserved.",
-                               "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
-            elif lim is None and not r["metric_unit"] and x > 1:
-                issues.append({"check_name": "metric_scale", "record_ids": r["result_id"],
-                               "description": f"{r['metric_name']}={v} has no stated unit and exceeds 1: scale ([0,1] vs [0,100%]) is not declared; not converted.",
-                               "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
-        if re.search(r"@\s*\d", r["metric_name"]) and not r["metric_k"]:
-            issues.append({"check_name": "metric_k", "record_ids": r["result_id"],
-                           "description": f"{r['metric_name']} looks like an @k metric but no integer k could be determined.",
-                           "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
-        if v and r["metric_unit"] == "%" and DELTA.search(r["metric_name"]):
-            pp[r["source_page"]].append(r)
     topk = {c["config_id"]: c["top_k"] for c in out["configurations"] if c["top_k"]}
-    for r in rows:
-        tk, mk = topk.get(r["config_id"], ""), r["metric_k"]
-        if tk and mk and int(mk) > int(tk) and r["extraction_status"] == "extracted":
-            issues.append({"check_name": "metric_k_gt_top_k", "record_ids": r["result_id"],
-                           "description": f"{r['metric_name']}: metric_k={mk} > top_k={tk} of the configuration; check the retrieval/reranker stage that metric_k refers to.",
-                           "source_page": r["source_page"], "source_fragment": r["source_fragment"]})
-    for page, rs in pp.items():
-        issues.append({"check_name": "percentage_vs_percentage_point", "record_ids": ";".join(x["result_id"] for x in rs),
-                       "description": "Difference-type metrics are labeled with % in the source; it is not established whether they are relative "
-                                      "percent or percentage points. Original unit retained, no conversion.",
-                       "source_page": page, "source_fragment": rs[0]["source_fragment"]})
-    for x in nonnum:
-        issues.append({"check_name": "non_numeric_result", "record_ids": "",
-                       "description": f"Qualitative/non-numeric finding not stored as a result: {x['name']} = '{x['raw']}'"
-                                      + (f" ({x['note']})" if x["note"] else ""),
-                       "source_page": x["page"], "source_fragment": x["frag"]})
+    for r, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict in validations:
+        issues.extend(check_result(r, printed_cutoffs=cutoffs, explicit_k=explicit_k, top_k=topk.get(r["config_id"], ""),
+                                   bounded=bool(BOUNDED.match(r["metric_name"])),
+                                   difference=bool(DELTA.search(r["metric_name"])), provenance=provenance,
+                                   baseline_conflict=baseline_conflict))
+        if nonnumeric:
+            issues.append(finding(r, "non_numeric_result", f"Raw value {r['raw_value']!r} cannot be normalized to one number."))
     for mi in meta.get("issues", []):
         pg = to_page(mi.get("source_page"))
         pg = str(pg) if 1 <= pg <= n_pages else ""
@@ -560,6 +552,16 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     for i, it in enumerate(issues, 1):
         row = {c: "" for c in columns()["issues"]}
         row.update(it, publication_id=doc_id, issue_id=f"I{i:02d}")
+        if pages_norm is not None and row["source_fragment"] and row["source_page"]:
+            page = int(row["source_page"])
+            original = row["source_fragment"]
+            fragment, verified_page, state = ground(original, page, pages_norm)
+            unique_native_match = (state == "moved" and ocr_pages_norm is None
+                                   and sum(norm(original) in text for text in pages_norm) == 1)
+            if state == "ok" or unique_native_match:
+                row.update(source_fragment=fragment, source_page=str(verified_page))
+            else:
+                row["source_fragment"] = ""
         out["issues"].append(row)
     out["results"] = rows
     for r in rows:

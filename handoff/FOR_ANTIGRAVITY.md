@@ -1,43 +1,50 @@
 # PROMPT FOR ANTIGRAVITY
 
-After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGRAVITY.md`. Tasks are listed newest first. Run the first task without a report for its ID. If the queue is empty or every ID already has a report, wait for a new task.
+After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGRAVITY.md`. Run the newest task without a matching report. If no such task exists, wait for a new one.
 
-To finish a task, prepend an English report with the same ID to `handoff/FROM_ANTIGRAVITY.md`. Use `complete` or `blocked` and record whether the acceptance check passed. Commit and push only the report:
-
-```powershell
-git add -- handoff/FROM_ANTIGRAVITY.md
-git diff --cached --name-only
-git commit --only -m "Report <task ID> verification" -- handoff/FROM_ANTIGRAVITY.md
-git push origin main
-```
-
-If `main` advanced, run `git pull --rebase origin main` and retry. Preserve existing reports. Keep credentials, PDFs, caches, generated bundles, and full logs local.
+Prepend an English report with the task ID to `handoff/FROM_ANTIGRAVITY.md` and push that file alone to `origin/main`. Use status `complete` or `blocked`, with acceptance and evidence recorded separately. If the branch advanced, rebase and preserve existing replies. Keep credentials, PDFs, caches, generated bundles, and full logs local.
 
 ## Open tasks
 
-### PHASE2-DEV-001 · Compare the Phase 2 changes on the existing dev cache
+### DOMAIN2-DEV-001 · Verify the Domain 2 audit changes and re-extract the three scans
 
-Use the 21-paper dev cache from `MVP-DEV-001`. Keep the accepted `out_dev/` bundle as the demo baseline and write the comparison to `out_dev_phase2/`. Use PowerShell from the repository root with the project Python environment active.
+Use the project Python environment in PowerShell. Preserve the accepted `out_dev/` bundle and original `cache/` until both stages have results. This task supersedes the unreported `PHASE2-DEV-001` comparison.
 
-```powershell
-git pull --ff-only origin main
-git rev-parse --short HEAD
-if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
-    $env:Path = "C:\Program Files\Tesseract-OCR;$env:Path"
-}
-tesseract --version
-python -m pytest tests/test_core.py
-$LASTEXITCODE
-python main.py --input dev --output out_dev_phase2 --rebuild-csv-only --ocr
-$LASTEXITCODE
-python tools/check_submission.py out_dev_phase2 dev --ocr --json-report out_dev_phase2/validation.json
-$LASTEXITCODE
-python scripts/evaluate.py out_dev_phase2 dev_gold --show-diffs 10
-$LASTEXITCODE
-```
+1. **Zero-token checkpoint.** Use the existing full dev cache. Record the commit, all exit codes, row counts, strict/loose TP and F1, the missing-reference breakdown, and the issue quote counts. A checker exit code 2 means review is pending.
 
-The rebuild, OCR, checker, and tests must use zero API tokens. Keep all live extraction and `test/` runs out of this task. If Tesseract remains unavailable, report the blocker.
+   ```powershell
+   git pull origin main
+   git rev-parse --short HEAD
+   python -m pytest tests/test_core.py
+   python main.py --input dev --output out_dev_domain2 --rebuild-csv-only
+   python tools/check_submission.py out_dev_domain2 dev --json-report out_dev_domain2/validation.json
+   python scripts/evaluate.py out_dev_domain2 dev_gold --show-diffs 20
+   ```
 
-Compare the new report to the accepted baseline: 21 publications, zero structural errors, 5,058 result rows, 6,650/7,062 confirmed quotes (412 unresolved), 541 missing result links, strict F1 0.043 (519 TP), and loose F1 0.144 (1,756 TP). Report the new totals and their deltas. Verify that OCR quote repair preserves the declared pages and numeric values; inspect examples from D002, D013, and D021. Separate remaining OCR mismatches from source text that the checker never verified. Check the synthetic DeepSeek output-limit and recursive-split tests through pytest; skip a live replay. If a count decreases, identify the affected paper and check whether quote repair made distinct source locations look like duplicates.
+2. **Targeted live OCR + DeepSeek.** Verify Tesseract is on PATH. Make sure the local environment selects DeepSeek and confirm the CLI log names `DeepSeekClient`. Keep credentials private. Copy the complete cache to a fresh scratch folder. Force only D002, D013, and D021. The shared OCR profile is 300 dpi, RGB, PSM 3.
 
-Post the report under `PHASE2-DEV-001` in `handoff/FROM_ANTIGRAVITY.md`. Include commit, commands and exit codes, 21-paper coverage, structural errors, per-scan quote coverage, total review counts, strict and loose F1/TP, and observed regressions. Treat checker exit code 2 as unresolved review evidence.
+   ```powershell
+   if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
+       $env:Path = "C:\Program Files\Tesseract-OCR;$env:Path"
+   }
+   tesseract --version
+   $scanCache = 'out_dev_domain2_scan_cache'
+   if (Test-Path $scanCache) { throw 'Choose a fresh scratch cache directory before running the targeted extraction.' }
+   New-Item -ItemType Directory $scanCache | Out-Null
+   Copy-Item -Path cache/*.json -Destination $scanCache
+   python main.py --input dev --output out_dev_domain2_scan_retry --cache $scanCache --only D002 D013 D021 --force --ocr --workers 1
+   $scanExit = $LASTEXITCODE
+   if ($scanExit -ne 0) { throw 'Keep the scratch cache and report the failure. Leave the accepted bundle intact.' }
+   python main.py --input dev --output out_dev --cache $scanCache --rebuild-csv-only --ocr
+   python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
+   python scripts/evaluate.py out_dev dev_gold --show-diffs 20
+   python scripts/serve_ui.py out_dev
+   ```
+
+3. **Demo and report.** Open `http://127.0.0.1:8000/`. Show an exact-context comparison with a signed baseline delta, a result with raw and normalized values and a source quote, one `RULE_*` filter, and the Data Passport tab. In `DOMAIN2-DEV-001`, report the stage 1 and stage 2 deltas against `MVP-DEV-001`, the three scan IDs' mode/row counts/quote coverage, total API tokens, and parser, checker, or UI regressions. Distinguish issue quotes cleared as unverified from newly confirmed OCR evidence. Skip the 111-paper test run.
+
+   ```powershell
+   git add -- handoff/FROM_ANTIGRAVITY.md
+   git commit --only -m "Report DOMAIN2-DEV-001 verification" -- handoff/FROM_ANTIGRAVITY.md
+   git push origin main
+   ```

@@ -181,8 +181,9 @@ def main(argv: list[str] | None = None) -> int:
             ):
                 log(f"{pdf.stem}: FAIL - in-scope publication has no exportable numeric results (review extraction)")
                 failed.append(pdf.stem)
-                stub(pdf.stem)
-                continue
+                if not doc["results"]:
+                    stub(pdf.stem)
+                    continue
             writer.write_doc(doc)
             built += 1
             del doc, cache, pages_norm
@@ -200,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
         log(f"SKIPPED_SCAN: {len(skipped)} document(s): {', '.join(skipped)}")
     if failed:
         log(f"INCOMPLETE: {len(failed)} document(s) failed: {', '.join(failed)}")
-    if stubs:
+    if stubs or failed:
         return 1
     return 0
 

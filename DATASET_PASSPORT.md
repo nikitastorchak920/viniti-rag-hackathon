@@ -20,43 +20,54 @@
 
 Валидатор запущен с PDF и OCR. Структурных ошибок 0, из 7 062 цитат найдено 6 650. Код проверки — 2: остаются 412 неподтверждённых цитат и 541 пропущенная ссылка у результата. Из 412 неподтверждённых цитат 399 относятся к трём отсканированным статьям. Базовая оценка по `dev_gold/`: strict F1 0,043 (519 совпадений), loose F1 0,144 (1 756 совпадений). Эти цифры относятся к принятому снимку, до изменений Фазы 2.
 
-## Таблицы
+## Таблицы Domain 2
+
+Слайды 7–11 презентации кейса задают состав сущностей, происхождение, сопоставимость, проверки и материалы для сдачи. Точный порядок полей семи CSV зафиксирован в [`submission_template/schema.json`](submission_template/schema.json). Каждый внешний ключ разрешается вместе с `publication_id`.
+
 | Таблица | Ключ | Содержание |
 |---|---|---|
 | publications | publication_id | title, year (int), DOI, authors (`;`), in_scope (`true/false`), exclusion_reason (обязательна при `false`, пуста при `true`) |
-| configurations | config_id (`C01…`) | вариант RAG/baseline/ablation: rag_variant, retrieval_method, retriever/embedding/reranker/generator модели и версии, chunking (chunk_size, chunk_overlap — int, chunk_unit), index_type, vector_store, top_k (int ≥ 0), prompt/context_strategy, note |
-| datasets | dataset_id (`DS1…`) | dataset_name, версия, language, data_split, scientific_domain |
-| tasks | task_id (`T1…`) | task_type (свободный текст) |
-| experiments | experiment_id (`E1…`) | evaluation_protocol, baseline_name (`;`), hardware, latency_ms (число, мс), tokens_per_query, sample_size (int) |
+| configurations | config_id (`C01…`) | `rag_variant`, `retrieval_method`, `retriever_model`, `embedding_model`, `embedding_version`, `chunking_method`, `chunk_size`, `chunk_overlap`, `chunk_unit`, `index_type`, `vector_store`, `top_k`, `reranker_model`, `generator_model`, `generator_version`, `prompt_strategy`, `context_strategy`, `note` |
+| datasets | dataset_id (`DS1…`) | `dataset_name`, `dataset_version`, `language`, `data_split`, `scientific_domain`, `note` |
+| tasks | task_id (`T1…`) | `task_type`, `note` |
+| experiments | experiment_id (`E1…`) | `evaluation_protocol`, `baseline_name`, `hardware`, `latency_ms`, `tokens_per_query`, `sample_size`, `note` |
 | results | result_id (`R001…`) | одно значение одной метрики; ссылки experiment_id/config_id/dataset_id/task_id; metric_*, raw_*/normalized_*, result_origin, source_*, extraction_status, duplicate_of |
 | issues | issue_id (`I01…`) | check_name, description, record_ids (`;` result_id), source_page, source_fragment |
 
 ## results: поля и единицы
+- `experiment_id`, `config_id`, `dataset_id` и `task_id` задают контекст измерения. `metric_group`, `metric_name` и `metric_variant` различают семейство, показатель и его редакцию. `aggregation` задаёт способ агрегации, а `sample_size` хранит размер выборки.
 - `raw_value`/`raw_unit` — как напечатано (`.204`, `62.4%`, `≈62.4`); `metric_value` = `normalized_value` (число, точка), `metric_unit` = `normalized_unit`.
 - `metric_unit`: `fraction` — безразмерная метрика в [0,1] (`.204`→`0.204`); `%` — значение напечатано в процентах и **не** пересчитывается в доли; `ms` — секунды пересчитываются ×1000 (исходное в raw); прочие единицы — как в источнике; пусто — шкала не указана.
-- `metric_k` — целое k из `Метрика@k` (дробные пороги вида `@0.8` — не k); `top_k` конфигурации — отдельное поле.
+- `metric_k` — целое число из имени или варианта метрики (`Recall@5`, `k=5`, `top-5`). Дробные пороги вида `@0.8` остаются частью определения. `top_k` хранит настройку конфигурации.
 - `metric_direction`: `higher_is_better | lower_is_better | target | ""`.
 - `result_origin`: `primary` (получено авторами, включая перезапуск чужих методов) | `cited` (+ `cited_publication_id` — ссылка как в статье).
 - `extraction_status`: `extracted | present_not_extractable | absent`.
 - Диапазоны (`256-512`), `±` и нечисловые значения: число пусто/берётся ведущее, исходный текст в `raw_value`/`note`; среднее не подставляется.
 - Происхождение: `source_page`, `source_section`, `source_table`, `source_figure`, `source_fragment` (дословная цитата страницы; для текстовых PDF сверяется с текстом страницы, страница/цитата исправляются при расхождении; для сканов проверка — OCR/визуально).
 
+Целочисленные поля включают `year`, `chunk_size`, `chunk_overlap`, `top_k`, `sample_size`, `metric_k` и `source_page`. `latency_ms`, `tokens_per_query`, `metric_value`, `normalized_value` и `baseline_value` хранят десятичное число с точкой. Задержка в `latency_ms` выражена в миллисекундах. Размер чанка и перекрытие выражены в `chunk_unit`. `baseline_value` сопоставим с `metric_value` в той же единице. Неизвестные значения оставляются пустыми. `record_ids`, `authors` и `baseline_name` используют точку с запятой как разделитель списка.
+
 ## Нормализация
 1. `.204`→`0.204`, `−`→`-`, `1,234`→`1234`, `%` вырезается из числа и сохраняется как единица.
 2. Доли/проценты, BLEU/ROUGE не пересчитываются; `fraction` ставится только для ограниченных метрик (accuracy, EM, F1, precision, recall, Hit, MRR, nDCG, MAP и т. п.) при значении в [0,1] без единицы.
-3. Повторное упоминание того же значения (тот же эксперимент/конфигурация/набор/метрика/k/единица/агрегация, другое место) → `duplicate_of` на первую запись; одинаковый ключ с разными числами → обе записи + issue `contradiction`.
+3. Повторное упоминание того же значения сохраняется с `duplicate_of`, если совпадают эксперимент, конфигурация, набор, определение метрики и другие поля контекста. Разные эксперименты, варианты метрик и противоречащие значения остаются отдельными строками.
+4. Суффикс версии удаляется из `dataset_name`, если та же версия отдельно указана в `dataset_version`. Заголовок семейства переносится в `note` только при наличии на странице явного списка всех соответствующих поднаборов. ID поднаборов сохраняются. Имена моделей и вариантов сохраняют напечатанные идентификаторы, за исключением типографской нормализации.
 
 ## Правила валидации (issues.csv; строки не удаляются)
 | check_name | Условие |
 |---|---|
-| metric_scale | ограниченная метрика (кроме разностей) вне [0,1] при `fraction` или вне [0,100] при `%`; также ограниченная метрика со значением >1 без указанной единицы |
-| metric_k | в названии `@k`, но целое k не определено |
-| percentage_vs_percentage_point | метрики-разности (Δ, improvement, gain…) в `%`: относительные проценты или п.п. — не установлено |
-| metric_k_gt_top_k | `metric_k` больше `top_k` конфигурации (проверить, к какой стадии — поиск или reranker — относится k) |
+| `RULE_SCALE_BOUNDS` | Значение вне интервала [0,1] для доли или [0,100] для процента. Неположительная задержка также отмечается. |
+| `RULE_AT_K_CONSISTENCY` | Пропущено или некорректно указано целое k, значения k противоречат друг другу или `metric_k` превышает `top_k` конфигурации. |
+| `RULE_UNIT_AMBIGUITY` | Отсутствует явно заданная шкала для ограниченной метрики, смысл разницы в процентах не установлен или единица baseline противоречит единице результата. |
+| `RULE_PROVENANCE_COMPLETE` | Отсутствует допустимая страница, цитата и табличный/графический локатор, ссылка на цитируемую работу или обязательное имя метрики. |
 | contradiction | расхождение значений одного ключа или противоречия в параметрах внутри статьи |
-| non_numeric_result | исходное значение не удалось представить числом; оно сохранено в замечании вместо строки результата |
+| non_numeric_result | исходное значение не удалось представить одним числом. Строка сохраняется со статусом `present_not_extractable` и исходным значением. |
 
-Экспортёр очищает неизвестные ссылки на ID и отмечает это в `note`. Строки без допустимой страницы PDF или без локатора источника исключаются с записью в лог. Исключённая статья имеет только строку в `publications.csv`. Для необработанной статьи булево поле сериализуется как `false` с зарезервированной причиной `Unprocessed: no scope decision`. Интерфейс и оценщик показывают её как отсутствие решения по области исследования. Проверяющий скрипт считает её открытым замечанием.
+Код правила записывается в `check_name`, ссылка на результат — в `record_ids`, местоположение — в `source_page` и `source_fragment`. При наличии текста PDF непроверенная цитата из замечания очищается, а номер страницы сохраняется. Результат без подтверждаемого локатора сохраняет `raw_value` и статус `present_not_extractable`. Если отсутствует обязательное имя метрики, наблюдение остаётся в кэше и описывается в `issues.csv`: схема результатов требует имя. При неизвестном ID внешняя ссылка остаётся пустой. Пустой `dataset_id` у результата авторов может быть восстановлен по однозначной разметке той же таблицы. Для цитируемого результата без идентификатора ссылки `unspecified` служит маркером отсутствия ссылки для совместимости с валидатором.
+
+Исключённая статья имеет только строку в `publications.csv`. Для необработанной статьи булево поле сериализуется как `false` с причиной `Unprocessed: no scope decision`. Интерфейс и оценщик учитывают такой случай отдельно от принятого решения.
+
+Интерфейс сравнивает результаты внутри публикации при совпадении `dataset_id`, `task_id`, `metric_name`, `metric_k`, `metric_variant`, `evaluation_protocol`, единицы, агрегации, направления и происхождения. Положительная дельта означает улучшение: для метрик с направлением вниз она равна baseline минус значение, для направления вверх — значение минус baseline.
 
 `tools/check_submission.py` проверяет заголовки, типы, ключи и ссылки, согласованность полей и источники. Код 0 означает чистую проверку, 1 — структурные ошибки, 2 — открытые замечания. `scripts/evaluate.py` отдельно сравнивает извлечение с `dev_gold/`.
 
