@@ -159,6 +159,36 @@ class Misc(unittest.TestCase):
 
 
 class Linking(unittest.TestCase):
+    def test_explicit_dataset_aliases_retained_as_candidates_with_conflicts(self):
+        from plugins.rag.table_context import dataset_aliases
+
+        aliases = dataset_aliases([("A", "Dataset Alpha"), ("B", "Dataset Beta")], [
+            "Dataset Alpha (ALPH) is used here. CTX: Dataset Alpha, BET: Dataset Beta.",
+            "Dataset Beta (CTX) is used elsewhere. AL collects unrelated data.",
+        ])
+        self.assertEqual(aliases, {"alph": {"A"}, "bet": {"B"}, "ctx": {"A", "B"}})
+
+    def test_caption_metric_and_explicit_alias_support_a_single_metric_table(self):
+        from core.pdf_processor import TextLine
+
+        layout = {1: [TextLine(x, x + 20, y, name) for x, y, name in [
+            (10, 10, "Table 1"), (10, 20, "EM over the test corpora."),
+            (10, 30, "Method"), (100, 30, "ALPH"), (200, 30, "BET"), (300, 30, "Overall"),
+            (10, 40, "Dense Retrieval"), (100, 40, "0.21"), (200, 40, "0.34"), (300, 40, "0.28"),
+            (10, 50, "Sparse Retrieval"), (100, 50, "0.30"), (200, 50, "0.40"), (300, 50, "0.40"),
+        ]]}
+        configs = [{"config_id": "C01", "rag_variant": "Dense Retrieval", "generator_model": "Acme A"},
+                   {"config_id": "C02", "rag_variant": "Sparse Retrieval", "generator_model": "Acme A"}]
+        datasets = [{"dataset_id": "DS1", "dataset_name": "Dataset Alpha"},
+                    {"dataset_id": "DS2", "dataset_name": "Dataset Beta"}]
+        rows = [result(raw_value="0.34", source_fragment="0.34", config_id="C01", dataset_id="DS1"),
+                result(raw_value="0.40", source_fragment="0.40", config_id="C02", dataset_id="DS1"),
+                result(raw_value="0.34", metric_name="F1", source_fragment="0.34", config_id="C01", dataset_id="DS1")]
+        pages = ["Dataset Alpha (ALPH). BET: Dataset Beta. 0.34 0.40", ""]
+        doc = exporter.build_doc("P1", make_cache(rows, configs=configs, datasets=datasets), pages, Mock(), table_layout=layout)
+        self.assertEqual([(r["dataset_id"], r["config_id"]) for r in doc["results"]],
+                         [("DS2", "C01"), ("DS1", "C02"), ("DS1", "C01")])
+
     def test_positioned_table_relinks_dataset_and_joint_configuration(self):
         from core.pdf_processor import TextLine
 

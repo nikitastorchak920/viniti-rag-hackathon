@@ -501,12 +501,15 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
             rows.append(row)
             validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
     if table_layout:
-        from plugins.rag.table_context import label, relink
+        from plugins.rag.table_context import dataset_aliases, label, relink
 
         labels = defaultdict(set)
         for dataset in out["datasets"]:
             for name in (dataset["dataset_name"], dataset_display_name(dataset["dataset_name"], dataset["dataset_version"])):
                 labels[label(name)].add(dataset["dataset_id"])
+        aliases = dataset_aliases(((d["dataset_id"], d["dataset_name"]) for d in out["datasets"]), pages_norm)
+        for alias, ids in aliases.items():
+            labels[alias].update(ids)
         known = {name: next(iter(ids)) for name, ids in labels.items() if name and len(ids) == 1}
         configurations = [(cfg["config_id"], label(cfg["rag_variant"]), label(cfg["generator_model"]))
                           for cfg in out["configurations"]]

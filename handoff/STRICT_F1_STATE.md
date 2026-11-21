@@ -1,8 +1,22 @@
 # Strict F1 checkpoint state
 
+## P0.3a · Completed offline alias recovery
+
+- Status: awaiting operator approval before P0.3b. No API calls or evaluator changes. Both builds scored the same 17 usable document caches against 21 gold publications.
+- Extracted only acronym definitions printed in the native PDF, in `full name (ABBR)` or `ABBR: full name` form. Conflicting names are excluded. For single-metric tables, the caption must identify one cached metric and the existing configuration must match the printed row method. Unlabeled numeric columns still participate in ambiguity checks. No new entities or configuration IDs were introduced.
+
+| Snapshot | Strict P | Strict R | Strict F1 | Strict TP | Loose P | Loose R | Loose F1 | Loose TP | Pred | Gold |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Before P0.3a | 0.11831 | 0.02372 | 0.03952 | 460 | 0.31019 | 0.06219 | 0.10361 | 1,206 | 3,888 | 19,392 |
+| After P0.3a | 0.12503 | 0.02501 | 0.04168 | 485 | 0.30987 | 0.06198 | 0.10330 | 1,202 | 3,879 | 19,392 |
+
+All 25 new Strict matches came from 39 dataset reference changes in D006; no prior Strict matches were lost. Nine observations gained duplicate flags and remain in CSV, reducing Loose TP by four. The validator reported zero structural errors and 260 review items before and after. `pytest` passed 37 tests.
+
+Reproduce with `python main.py --input dev --output out_dev_strict_p03 --rebuild-csv-only` and `python scripts/evaluate.py out_dev_strict_p03 dev_gold --show-diffs 20`. The next proposed step, P0.3b, targets entities whose source labels have no matching entry in cached metadata.
+
 ## P0.2 · Completed offline relinking
 
-- Status: awaiting operator approval before P0.3. No API calls and no evaluator changes. Both builds scored the same 17 available local document caches against 21 gold publications.
+- Historical checkpoint. No API calls and no evaluator changes. Both builds scored the same 17 available local document caches against 21 gold publications.
 - Changes: `core/pdf_processor.py` exposes optional native line coordinates only for result pages. `plugins/rag/table_context.py` links an exact cached value and metric to repeated column groups under known printed dataset labels. It scopes to a uniquely captioned table, checks row method and generator evidence, and leaves ambiguous cells unresolved. A configuration reassignment requires a quoted method and a unique configuration. Cache version 2 and the seven CSV schemas are unchanged.
 
 | Snapshot | Strict P | Strict R | Strict F1 | Strict TP | Loose P | Loose R | Loose F1 | Loose TP | Pred | Gold |
