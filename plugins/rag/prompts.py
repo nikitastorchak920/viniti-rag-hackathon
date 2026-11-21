@@ -18,7 +18,9 @@ HARD RULES
 9. Separate configurations: different generators, ablation variants, retrieval settings are DIFFERENT configurations. Different datasets/splits/versions are different datasets. Do not merge experiments with different protocols.
 10. Do not multiply percentages/fractions: keep what is printed. Differences/deltas in tables (e.g. "+3.2", "Δ", "improvement") are separate metrics: put the delta in metric_name (e.g. "EM delta") and raw_unit "%" only if printed with %.
 11. metric_direction: "higher_is_better", "lower_is_better", "target" or "" if unclear. metric_k: integer k for @k metrics (Recall@5 -> metric_name "Recall@5", metric_k "5"); "" otherwise. A fractional threshold (OC@0.8) is not k. top_k of the retriever is a configuration field, not metric_k.
-12. Identifiers: configurations C01, C02, ...; datasets DS1, DS2, ...; tasks T1, T2, ...; experiments E1, E2, ... (consistent everywhere).
+12. source_fragment must be copied character-for-character from the text layer (keep its spacing, symbols and line order; do not re-join hyphenated line breaks, do not fix typos, do not add "..."). Prefer the shortest span that contains the number (e.g. "Recall@5 0.712"). Same number printed in a table and in text: quote the table row once.
+13. Never output the same entity twice: one configuration/dataset/task/experiment per distinct setting, with the SAME name spelling as the paper. result_origin "cited" iff cited_ref is non-empty. Do not scale values: if the table says 62.4 without %, raw_unit is "".
+14. Identifiers: configurations C01, C02, ...; datasets DS1, DS2, ...; tasks T1, T2, ...; experiments E1, E2, ... (consistent everywhere).
 """
 
 META_USER = """TASK: read the whole paper and return the paper-level entities.
@@ -55,7 +57,9 @@ def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
         "OUTPUT SIZE: return compact JSON (no indentation, no extra whitespace or blank lines). source_fragment must be a SHORT verbatim quote "
         "(at most 15 words around the value, e.g. the table row); keep note short or empty.\n"
         + ("NOTE: the text below is only a FRAGMENT of the page (a few lines may repeat from the neighbouring fragment); "
-           "extract only values visible in it and keep source_page = the page number in the marker.\n" if part else "")
+           "extract only values visible in it and keep source_page = the page number in the marker. "
+           "Lines between [TABLE HEADER CONTEXT...] and [END HEADER CONTEXT] are only the table caption/column headers repeated from above: "
+           "use them to name metrics/columns (and source_table), never as a source of values or quotes.\n" if part else "")
         + "\n"
         "ENTITIES (already extracted, ids fixed):\n" + json.dumps(ent, ensure_ascii=False)
     )

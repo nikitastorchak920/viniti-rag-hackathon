@@ -82,6 +82,10 @@ def as_num(v: str) -> str | None:
     return n if n is not None and not n.startswith("-") else None
 
 
+def _compact(t: str) -> str:
+    return re.sub(r"[\s\-\u2010\u2011\u2012\u2013\u2212]+", "", t)
+
+
 def ground(frag: str, page: int, pages_norm: list[str]) -> tuple[str, int, str]:
     """Return (fragment, page, status) status in ok|moved|repaired|unverified."""
     f = norm(frag)
@@ -92,6 +96,18 @@ def ground(frag: str, page: int, pages_norm: list[str]) -> tuple[str, int, str]:
     for i, t in enumerate(pages_norm):
         if f in t:
             return frag, i + 1, "moved"
+    fc = _compact(f)
+    if len(fc) >= 6:
+        order = ([page - 1] if 1 <= page <= len(pages_norm) else []) + [i for i in range(len(pages_norm)) if i != page - 1]
+        for i in order:
+            t = pages_norm[i]
+            tc = _compact(t)
+            j = tc.find(fc)
+            if j >= 0:
+                # map the compact hit back to an exact substring of the page text (checker matches verbatim after norm)
+                idx = [k for k, ch in enumerate(t) if not ch.isspace() and ch not in "-\u2010\u2011\u2012\u2013\u2212"]
+                a, b = idx[j], idx[j + len(fc) - 1] + 1
+                return t[a:b], i + 1, "repaired" if i == page - 1 else "moved"
     if len(f) >= 15 and 1 <= page <= len(pages_norm):
         try:
             from rapidfuzz import fuzz
@@ -102,6 +118,25 @@ def ground(frag: str, page: int, pages_norm: list[str]) -> tuple[str, int, str]:
         except ImportError:
             pass
     return frag, page, "unverified"
+
+
+def _subfragment(frag: str, raw: str, page: int, pages_norm: list[str]) -> tuple[str, int] | None:
+    """Longest verbatim window of the quote's words around raw_value that exists on the page."""
+    words = norm(frag).split(" ")
+    rv = norm(raw)
+    if not rv or not 1 <= page <= len(pages_norm):
+        return None
+    pos = [i for i, w in enumerate(words) if rv in w]
+    if not pos:
+        return None
+    text = pages_norm[page - 1]
+    best = None
+    for L in range(len(words), 0, -1):
+        for a in range(max(0, pos[0] - L + 1), min(pos[0], len(words) - L) + 1):
+            cand = " ".join(words[a:a + L])
+            if rv in cand and cand in text:
+                return cand, page
+    return best
 
 
 def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> dict[str, list[dict]]:
@@ -154,10 +189,28 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
         if extra:
             row["note"] = (row.get("note", "") + " | " if row.get("note") else "") + "; ".join(extra)
 
-    cfgs = [dict(c) for c in meta["configurations"]]
-    dss = [dict(d) for d in meta["datasets"]]
-    tks = [dict(t) for t in meta["tasks"]]
-    exs = [dict(e) for e in meta["experiments"]]
+    idmap: dict[str, dict[str, str]] = {k: {} for k in ("config_id", "dataset_id", "task_id", "experiment_id")}
+
+    def merge_entities(items: list[dict], key: str) -> list[dict]:
+        """Drop later entities identical (ignoring id/note, case/space-insensitive) to an earlier one; map their ids."""
+        seen: dict[tuple, str] = {}
+        out_: list[dict] = []
+        for it in items:
+            sig = tuple(sorted((k, re.sub(r"\s+", " ", str(v or "")).strip().lower()) for k, v in it.items()
+                               if k not in (key, "note", "publication_id")))
+            vid = (it.get(key) or "").strip()
+            if sig in seen and any(v for _, v in sig):
+                if vid:
+                    idmap[key].setdefault(vid, seen[sig])
+                continue
+            seen[sig] = vid
+            out_.append(it)
+        return out_
+
+    cfgs = merge_entities([dict(c) for c in meta["configurations"]], "config_id")
+    dss = merge_entities([dict(d) for d in meta["datasets"]], "dataset_id")
+    tks = merge_entities([dict(t) for t in meta["tasks"]], "task_id")
+    exs = merge_entities([dict(e) for e in meta["experiments"]], "experiment_id")
     cset = uniq_ids(cfgs, "config_id", "C")
     dset = uniq_ids(dss, "dataset_id", "DS")
     tset = uniq_ids(tks, "task_id", "T")
@@ -194,6 +247,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                 row[k] = (r.get(k) or "").strip()
             for k, valid in (("experiment_id", eset), ("config_id", cset), ("dataset_id", dset), ("task_id", tset)):
                 v = (r.get(k) or "").strip()
+                v = idmap[k].get(v, v) if v not in valid else v
                 if v and f"{k}:{v}" in dup_ids:
                     note = (note + " | " if note else "") + f"ambiguous {k} '{v}' (duplicated in paper entities)"
                 if v and v not in valid:
@@ -211,6 +265,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                 continue
             origin = (r.get("result_origin") or "primary").strip()
             cref = (r.get("cited_ref") or "").strip()
+            if origin != "cited" and cref:
+                origin = "cited"
             if origin == "cited":
                 cref = cref or "unspecified"
             else:
@@ -249,6 +305,14 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
             if pages_norm is not None and frag:
                 frag, fpage, st = ground(frag, page, pages_norm)
                 fstat[st] += 1
+                if st == "unverified":
+                    sub = _subfragment(frag, raw, page, pages_norm)
+                    if sub:
+                        frag, fpage = sub
+                    else:
+                        note = (note + " | " if note else "") + "quote not verified in text layer"
+                        if row["source_table"] or row["source_figure"]:
+                            frag = ""  # keep a table/figure locator instead of an unverifiable quote
             row.update(metric_direction=direction, metric_k=k, metric_value=value, metric_unit=unit,
                        baseline_value=blv or "", sample_size=sample or "", raw_value=raw, raw_unit=raw_unit,
                        normalized_value=value, normalized_unit=unit, result_origin=origin,

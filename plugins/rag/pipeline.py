@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pathlib
+import re
 import time
 
 from core.llm_client import GeminiClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
@@ -29,6 +30,33 @@ def _gen(client, contents, schema, tag: str) -> dict:
 OVERLAP = 4  # lines shared by the two halves of a split page (keeps table header / context)
 
 
+CAPTION = re.compile(r"(?i)^\s*(table|tab\.|figure|fig\.)\s*[A-Z]?\d+")
+COLHEAD = re.compile(r"(?i)\b(method|model|dataset|metric|setting|config\w*|EM|F1|recall|precision|accuracy|MRR|nDCG)\b.*\b(EM|F1|recall|precision|accuracy|MRR|nDCG|score|avg|average)\b")
+HDR_MARK, HDR_END = "[TABLE HEADER CONTEXT - do not extract values from these lines]", "[END HEADER CONTEXT]"
+HEADER_LINES = 4
+
+
+def _header(lines: list[str], idx: int) -> list[str]:
+    """Table caption + column-header lines found above split index idx (empty if none or already in the overlap)."""
+    for i in range(idx - 1, -1, -1):
+        if lines[i] in (HDR_MARK, HDR_END):
+            continue
+        if CAPTION.match(lines[i]) or (COLHEAD.search(lines[i]) and not re.search(r"\d+\.\d", lines[i])):
+            for j in range(i - 1, max(-1, i - 4), -1):  # caption just above the column-header line
+                if CAPTION.match(lines[j]):
+                    i = j
+                    break
+            if i >= idx - OVERLAP:
+                return []
+            out = []
+            for x in lines[i:min(i + HEADER_LINES, idx - OVERLAP)]:
+                if x in (HDR_MARK, HDR_END) or (out and re.search(r"\d+\.\d", x)):  # stop at first data row
+                    break
+                out.append(x)
+            return out
+    return []
+
+
 def _dedupe(rows: list[dict]) -> list[dict]:
     seen, out = set(), []
     for r in rows:
@@ -49,12 +77,16 @@ def _part(client, contents_fn, meta: dict, page: int, lines: list[str], doc_id: 
         data = _gen(client, contents_fn(window_user(meta, page, page, part=depth > 0), page, page, text), Window, tag)
         return data["results"]
     except TruncatedResponseError:
-        if len(lines) < 2 * OVERLAP + 2 or depth >= 8:
+        if len([x for x in lines if x not in (HDR_MARK, HDR_END)]) < 2 * OVERLAP + 2 or depth >= 8:
             raise
         mid = len(lines) // 2
         log(f"  [{doc_id}] page {page} still truncated ({len(lines)} lines): splitting by lines")
         a = _part(client, contents_fn, meta, page, lines[:mid + OVERLAP], doc_id, depth + 1)
-        b = _part(client, contents_fn, meta, page, lines[mid - OVERLAP:], doc_id, depth + 1)
+        low = lines[mid - OVERLAP:]
+        hdr = _header(lines, mid - OVERLAP)
+        if hdr and HDR_MARK not in low:
+            low = [HDR_MARK, *hdr, HDR_END, *low]
+        b = _part(client, contents_fn, meta, page, low, doc_id, depth + 1)
         return _dedupe(a + b)
 
 
