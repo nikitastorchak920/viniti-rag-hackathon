@@ -1,5 +1,19 @@
 # Strict F1 checkpoint state
 
+## Stage 3 · Entity passport and source-backed normalization
+
+The metadata pass now emits page and table scopes alongside paper entities. The exporter resolves model and dataset spellings against printed evidence, removes generic author markers from method labels, and checks metric cutoff declarations against the cited page. It separates the parsed cutoff from the printed metric display label and preserves the existing CSV convention and evaluator.
+
+| Comparison against 21 gold papers (18 complete local caches) | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP | Structural errors |
+|---|---:|---|---:|---|---:|---:|
+| Stage 2 reference | 3,994 | 0.02707/0.13145/0.04490 | 525 | 0.06962/0.33801/0.11545 | 1,350 | 0 |
+| Stage 3 on the same cache | 3,994 | 0.03445/0.16725/0.05713 | 668 | 0.06962/0.33801/0.11545 | 1,350 | 0 |
+| Stage 3 with one fresh paper | 4,031 | 0.03130/0.15058/0.05183 | 607 | 0.06962/0.33490/0.11527 | 1,350 | 0 |
+
+The same-cache gain was +144 Strict TP on D007 and -1 on D011, where the earlier configuration assignment came from a substring of an extraction note. D007's source states the model identifier in a parenthetical declaration and marks the authors' method separately. The rules are based on those document structures. The fresh D007 run used seven passport scopes, 15 detected tables, and 859 raw results. It increased D007 Strict TP from the Stage 2 reference's 180 to 263, but the normalized earlier cache scored 324. Keep these snapshots separate.
+
+The offline check took 5.6 seconds and zero tokens. The full-paper pilot took 332.5 seconds and reported 145,718 input and 63,294 output tokens. The final rebuild and evaluation took 8.8 seconds. The checker reported 420 review items for the same-cache comparison and 347 with the refreshed paper. Both used native text for quote checks. The local cache gaps are D002, D009 and D013. All 56 core tests passed. The original caches, jury bundle, front end and held-out test data were outside the verification run.
+
 ## Stage 2 · Table requests and compact results
 
 The same D007 pages 7–9 and Stage 1 metadata were replayed on the configured DeepSeek gateway. The first pass exposed a captioned table rendered as plain text. The final planner captured both header groups and returned 210 observations in the two slices of that table. It also kept the other table and residual prose requests. Eight identical table responses were reused between experiments.

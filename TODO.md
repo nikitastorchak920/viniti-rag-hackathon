@@ -25,5 +25,7 @@
 
 ## Stage 3 · Strict context and seven-field tuples
 
-- [ ] **3.1 Paper entity passport.** Collect datasets, generators, RAG variants and cutoffs in one metadata request per paper. Include the supported entities with each table and inherit keys from the applicable headers and captions.
-- [ ] **3.2 Source-backed normalization.** Split metric suffixes such as `Metric@k`, canonicalize names and spacing, and inherit unambiguous context without filling unsupported values. Keep experiment limits distinct from metric cutoffs. Measure Strict/Loose results and review diagnostics on dev. Stop for approval.
+- [x] **3.1 Paper entity passport.** Collect datasets, generators, RAG variants and scoped metric cutoffs in the first metadata request. Pass the matching page and table scope to each extraction request. The live pilot returned seven scopes and completed the paper.
+- [x] **3.2 Source-backed normalization.** Resolve entity typography and explicit model identifiers, read metric cutoffs separately from display labels, and inherit context when the local source is unambiguous. On the same cache, Strict TP rose from 525 to 668 and Strict F1 from 0.04490 to 0.05713. The fresh-paper variant scored 607 Strict TP and remains an isolated comparison. Both bundles passed structural validation. [Detailed results](handoff/STRICT_F1_STATE.md#stage-3--entity-passport-and-source-backed-normalization)
+
+The local measurements cover 18 complete caches against all 21 gold papers. D002, D009 and D013 remain unresolved in the local snapshot. The accepted jury bundle and test corpus remain outside this pilot.

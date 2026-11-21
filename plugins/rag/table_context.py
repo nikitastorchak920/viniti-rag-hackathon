@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from decimal import Decimal
+from functools import lru_cache
 import re
 import unicodedata
 from typing import NamedTuple
@@ -30,6 +31,22 @@ def mentions(phrase: str, text: str) -> bool:
     return bool(phrase and f" {phrase} " in f" {text} ")
 
 
+def identity_label(text: str) -> str:
+    """Ignore case and typography around letters, digits and version decimals."""
+    normalized = label(text)
+    return re.sub(r"(?<=[a-z]) (?=\d)|(?<=\d) (?=[a-z]\b)", "", normalized)
+
+
+@lru_cache(maxsize=2048)
+def _identity_pattern(phrase: str) -> re.Pattern:
+    pattern = re.sub(r"(?<=[a-z])(?=\d)|(?<=\d)(?=[a-z]\b)", " ?", re.escape(phrase))
+    return re.compile(rf"(?<!\w){pattern}(?!\w)")
+
+
+def mentions_identity(phrase: str, text: str) -> bool:
+    return bool(phrase and _identity_pattern(phrase).search(text))
+
+
 def number(text: str) -> tuple[Decimal, bool]:
     return Decimal(text.rstrip("%").replace("−", "-")), text.endswith("%")
 
@@ -37,15 +54,17 @@ def number(text: str) -> tuple[Decimal, bool]:
 def dataset_aliases(datasets, pages_norm) -> dict[str, set[str]]:
     """Read explicit acronym definitions, never infer an acronym from initials or a prefix."""
     aliases = defaultdict(set)
-    token = r"[A-Z][A-Z0-9-]{1,11}"
+    token = r"[A-Z][A-Za-z0-9-]{1,11}"
     for dataset_id, name in datasets:
         if not name:
             continue
         full = rf"(?i:{re.escape(name)})"
-        definition = re.compile(rf"(?<![\w-])(?:({token})\s*:\s*{full}(?![\w-])|{full}\s*\(\s*({token})\s*\))")
+        definition = re.compile(rf"(?<![\w-])(?:({token})\s*:\s*{full}(?![\w-])|{full}\s*\(\s*({token})(?=\s*[,;)]))")
         for page in pages_norm or ():
             for match in definition.finditer(page):
-                aliases[label(match[1] or match[2])].add(dataset_id)
+                alias = match[1] or match[2]
+                if sum(c.isupper() or c.isdigit() for c in alias) >= 2:
+                    aliases[label(alias)].add(dataset_id)
     return aliases
 
 
@@ -58,6 +77,15 @@ def _visual_rows(lines: list[TextLine]) -> list[list[TextLine]]:
             rows.append([])
         rows[-1].append(line)
     return [sorted(row, key=lambda item: item.left) for row in rows]
+
+
+def native_captions(layout):
+    captions = defaultdict(set)
+    for page, lines in layout.items():
+        for row in _visual_rows(lines):
+            if match := CAPTION.match(row[0].text.strip()):
+                captions[str(page), label(f"Table {match[1]}")].add(row[0].text.strip())
+    return {key: next(iter(values)) for key, values in captions.items() if len(values) == 1}
 
 
 def _columns(headings, metrics, dataset_labels):

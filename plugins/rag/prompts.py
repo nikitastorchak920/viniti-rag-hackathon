@@ -8,7 +8,7 @@ SYSTEM = """You extract structured data from scientific papers about Retrieval-A
 
 HARD RULES
 1. Never invent. If a value is not stated in the paper, output "" (empty string). Zero is "0", never "". Never output null/NaN/unknown/N/A.
-2. Do not infer versions, parameters, scales or conditions from general knowledge or other papers. Keep the paper's own notation (e.g. "GPT-4o mini", "LLaMA3-8B-Instruct"). Explain ambiguity in `note`.
+2. Do not infer versions, parameters, scales or conditions from general knowledge or other papers. Keep the paper's own notation. Explain ambiguity in `note`.
 3. Ranges (e.g. "256-512") must NOT be averaged: leave the numeric field empty and put the range in `note`.
 4. Numbers: copy `raw_value` exactly as printed (".204", "62.4", "≈62.4", "3.0%", "-1.5"). Put the printed unit in `raw_unit` only if it is printed ("%", "ms", "s", "tokens"); otherwise "". Do not convert units or scales yourself.
 5. Page numbers are PDF page numbers starting at 1 (the `--- PAGE N ---` markers, or the physical page index of the PDF file), NOT printed journal page numbers.
@@ -17,33 +17,20 @@ HARD RULES
 8. `extraction_status`: "extracted" (default, value readable), "present_not_extractable" (value clearly exists but cannot be read reliably), "absent" (metric announced but value not given). Do not create rows for absent combinations of metrics x configurations.
 9. Separate configurations: different generators, ablation variants, retrieval settings are DIFFERENT configurations. Different datasets/splits/versions are different datasets. Do not merge experiments with different protocols.
 10. Do not multiply percentages/fractions: keep what is printed. Differences/deltas in tables (e.g. "+3.2", "Δ", "improvement") are separate metrics: put the delta in metric_name (e.g. "EM delta") and raw_unit "%" only if printed with %.
-11. metric_direction: "higher_is_better", "lower_is_better", "target" or "" if unclear. metric_k: integer k for @k metrics (Recall@5 -> metric_name "Recall@5", metric_k "5"); "" otherwise. A fractional threshold (OC@0.8) is not k. top_k of the retriever is a configuration field, not metric_k.
+11. metric_direction: "higher_is_better", "lower_is_better", "target" or "" if unclear. For a printed @k metric, preserve its printed label in metric_name and put the integer in metric_k. Otherwise fill metric_k only if the source explicitly states the evaluation cutoff for that metric. A fractional threshold is not k. A setting for the retriever or the amount of context is a configuration field.
 12. source_fragment must be copied character-for-character from the text layer (keep its spacing, symbols and line order; do not re-join hyphenated line breaks, do not fix typos, do not add "..."). Prefer the shortest span that contains the number (e.g. "Recall@5 0.712"). Same number printed in a table and in text: quote the table row once.
 13. Never output the same entity twice: one configuration/dataset/task/experiment per distinct setting, with the SAME name spelling as the paper. result_origin "cited" iff cited_ref is non-empty. Do not scale values: if the table says 62.4 without %, raw_unit is "".
-14. `rag_variant` = METHOD/pipeline name only (e.g. "Vanilla RAG", "Focal Mixed Training", "RA-CoT", "retriever only"); NEVER append the generator/backbone/retriever name to it. `generator_model` = the LLM only (paper notation), "" for retriever-only systems. Same method with 3 generators = 3 configurations with the same rag_variant.
+14. `rag_variant` = METHOD/pipeline name only; NEVER append the generator/backbone/retriever name to it. `generator_model` = the LLM only (paper notation), "" for retriever-only systems. Same method with 3 generators = 3 configurations with the same rag_variant.
 15. EXHAUSTIVENESS: extract EVERY numeric cell of EVERY results, ablation, hyperparameter, cost/efficiency, analysis and appendix table (all baselines, all ablation rows, all datasets x metrics x generators), plus numbers in running text. Never summarize, sample or skip rows/columns; if a table is long, keep going until the last row. Each metric column = its own row (EM and F1 separately). Do not output rows without a numeric value.
 16. Identifiers: configurations C01, C02, ...; datasets DS1, DS2, ...; tasks T1, T2, ...; experiments E1, E2, ... (consistent everywhere).
 """
 
-FEWSHOT = """
-CANONICAL CONVENTIONS (from the expert-annotated gold set)
-- Table "Method x Generator x Dataset x Metric" is expanded to ATOMIC rows: one configuration per (method, generator); one result row per (configuration, dataset, metric).
-  Example: row "RA-CoT" with generators LLaMA3-8B-Instruct / Qwen3.5 plus / GPT-4o mini and datasets HotpotQA, 2Wiki each with EM and F1
-  -> 3 configurations {rag_variant:"RA-CoT", generator_model:"LLaMA3-8B-Instruct"|"Qwen3.5 plus"|"GPT-4o mini"}, each with 2 datasets x 2 metrics = 4 rows.
-- Retriever-only systems: {rag_variant:"Retriever-Only", generator_model:""}; reranker variants: {rag_variant:"Retriever-Only + LCR"}. The reranker/method is part of rag_variant, the LLM never is.
-- No retrieval / closed-book LLM rows: {rag_variant:"No Retrieval" (or "Baseline" if the paper calls it so), generator_model:<LLM>}.
-- WRONG: {rag_variant:"Vanilla RAG Llama 3.1 8B Instruct"}. RIGHT: {rag_variant:"Vanilla RAG", generator_model:"Llama 3.1 8B Instruct"}.
-- @k metrics: metric_name "NDCG@5" (no spaces) and metric_k "5"; plain "Accuracy" has metric_k "". OC@0.8 is a threshold: metric_k "".
-- Scale: copy the printed number. ".204" -> raw_value ".204" (fraction); "62.4%" -> raw_value "62.4%", raw_unit "%". Never convert 0.204 <-> 20.4.
-- A column of deltas/improvements ("EM improvement over X", "EM decrease") is its own metric name. A cost table (tokens, ms, USD) is its own experiment with its own metric names and units.
-- Ablation rows ("w/o X") are separate configurations: rag_variant "<Method> w/o X".
-- Numbers copied from another paper's results (marked with a citation or "reported in [x]") = cited with cited_ref; the authors' own runs of baselines = primary.
-- DATASETS are granular: every sub-corpus, domain, language, property, split or aggregate shown as a row/column gets its OWN dataset ("DocBench / Law", "OpinioBank: Ala Moana Honolulu", "RAG-Multi-Corpus / Overall", "mean over TREC DL19 and DL20"). Use the table's own label. A table without a dataset dimension => dataset_id "" unless the paper has one dataset.
-- METRIC NAMES: use the full name as the paper defines it ("Entity Match Rate", "Factuality", "Answer accuracy"), not a table abbreviation ("EM-R", "Fac.", "Acc"). Keep one spelling for the same metric everywhere.
-- metric_k: if a column/section is computed at a stated retrieval depth (top-20 retrieved items, "k=5"), put that integer in metric_k even if the name has no "@".
-- rag_variant: the full row label as printed, including qualifiers ("Traditional RAG raw KB", "PrismRAG w/o Distractor", "ThreadRAG ablation SN+STG+EDP"); ablation/sweep rows keep their own variant, do not collapse them into the full method.
-- generator_model: copy the notation printed in the table/caption ("LLaMA3-8B-Instruct", "Qwen-14B", "GPT-4o mini"); do NOT expand it to a full official model name or add version numbers/vendor prefixes that are not printed there.
-- A qualitative statement without a number ("significantly better") is NOT a result row.
+ENTITY_CONVENTIONS = """
+ENTITY CONVENTIONS
+- Preserve each printed dataset split or sub-corpus and each method, generator, and ablation condition as a distinct entity.
+- A model-free baseline may have an empty generator. Keep a generator separate from the method and retain all printed condition qualifiers.
+- Prefer a metric's full printed definition to its abbreviated label when the paper explicitly links them.
+- Keep numerical scales and source spellings intact. Return separate rows for separate measured cells.
 """
 
 IN_SCOPE_RUBRIC = """IN_SCOPE RUBRIC (precision matters: every excluded paper must have in_scope=false and EMPTY entity lists, otherwise its metrics count as false positives)
@@ -62,7 +49,15 @@ META_USER = """TASK: read the whole paper and return the paper-level entities.
 
 Use only the paper. Leave unknown fields "".
 """
-META_USER = META_USER + "\n" + IN_SCOPE_RUBRIC
+META_USER = META_USER + """
+5. table_scopes: a compact passport of table-specific evidence. Record only tables with explicitly
+documented datasets, configurations, or metric cutoffs, including those in appendices. Use the PDF
+page number and printed table identifier. List only already declared dataset_ids and config_ids.
+For each metric cutoff, supply the metric_name, positive integer metric_k, and a short verbatim
+source_fragment containing the metric and its cutoff (for example "Recall@5"). Retrieval settings
+and context limits are not metric cutoffs. When a table has no explicit scope, omit that scope.
+An excluded paper has an empty table_scopes list.
+""" + "\n" + IN_SCOPE_RUBRIC
 
 VERIFY_USER = """TASK: AUDIT of PDF page {page}. Rows already extracted from this page are listed below (compact). Find numeric values on this page that are MISSING (every table cell of every table on the page, appendix tables, ablation/baseline rows, values in text) and return ONLY the missing rows in `results`, following all rules. Do not repeat existing rows. Return an empty list if nothing is missing.
 Return compact JSON.
@@ -78,7 +73,8 @@ def verify_user(meta: dict, page: int, existing: list[str]) -> str:
     return VERIFY_USER.format(page=page, entities=ent, existing=json.dumps(existing, ensure_ascii=False))
 
 
-def window_user(meta: dict, first: int, last: int, part: bool = False, table_only: bool = False) -> str:
+def window_user(meta: dict, first: int, last: int, part: bool = False, table_only: bool = False,
+                table_label: str = "") -> str:
     ent = {
         "configurations": [{k: c.get(k, "") for k in ("config_id", "rag_variant", "generator_model", "retriever_model", "note")}
                            for c in meta["configurations"]],
@@ -88,6 +84,10 @@ def window_user(meta: dict, first: int, last: int, part: bool = False, table_onl
         "experiments": [{k: e.get(k, "") for k in ("experiment_id", "evaluation_protocol")}
                         for e in meta["experiments"]],
     }
+    if scopes := [s for s in meta.get("table_scopes", [])
+                  if first <= s["source_page"] <= last
+                  and (not table_label or s["source_table"].casefold() == table_label.casefold())]:
+        ent["table_scopes"] = scopes
     return (
         ("TASK: extract ALL measured numeric cells from the supplied rows of this single table. "
          "Use repeated headers, captions, and cells with data-context-only=true as context only. "
@@ -100,6 +100,9 @@ def window_user(meta: dict, first: int, last: int, part: bool = False, table_onl
         "ONLY from the entity lists below (copy the id exactly; \"\" if none fits). Include baseline rows reported in the paper's tables "
         "(origin primary if re-run by the authors, cited if copied from other work). A numeric baseline cell with its own identifiable setting is a separate "
         "result row. `baseline_value` can also link a comparable baseline; it never replaces an independently reported result.\n"
+        "Resolve missing context from the relevant row, merged column headers, and caption, in that order. "
+        "Use the paper's entity passport to disambiguate labels. Keep the cell empty when those sources disagree. "
+        "Never borrow the dataset, configuration, or cutoff from an adjacent row with a different condition.\n"
         "Set source_page for every row to the PDF page where the value appears; source_table like \"Table 1\"; source_section like \"4.2\".\n"
         "Apply the same extraction rules to appendices and supplementary pages. For reference lists and pages that genuinely have no numeric results, return an empty list.\n"
         "OUTPUT SIZE: return compact JSON (no indentation, no extra whitespace or blank lines). source_fragment must be a SHORT verbatim quote "
@@ -112,8 +115,8 @@ def window_user(meta: dict, first: int, last: int, part: bool = False, table_onl
         "ENTITIES (already extracted, ids fixed):\n" + json.dumps(ent, ensure_ascii=False)
     )
 
+SYSTEM = SYSTEM + ENTITY_CONVENTIONS
 RESULT_SYSTEM = SYSTEM
-SYSTEM = SYSTEM + FEWSHOT
 
 
 def compact_result_format() -> str:

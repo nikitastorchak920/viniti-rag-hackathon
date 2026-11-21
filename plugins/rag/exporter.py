@@ -11,6 +11,7 @@ from decimal import Decimal
 from itertools import chain
 
 from core.validator import RULE_PROVENANCE_COMPLETE, check_result, finding
+from plugins.rag.table_context import dataset_aliases, identity_label, label, mentions_identity, native_captions
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parents[2] / "submission_template" / "schema.json"
 TABLES = ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"]
@@ -180,6 +181,34 @@ def canon_space(t: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[‐‑‒–]", "-", t)).strip()
 
 
+_MODEL_DECLARATION = re.compile(
+    r"(?i)(?<![\w.-])(?P<family>[\w.-]*\d[\w.-]*)\s+model\s*"
+    r"\(\s*(?P<identifier>[\w.]+(?:-[\w.]+)+)\s*\)"
+)
+_AUTHOR_LABEL = re.compile(r"(?i)\s*(?:\(\s*ours\s*\)|\[\s*ours\s*\])$")
+
+
+def _model_parts(name: str) -> tuple[str, ...]:
+    return tuple(re.findall(r"[^\W\d_]+|\d+(?:\.\d+)*", name.casefold()))
+
+
+def _model_declarations(pages_norm):
+    return [(m["family"], m["identifier"]) for page in pages_norm or () for m in _MODEL_DECLARATION.finditer(page)]
+
+
+def canonical_model(name: str, declarations: list[tuple[str, str]], printed_ids=()) -> str:
+    """Complete an intermediate model identifier only from an explicit source declaration."""
+    parts = _model_parts(name)
+    if parts in printed_ids:
+        return name
+    matches = {}
+    for family, identifier in declarations:
+        base, full = _model_parts(family), _model_parts(identifier)
+        if len(base) < len(parts) <= len(full) and parts[:len(base)] == base and full[:len(parts)] == parts:
+            matches[full] = identifier
+    return next(iter(matches.values())) if len(matches) == 1 else name
+
+
 def dataset_display_name(name: str, version: str) -> str:
     """Remove an explicitly recorded version suffix from the display name."""
     version = canon_space(version)
@@ -220,6 +249,35 @@ def canon_metric(name: str) -> str:
     return re.sub(r"\s*@\s*(?=\d)", "@", canon_space(name))
 
 
+_METRIC_AT_K = re.compile(r"@\s*(\d+)(?![\w%]|[.,]\d|[-–]\d)")
+
+
+def metric_identity(name: str) -> tuple[str, str]:
+    """Return the underlying metric and an unambiguous explicitly printed cutoff."""
+    cuts = list(_METRIC_AT_K.finditer(name))
+    if len(cuts) != 1:
+        return canon_metric(name), ""
+    match = cuts[0]
+    return canon_space(name[:match.start()] + name[match.end():]), match[1].lstrip("0") or "0"
+
+
+def _passport_cutoffs(meta: dict, pages_norm: list[str] | None) -> dict:
+    candidates = defaultdict(set)
+    for scope in meta.get("table_scopes", []):
+        number = to_page(scope.get("source_page"))
+        table = label(scope.get("source_table") or "")
+        if not table or not pages_norm or not 1 <= number <= len(pages_norm):
+            continue
+        for item in scope.get("metric_cutoffs", []):
+            name, _ = metric_identity(item.get("metric_name") or "")
+            fragment = norm(item.get("source_fragment") or "")
+            base, cutoff = metric_identity(fragment)
+            if (cutoff and cutoff == item.get("metric_k") and label(name) == label(base)
+                    and fragment in pages_norm[number - 1]):
+                candidates[str(number), table, label(name)].add(cutoff)
+    return {key: next(iter(values)) for key, values in candidates.items() if len(values) == 1}
+
+
 def _expand_metric_abbreviations(rows: list[dict], pages_norm: list[str] | None) -> None:
     """Restore one-word metric expansions only when explicitly defined in this PDF."""
     definitions = defaultdict(set)
@@ -235,7 +293,7 @@ def _expand_metric_abbreviations(rows: list[dict], pages_norm: list[str] | None)
             row["note"] = (row["note"] + " | " if row["note"] else "") + f"Printed metric abbreviation: {original}."
 
 
-CUTOFF = re.compile(r"(?i)(?:@\s*|\bk\s*=\s*|\btop[-\s]*)([0-9]+)(?!\w|[.,]\d|[-–]\d)")
+CUTOFF = re.compile(r"(?i)(?:@\s*|\bk\s*=\s*|\btop[-\s]*)([0-9]+)(?![\w%]|[.,]\d|[-–]\d)")
 
 
 def printed_cutoffs(*labels: str) -> set[str]:
@@ -255,11 +313,6 @@ def iter_results(cache: dict):
         yield from cache["verify"][pg].get("results", [])
 
 
-def _hint(r: dict) -> str:
-    return canon_space(" ".join(r.get(k, "") for k in ("source_fragment", "source_table", "source_section",
-                                                       "metric_variant", "note"))).lower()
-
-
 def _unique_best(cands: list[tuple[int, str]]) -> str:
     if not cands:
         return ""
@@ -268,12 +321,33 @@ def _unique_best(cands: list[tuple[int, str]]) -> str:
     return top[0] if len(set(top)) == 1 else ""
 
 
-def _fill_ids(rows: list[dict], out: dict) -> None:
-    """Fill blank ids of primary results: (1) single entity of a kind; (2) table named in one experiment's
-    protocol; (3) config/dataset by name match in the row's own quote/table text; (4) experiment/task/dataset
-    inherited from the same source_table when every labelled row of that table agrees."""
+def _fill_ids(rows: list[dict], out: dict, captions=None, row_captions=None, pages_norm=None,
+              model_aliases=None) -> None:
+    """Fill missing IDs using row evidence and unambiguous local table context."""
+    captions, row_captions = captions or {}, row_captions or {}
     only = {k: out[t][0][k] for t, k in (("experiments", "experiment_id"), ("configurations", "config_id"),
                                           ("datasets", "dataset_id"), ("tasks", "task_id")) if len(out[t]) == 1}
+    configs = {c["config_id"]: (identity_label(c["rag_variant"]), identity_label(c["generator_model"]))
+               for c in out["configurations"]}
+    models = {g for _, g in configs.values() if g}
+    model_names = defaultdict(set)
+    for model in models:
+        model_names[model].add(model)
+    for short, full in (model_aliases or {}).items():
+        model_names[identity_label(short)].add(identity_label(full))
+    datasets = defaultdict(set)
+    for d in out["datasets"]:
+        datasets[identity_label(d["dataset_name"])].add(d["dataset_id"])
+    for alias, ids in dataset_aliases(((d["dataset_id"], d["dataset_name"]) for d in out["datasets"]), pages_norm).items():
+        datasets[identity_label(alias)].update(ids)
+
+    def local_scope(row):
+        return row["source_page"], label(row["source_table"])
+
+    def models_in(text):
+        return {model for name, candidates in model_names.items() if mentions_identity(name, text)
+                for model in candidates}
+
     for r in rows:
         if r["result_origin"] != "primary":
             continue
@@ -283,31 +357,48 @@ def _fill_ids(rows: list[dict], out: dict) -> None:
                    if re.search(r"\b" + re.escape(tb) + r"\b(?!\d)", (e.get("evaluation_protocol") or "").lower())]
             if len(hit) == 1:
                 r["experiment_id"] = hit[0]
-        h = _hint(r)
-        if not r["config_id"] and h:
-            cands = []
-            for c in out["configurations"]:
-                v, g = canon_space(c["rag_variant"]).lower(), canon_space(c["generator_model"]).lower()
-                if len(v) >= 3 and v in h and (not g or g in h):
-                    cands.append((len(v) + len(g), c["config_id"]))
-            r["config_id"] = _unique_best(cands)
-        if not r["dataset_id"] and h:
-            r["dataset_id"] = _unique_best([(len(n), d["dataset_id"]) for d in out["datasets"]
-                                            if len(n := canon_space(d["dataset_name"]).lower()) >= 3 and n in h])
-    by_tab: dict[str, dict[str, set]] = defaultdict(lambda: defaultdict(set))
+        quote = label(r["source_fragment"])
+        cap = label(captions.get(local_scope(r)) or row_captions.get(r.get("result_id")) or "")
+        stated_models = models_in(quote) or models_in(cap)
+        cands = [(len(v), cid) for cid, (v, g) in configs.items() if len(v) >= 3 and mentions_identity(v, quote)
+                 and (g in stated_models if len(stated_models) == 1 else not (g or stated_models))]
+        config = _unique_best(cands)
+        if config and not r["config_id"]:
+            r["config_id"] = config
+        elif config and config != r["config_id"] and len(stated_models) == 1:
+            old_variant, old_model = configs[r["config_id"]]
+            variant, model = configs[config]
+            if old_variant == variant and old_model != model:
+                r["config_id"] = config
+        if not r["dataset_id"]:
+            named = [(len(n), next(iter(ids))) for n, ids in datasets.items()
+                     if len(n) >= 2 and len(ids) == 1 and mentions_identity(n, quote)]
+            in_caption = {cid for n, ids in datasets.items() if len(n) >= 2 and mentions_identity(n, cap) for cid in ids}
+            r["dataset_id"] = _unique_best(named) or (next(iter(in_caption)) if not named and len(in_caption) == 1 else "")
+    by_tab = defaultdict(lambda: defaultdict(set))
     for r in rows:
-        tb = canon_space(r["source_table"]).lower()
+        page, tb = local_scope(r)
         if tb:
-            for k in ("experiment_id", "task_id", "dataset_id"):
+            for k in ("experiment_id", "task_id", "dataset_id", "config_id"):
                 if r[k]:
-                    by_tab[tb][k].add(r[k])
+                    by_tab[page if k in {"dataset_id", "config_id"} else "", tb][k].add(r[k])
     for r in rows:
         if r["result_origin"] != "primary":
             continue
-        tb = canon_space(r["source_table"]).lower()
+        page, tb = local_scope(r)
         for k in ("experiment_id", "task_id", "dataset_id"):
-            if not r[k] and tb and len(by_tab[tb][k]) == 1:
-                r[k] = next(iter(by_tab[tb][k]))
+            ids = by_tab[page if k == "dataset_id" else "", tb][k]
+            if not r[k] and tb and len(ids) == 1:
+                r[k] = next(iter(ids))
+        cfg_ids = by_tab[page, tb]["config_id"]
+        if not r["config_id"] and tb and len(cfg_ids) == 1:
+            cfg_id = next(iter(cfg_ids))
+            variant, generator = configs[cfg_id]
+            cap = label(captions.get(local_scope(r)) or row_captions.get(r.get("result_id")) or "")
+            quote = label(r["source_fragment"])
+            if (mentions_identity(variant, cap) and (not generator or models_in(cap) == {generator})
+                    and not any(v != variant and mentions_identity(v, quote) for v, _ in configs.values())):
+                r["config_id"] = cfg_id
         for k, v in only.items():
             if not r[k]:
                 r[k] = v
@@ -370,8 +461,10 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         """Drop later entities identical (ignoring id/note, case/space-insensitive) to an earlier one; map their ids."""
         seen: dict[tuple, str] = {}
         out_: list[dict] = []
+        names = {"generator_model", "retriever_model", "embedding_model", "reranker_model", "dataset_name"}
         for it in items:
-            sig = tuple(sorted((k, re.sub(r"\s+", " ", str(v or "")).strip().lower()) for k, v in it.items()
+            sig = tuple(sorted((k, identity_label(str(v or "")) if k in names else canon_space(str(v or "")).casefold())
+                               for k, v in it.items()
                                if k not in (key, "note", "publication_id")))
             vid = (it.get(key) or "").strip()
             if sig in seen and any(v for _, v in sig):
@@ -383,6 +476,10 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         return out_
 
     cfg_in = [dict(c) for c in meta["configurations"]]
+    model_declarations = _model_declarations(pages_norm)
+    printed_ids = {_model_parts(value) for page in pages_norm or () for value in
+                   re.findall(r"(?<![\w.-])[\w.]+(?:-[\w.]+)+(?![\w-])", page) if any(c.isdigit() for c in value)}
+    model_aliases = {}
     if plot_rows:
         # A generator printed on a panel is evidence for a partial configuration only.
         declared_ids = {c.get("config_id") for c in cfg_in}
@@ -406,7 +503,13 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     for c in cfg_in:
         for f in ("generator_model", "retriever_model", "embedding_model", "reranker_model"):
             c[f] = canon_space(c.get(f, ""))
-        c["rag_variant"] = strip_names(canon_space(c.get("rag_variant", "")), c.get("generator_model", ""), c.get("retriever_model", ""))
+        generator = c["generator_model"]
+        c["generator_model"] = canonical_model(generator, model_declarations, printed_ids)
+        if generator != c["generator_model"]:
+            model_aliases[generator] = c["generator_model"]
+        variant = canon_space(c.get("rag_variant", ""))
+        variant = _AUTHOR_LABEL.sub("", variant).strip() or variant
+        c["rag_variant"] = strip_names(variant, generator, c["generator_model"], c["retriever_model"])
     cfgs = merge_entities(cfg_in, "config_id")
     dss = merge_entities([dict(d, dataset_name=canon_space(d.get("dataset_name", ""))) for d in meta["datasets"]], "dataset_id")
     tks = merge_entities([dict(t) for t in meta["tasks"]], "task_id")
@@ -428,6 +531,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     n_pages = cache.get("n_pages", 0)
     ocr_pages_norm = pages_norm if cache.get("ocr") else None
     rows: list[dict] = []
+    row_captions = {}
+    scoped_cutoffs = _passport_cutoffs(meta, pages_norm)
     fstat = defaultdict(int)
     issues: list[dict] = []
     validations = []
@@ -435,7 +540,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     source_rows = iter_results(cache)
     cells = {}
     if table_layout:
-        from plugins.rag.table_context import dataset_aliases, index_cells, label, recover_missing, relink
+        from plugins.rag.table_context import index_cells, recover_missing, relink
 
         labels = defaultdict(set)
         for dataset in out["datasets"]:
@@ -447,6 +552,9 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         known = {name: next(iter(ids)) for name, ids in labels.items() if name and len(ids) == 1}
         configurations = [(cfg["config_id"], label(cfg["rag_variant"]), label(cfg["generator_model"]))
                           for cfg in out["configurations"]]
+        configurations.extend((cfg["config_id"], label(cfg["rag_variant"]), label(short))
+                              for cfg in out["configurations"] for short, full in model_aliases.items()
+                              if full == cfg["generator_model"])
         cached_rows = list(source_rows)
         cells = index_cells(cached_rows, table_layout, known, configurations)
         recovered = recover_missing(cached_rows, cells, pages_norm or []) if recover_table_cells else []
@@ -507,7 +615,12 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                 note = (note + " | " if note else "") + f"sample_size: {r['sample_size'].strip()}"
             explicit_k = (r.get("metric_k") or "").strip()
             cutoffs = printed_cutoffs(name, row["metric_variant"])
-            k = explicit_k if re.fullmatch(r"[0-9]+", explicit_k) else (next(iter(cutoffs)) if len(cutoffs) == 1 else "")
+            base_metric, printed_k = metric_identity(name)
+            scope_k = scoped_cutoffs.get((str(page), label(row["source_table"]), label(base_metric)), "")
+            if scope_k:
+                cutoffs.add(scope_k)
+            k = ((explicit_k.lstrip("0") or "0") if re.fullmatch(r"[0-9]+", explicit_k) else
+                 printed_k or (next(iter(cutoffs)) if len(cutoffs) == 1 else ""))
             direction = (r.get("metric_direction") or "").strip()
             if direction not in DIRECTIONS:
                 direction = "lower_is_better" if LOWER.search(name) else ("higher_is_better" if HIGHER.search(name) else "")
@@ -558,12 +671,15 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                        cited_publication_id=cref, source_page=str(fpage or ""), source_fragment=frag,
                        extraction_status=status, note=note)
             rows.append(row)
+            if r.get("table_caption"):
+                row_captions[row["result_id"]] = r["table_caption"]
             if r.get("plot_observation"):
                 plot_ids.add(row["result_id"])
             validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
     if cells:
         relink(rows, cells)
-    _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out)
+    _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
+              native_captions(table_layout or {}), row_captions, pages_norm, model_aliases)
     _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----

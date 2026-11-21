@@ -426,6 +426,57 @@ class TableWindows(unittest.TestCase):
         self.assertIn("Subsequent discussion.", residual[0])
 
 
+class EntityPassport(unittest.TestCase):
+    def test_cutoff_requires_same_page_and_table_with_literal_evidence(self):
+        scope = {"source_page": 1, "source_table": "Table 1", "metric_cutoffs": [
+            {"metric_name": "Recall", "metric_k": "5", "source_fragment": "Recall@5"},
+            {"metric_name": "Precision", "metric_k": "3", "source_fragment": "context k=3"},
+        ]}
+        meta = {"table_scopes": [scope]}
+        self.assertEqual(exporter._passport_cutoffs(meta, ["Recall@5 context k=3", ""]),
+                         {("1", "table 1", "recall"): "5"})
+        self.assertFalse(exporter._passport_cutoffs(meta, ["context k=3", "Recall@5"]))
+        self.assertEqual(exporter.metric_identity("nDCG @ 005"), ("nDCG", "5"))
+        self.assertEqual(exporter.metric_identity("Recall@0.5"), ("Recall@0.5", ""))
+
+    def test_only_relevant_passport_scopes_are_sent(self):
+        meta = make_cache([])["meta"]
+        meta["table_scopes"] = [
+            {"source_page": 1, "source_table": "Table 1", "metric_cutoffs": [{"metric_k": "11"}]},
+            {"source_page": 1, "source_table": "Table 2", "metric_cutoffs": [{"metric_k": "17"}]},
+            {"source_page": 2, "source_table": "Table 1", "metric_cutoffs": [{"metric_k": "23"}]},
+        ]
+        prompt = pipeline.window_user(meta, 1, 1, table_only=True, table_label="Table 1")
+        self.assertIn('"metric_k": "11"', prompt)
+        self.assertNotIn('"metric_k": "17"', prompt)
+        self.assertNotIn('"metric_k": "23"', prompt)
+
+    def test_explicit_model_identifier_and_author_label(self):
+        declarations = exporter._model_declarations(["Atlas-2.1 model (atlas-2.1-small-instruct)."])
+        self.assertEqual(exporter.canonical_model("Atlas 2.1 Small", declarations), "atlas-2.1-small-instruct")
+        self.assertEqual(exporter.canonical_model("Atlas 2.1", declarations), "Atlas 2.1")
+        conflicting = declarations + [("Atlas-2.1", "atlas-2.1-small-chat")]
+        self.assertEqual(exporter.canonical_model("Atlas 2.1 Small", conflicting), "Atlas 2.1 Small")
+        cfg = {"config_id": "C1", "rag_variant": "Method A (Ours)", "generator_model": "Atlas 2.1 Small"}
+        doc = exporter.build_doc("P1", make_cache([], configs=[cfg]),
+                                 ["Atlas-2.1 model (atlas-2.1-small-instruct)."], Mock())
+        self.assertEqual((doc["configurations"][0]["rag_variant"], doc["configurations"][0]["generator_model"]),
+                         ("Method A", "atlas-2.1-small-instruct"))
+
+    def test_context_uses_exact_alias_and_matching_model_format(self):
+        configs = [
+            {"config_id": "C1", "rag_variant": "Method Alpha", "generator_model": "Atlas 2.1 8B"},
+            {"config_id": "C2", "rag_variant": "Method Alpha", "generator_model": "Atlas 2.1 4B"},
+        ]
+        datasets = [{"dataset_id": "D1", "dataset_name": "World of Samples"},
+                    {"dataset_id": "D2", "dataset_name": "Another Dataset"}]
+        r = result(config_id="", dataset_id="", source_fragment="Method Alpha WoS 0.204",
+                   table_caption="Table 1: Atlas2.1-8B comparison")
+        cache = make_cache([r], configs=configs, datasets=datasets)
+        doc = exporter.build_doc("P1", cache, ["World of Samples (WoS; citation) Method Alpha WoS 0.204", ""], Mock())
+        self.assertEqual((doc["results"][0]["config_id"], doc["results"][0]["dataset_id"]), ("C1", "D1"))
+
+
 class OcrFallback(unittest.TestCase):
     pdf = pathlib.Path("synthetic.pdf")
     native = "A full native page with text that exceeds the OCR threshold."

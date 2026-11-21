@@ -129,7 +129,7 @@ def _table_part(client, contents, meta, table, first, last, doc_id, windows, spl
         return
     if key not in splits:
         try:
-            prompt = window_user(meta, table.page, table.page, table_only=True)
+            prompt = window_user(meta, table.page, table.page, table_only=True, table_label=table.label)
             data = _gen(client, contents(prompt, table.page, table.page, table.source(first, last)),
                         _result_schema(client), f"{doc_id}:{key}")
         except TruncatedResponseError as exc:
@@ -143,6 +143,7 @@ def _table_part(client, contents, meta, table, first, last, doc_id, windows, spl
                 row["source_page"] = table.page
                 if table.label:
                     row["source_table"] = table.label
+                    row["table_caption"] = table.caption
             windows[key] = data
             persist()
             return
@@ -255,7 +256,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                  windows=cache.get("windows", {}), complete=False)
     if mode == "text":
         cache["text_format"] = text_format
-    from plugins.rag.schemas import Meta  # lazy: needs pydantic
+    from plugins.rag.schemas import Passport  # lazy: needs pydantic
 
     uploaded = None
     try:
@@ -272,7 +273,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
 
         if "meta" not in cache:
             log(f"  [{doc_id}] meta pass ({info.n_pages} pages)")
-            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), Meta, doc_id)
+            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), Passport, doc_id)
             save_cache(cache_dir, doc_id, cache)
         in_scope = cache["meta"]["publication"].get("in_scope")
         if in_scope:

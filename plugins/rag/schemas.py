@@ -112,6 +112,34 @@ class Meta(BaseModel):
     issues: list[MetaIssue]
 
 
+class MetricCutoff(BaseModel):
+    metric_name: str
+    metric_k: str
+    source_fragment: str
+
+    @_coerce("metric_name", "metric_k", "source_fragment")
+    @classmethod
+    def _text(cls, value):
+        return to_text(value)
+
+
+class TableScope(BaseModel):
+    source_page: int
+    source_table: str
+    dataset_ids: list[str]
+    config_ids: list[str]
+    metric_cutoffs: list[MetricCutoff]
+
+    @_coerce("source_page")
+    @classmethod
+    def _page(cls, value):
+        return to_page_int(value)
+
+
+class Passport(Meta):
+    table_scopes: list[TableScope]
+
+
 class Result(BaseModel):
     experiment_id: str
     config_id: str
