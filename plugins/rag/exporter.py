@@ -139,6 +139,34 @@ def _subfragment(frag: str, raw: str, page: int, pages_norm: list[str]) -> tuple
     return best
 
 
+def strip_names(variant: str, *names: str) -> str:
+    """Remove generator/retriever names (and 'with/using/+/()' glue) from a rag_variant."""
+    v = (variant or "").strip()
+    for nm in sorted({x.strip() for x in names if x and x.strip()}, key=len, reverse=True):
+        v2 = re.sub(r"[\s(\[,;:+/&-]*(?:with|using|w/|on|over|\+)?[\s(\[]*" + re.escape(nm) + r"[\s)\]]*", " ", v, flags=re.I).strip(" -+,;:/()[]")
+        if v2:
+            v = re.sub(r"\s+", " ", v2)
+    return v
+
+
+def _fill_ids(rows: list[dict], out: dict) -> None:
+    """Fill blank ids when unambiguous: single entity of a kind, or table named in one experiment's protocol."""
+    only = {k: out[t][0][k] for t, k in (("experiments", "experiment_id"), ("configurations", "config_id"),
+                                          ("datasets", "dataset_id"), ("tasks", "task_id")) if len(out[t]) == 1}
+    for r in rows:
+        if r["result_origin"] != "primary":
+            continue
+        if not r["experiment_id"] and r["source_table"]:
+            tb = re.sub(r"\s+", " ", r["source_table"]).strip().lower()
+            hit = [e["experiment_id"] for e in out["experiments"]
+                   if re.search(r"\b" + re.escape(tb) + r"\b(?!\d)", (e.get("evaluation_protocol") or "").lower())]
+            if len(hit) == 1:
+                r["experiment_id"] = hit[0]
+        for k, v in only.items():
+            if not r[k]:
+                r[k] = v
+
+
 def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {t: [] for t in TABLES}
     meta = cache["meta"]
@@ -207,7 +235,10 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
             out_.append(it)
         return out_
 
-    cfgs = merge_entities([dict(c) for c in meta["configurations"]], "config_id")
+    cfg_in = [dict(c) for c in meta["configurations"]]
+    for c in cfg_in:
+        c["rag_variant"] = strip_names(c.get("rag_variant", ""), c.get("generator_model", ""), c.get("retriever_model", ""))
+    cfgs = merge_entities(cfg_in, "config_id")
     dss = merge_entities([dict(d) for d in meta["datasets"]], "dataset_id")
     tks = merge_entities([dict(t) for t in meta["tasks"]], "task_id")
     exs = merge_entities([dict(e) for e in meta["experiments"]], "experiment_id")
@@ -313,12 +344,16 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                         note = (note + " | " if note else "") + "quote not verified in text layer"
                         if row["source_table"] or row["source_figure"]:
                             frag = ""  # keep a table/figure locator instead of an unverifiable quote
+            if status == "extracted" and not value:
+                drops["non-numeric metric_value"] += 1
+                continue
             row.update(metric_direction=direction, metric_k=k, metric_value=value, metric_unit=unit,
                        baseline_value=blv or "", sample_size=sample or "", raw_value=raw, raw_unit=raw_unit,
                        normalized_value=value, normalized_unit=unit, result_origin=origin,
                        cited_publication_id=cref, source_page=str(fpage), source_fragment=frag,
                        extraction_status=status, note=note)
             rows.append(row)
+    _fill_ids(rows, out)
     if fstat:
         log(f"  {doc_id}: quote check {dict(fstat)}")
     for why, n in drops.items():

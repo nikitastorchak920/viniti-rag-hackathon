@@ -20,14 +20,16 @@ HARD RULES
 11. metric_direction: "higher_is_better", "lower_is_better", "target" or "" if unclear. metric_k: integer k for @k metrics (Recall@5 -> metric_name "Recall@5", metric_k "5"); "" otherwise. A fractional threshold (OC@0.8) is not k. top_k of the retriever is a configuration field, not metric_k.
 12. source_fragment must be copied character-for-character from the text layer (keep its spacing, symbols and line order; do not re-join hyphenated line breaks, do not fix typos, do not add "..."). Prefer the shortest span that contains the number (e.g. "Recall@5 0.712"). Same number printed in a table and in text: quote the table row once.
 13. Never output the same entity twice: one configuration/dataset/task/experiment per distinct setting, with the SAME name spelling as the paper. result_origin "cited" iff cited_ref is non-empty. Do not scale values: if the table says 62.4 without %, raw_unit is "".
-14. Identifiers: configurations C01, C02, ...; datasets DS1, DS2, ...; tasks T1, T2, ...; experiments E1, E2, ... (consistent everywhere).
+14. `rag_variant` = METHOD/pipeline name only (e.g. "Vanilla RAG", "Focal Mixed Training", "RA-CoT", "retriever only"); NEVER append the generator/backbone/retriever name to it. `generator_model` = the LLM only (paper notation), "" for retriever-only systems. Same method with 3 generators = 3 configurations with the same rag_variant.
+15. EXHAUSTIVENESS: extract EVERY numeric cell of EVERY results, ablation, hyperparameter, cost/efficiency, analysis and appendix table (all baselines, all ablation rows, all datasets x metrics x generators), plus numbers in running text. Never summarize, sample or skip rows/columns; if a table is long, keep going until the last row. Each metric column = its own row (EM and F1 separately). Do not output rows without a numeric value.
+16. Identifiers: configurations C01, C02, ...; datasets DS1, DS2, ...; tasks T1, T2, ...; experiments E1, E2, ... (consistent everywhere).
 """
 
 META_USER = """TASK: read the whole paper and return the paper-level entities.
 
 1. publication: title, year (4 digits), doi (only if printed), authors ("First Last; First Last"), in_scope, exclusion_reason.
    in_scope=true only if the paper itself describes a system that retrieves information from an external document collection and uses the retrieved context to produce an answer, AND reports a configuration with evaluation results. Decide by content, not by the word RAG in the title. If false: give a short exclusion_reason and return EMPTY lists for configurations, datasets, tasks, experiments, issues. If true: exclusion_reason = "".
-2. configurations: every distinct RAG system/baseline/ablation/generator variant that has results (one row per table row x generator when generators differ). `note`: where defined (page, table row).
+2. configurations (rag_variant = method only, generator_model = LLM only; one row per method x generator, including baselines, ablations, appendix and analysis setups): every distinct RAG system/baseline/ablation/generator variant that has results (one row per table row x generator when generators differ). `note`: where defined (page, table row).
 3. datasets (name, version, language, split, domain), tasks (task_type, e.g. "open-domain multi-hop question answering"), experiments (evaluation protocol, baseline names joined by ";", hardware, latency in ms only if the source unit is known, tokens per query, evaluation sample size).
 4. issues: contradictions inside the paper about configuration or protocol facts (e.g. two different embedding models stated); use check_name such as protocol_mismatch, contradiction, normalization. Empty list if none. source_page 0 and source_fragment "" if not applicable.
 
