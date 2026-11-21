@@ -1,50 +1,49 @@
 # PROMPT FOR ANTIGRAVITY
 
-After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGRAVITY.md`. Run the newest task without a matching report. If no such task exists, wait for a new one.
-
-Prepend an English report with the task ID to `handoff/FROM_ANTIGRAVITY.md` and push that file alone to `origin/main`. Use status `complete` or `blocked`, with acceptance and evidence recorded separately. If the branch advanced, rebase and preserve existing replies. Keep credentials, PDFs, caches, generated bundles, and full logs local.
+After `git pull --ff-only origin main`, read this queue and `handoff/FROM_ANTIGRAVITY.md`. Run the newest task without a matching report. If none is pending, wait. Keep credentials, PDFs, caches, generated bundles, and full logs local.
 
 ## Open tasks
 
-### DOMAIN2-DEV-001 · Verify the Domain 2 audit changes and re-extract the three scans
+### STRICT-DEV-001 · Audit dense-table coverage and compare the two D013 caches
 
-Use the project Python environment in PowerShell. Preserve the accepted `out_dev/` bundle and original `cache/` until both stages have results. This task supersedes the unreported `PHASE2-DEV-001` comparison.
+Work from the project Python environment in PowerShell. This is a **zero-token** checkpoint. Preserve the accepted `out_dev/`, `cache/`, and `out_dev_domain2_scan_cache/`. Use fresh output folders. Skip live extraction and the 111-paper test run.
 
-1. **Zero-token checkpoint.** Use the existing full dev cache. Record the commit, all exit codes, row counts, strict/loose TP and F1, the missing-reference breakdown, and the issue quote counts. A checker exit code 2 means review is pending.
+1. **Find where D014 loses coverage.** Measure D014 separately. The latest report shows 91 scored predictions against 11,760 gold tuples and zero Strict TP. Compare the exported and gold row counts grouped by PDF page and table. For the three largest gaps, inspect the original PDF locally and report the PDF page, table or figure label, visible row/column axes, numerical density, and whether the existing cache window returned zero rows, sampled a large table, or emitted rows with mismatched context. Distinguish a genuine missed table from repeated or analysis-heavy gold rows. Propose the smallest generic extraction intervention and the exact pages or windows to target. Use gold only to measure the gaps.
 
    ```powershell
-   git pull origin main
+   git pull --ff-only origin main
    git rev-parse --short HEAD
-   python -m pytest tests/test_core.py
-   python main.py --input dev --output out_dev_domain2 --rebuild-csv-only
-   python tools/check_submission.py out_dev_domain2 dev --json-report out_dev_domain2/validation.json
-   python scripts/evaluate.py out_dev_domain2 dev_gold --show-diffs 20
+   python scripts/evaluate.py out_dev dev_gold --only D014 --show-diffs 20
    ```
 
-2. **Targeted live OCR + DeepSeek.** Verify Tesseract is on PATH. Make sure the local environment selects DeepSeek and confirm the CLI log names `DeepSeekClient`. Keep credentials private. Copy the complete cache to a fresh scratch folder. Force only D002, D013, and D021. The shared OCR profile is 300 dpi, RGB, PSM 3.
+2. **Measure the D013 regression under the same OCR checker.** The old cache retained 28 Strict TP and the live OCR cache retained 2. Rebuild both with the current code and the same Tesseract settings. Use a one-PDF input folder for the checker so a scoped export does not create spurious missing-publication errors.
 
    ```powershell
    if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
        $env:Path = "C:\Program Files\Tesseract-OCR;$env:Path"
    }
    tesseract --version
-   $scanCache = 'out_dev_domain2_scan_cache'
-   if (Test-Path $scanCache) { throw 'Choose a fresh scratch cache directory before running the targeted extraction.' }
-   New-Item -ItemType Directory $scanCache | Out-Null
-   Copy-Item -Path cache/*.json -Destination $scanCache
-   python main.py --input dev --output out_dev_domain2_scan_retry --cache $scanCache --only D002 D013 D021 --force --ocr --workers 1
-   $scanExit = $LASTEXITCODE
-   if ($scanExit -ne 0) { throw 'Keep the scratch cache and report the failure. Leave the accepted bundle intact.' }
-   python main.py --input dev --output out_dev --cache $scanCache --rebuild-csv-only --ocr
-   python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
-   python scripts/evaluate.py out_dev dev_gold --show-diffs 20
-   python scripts/serve_ui.py out_dev
+   $d013Input = 'out_dev_strict_d013_input'
+   New-Item -ItemType Directory -Path $d013Input -Force | Out-Null
+   Copy-Item -LiteralPath dev/D013.pdf -Destination $d013Input
+   python main.py --input $d013Input --output out_dev_strict_d013_old --cache cache --rebuild-csv-only --ocr
+   python main.py --input $d013Input --output out_dev_strict_d013_live --cache out_dev_domain2_scan_cache --rebuild-csv-only --ocr
+   foreach ($bundle in 'out_dev_strict_d013_old','out_dev_strict_d013_live') {
+       python tools/check_submission.py $bundle $d013Input --ocr --json-report "$bundle/validation.json"
+       $LASTEXITCODE
+       python scripts/evaluate.py $bundle dev_gold --only D013 --show-diffs 20
+       $LASTEXITCODE
+   }
    ```
 
-3. **Demo and report.** Open `http://127.0.0.1:8000/`. Show an exact-context comparison with a signed baseline delta, a result with raw and normalized values and a source quote, one `RULE_*` filter, and the Data Passport tab. In `DOMAIN2-DEV-001`, report the stage 1 and stage 2 deltas against `MVP-DEV-001`, the three scan IDs' mode/row counts/quote coverage, total API tokens, and parser, checker, or UI regressions. Distinguish issue quotes cleared as unverified from newly confirmed OCR evidence. Skip the 111-paper test run.
+   Compare numeric rows, strict and loose TP/F1, matched/requested quotes, and missing IDs by field. Identify whether the old cache preserves strict matches under the current OCR verifier and summarize where the newer extraction lost valid rows. Report the trade-off without promoting either cache.
+
+3. **Publish evidence.** Prepend `## STRICT-DEV-001` to `handoff/FROM_ANTIGRAVITY.md` with the tested commit, status, command exit codes, D014 page/table gap summary, D013 comparison, and recommended next experiment. Use short redacted examples. Push only that file:
 
    ```powershell
    git add -- handoff/FROM_ANTIGRAVITY.md
-   git commit --only -m "Report DOMAIN2-DEV-001 verification" -- handoff/FROM_ANTIGRAVITY.md
+   git commit --only -m "Report STRICT-DEV-001 verification" -- handoff/FROM_ANTIGRAVITY.md
    git push origin main
    ```
+
+If `main` advanced, rebase and preserve existing replies. Report blockers if a required cache or Tesseract is missing.
