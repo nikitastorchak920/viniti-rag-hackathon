@@ -25,8 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", nargs="+", metavar="ID", help="document ids to process, e.g. D001 D002")
     ap.add_argument("--force", action="store_true", help="ignore cache and re-query the API")
     ap.add_argument("--rebuild-csv-only", action="store_true", help="no API calls: rebuild CSV from cache")
-    ap.add_argument("--recover-table-cells", action="store_true",
-                    help="also export uniquely identified missing native PDF table cells (works without API calls)")
+    ap.add_argument("--recover-table-cells", action=argparse.BooleanOptionalAction, default=True,
+                    help="export uniquely identified missing native PDF table cells (enabled by default, no API calls)")
     ap.add_argument("--recover-plot-points", action="store_true",
                     help="also export calibrated native vector scatter points (works without API calls)")
     ap.add_argument("--window", type=int, default=3, help="pages per result-extraction request (default 3)")

@@ -4,9 +4,9 @@ After `git pull --ff-only origin main`, run the newest task without a matching r
 
 ## Open tasks
 
-### RECALL-DEV-002 · Isolate table gains and trace plot conditions to source evidence
+### RECALL-DEV-003 · Verify default table recovery and build a plot correspondence audit
 
-Use the complete 21-paper `out_dev_domain2_scan_cache` from RECALL-DEV-001. Spend zero API tokens. Keep the jury `out_dev/` and the previous comparison bundles intact. Leave the provider and the 111-paper test set untouched.
+Use the same complete 21-paper `out_dev_domain2_scan_cache` and the existing `out_dev_recall21_candidate` vector export from RECALL-DEV-001. Use zero API tokens. Leave `out_dev/`, the comparison bundles, the configured provider and the 111-paper test set alone. Do not edit source files.
 
 ```powershell
 git pull --ff-only origin main
@@ -15,24 +15,24 @@ if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
     $env:Path = "C:\Program Files\Tesseract-OCR;$env:Path"
 }
 if (!(Test-Path out_dev_domain2_scan_cache)) {
-    throw 'The benchmark requires the same full cache as RECALL-DEV-001.'
+    throw 'Use the same full cache as RECALL-DEV-002.'
 }
-python main.py --input dev --cache out_dev_domain2_scan_cache --output out_dev_recall21_table --rebuild-csv-only --ocr --recover-table-cells
+python main.py --input dev --cache out_dev_domain2_scan_cache --output out_dev_recall21_adopted --rebuild-csv-only --ocr
 Write-Output "Rebuild exit $LASTEXITCODE"
-python tools/check_submission.py out_dev_recall21_table dev --ocr --json-report out_dev_recall21_table/validation.json
+python tools/check_submission.py out_dev_recall21_adopted dev --ocr --json-report out_dev_recall21_adopted/validation.json
 Write-Output "Checker exit $LASTEXITCODE"
-python scripts/evaluate.py out_dev_recall21_table dev_gold --show-diffs 20
+python scripts/evaluate.py out_dev_recall21_adopted dev_gold --show-diffs 0
 Write-Output "Evaluator exit $LASTEXITCODE"
 ```
 
-1. Compare the table-only run with the recorded default (4,911 scored predictions, 731 Strict TP, 1,842 Loose TP, 550 review items). Report document coverage, exit codes, wall time, scored predictions, Strict and Loose P/R/F1 and TP, structural errors, new reviews, changed papers, and the source page and table for added Strict matches. Table recovery is eligible for default adoption if the full run has zero structural errors, higher corpus Strict F1, and no per-paper Strict F1 or Loose TP loss. Report observed results even if this gate fails.
-2. Use the existing candidate bundle and native PDF to produce a small source-evidence matrix for D014 Figures 2, 3, 5, 8, 9 and 10. For each figure, choose a representative panel and record PDF page, panel title or axis/panel locator, the applicable legend/caption/method locator, and the scope of each printed label (whole figure, panel, group, or point). Check whether PDF text extraction preserves the label and whether a legend style can be linked unambiguously to markers. Report a specific repeated-series pair and whether the source confirms the same conditions or only matching values. For Figure 9, determine whether its printed selection limit defines an experiment setting, a metric cutoff, or has unresolved semantics. For Figures 5 and 8, check if nearby text establishes the missing task/dataset relationship or generator and applies to the exact panel.
-3. Complete the source matrix before consulting gold. Then compare representative rows against the proposed Strict keys and classify gaps as source-supported exact labels, explicit aliases, unsupported metadata, ambiguous grouping, or unlabeled plot values. Cite PDF locations for alias and variant claims. For context the PDF does not establish, record an empty value and the reason. Report whether precision work on repeated series or recovering missing axes/colorbars should follow the context fix, with evidence from the sampled panels.
+1. Confirm that a rebuild with no recovery flags reproduces the previous table-only benchmark (`out_dev_recall21_table`): 21 processed papers, 5,113 result rows, 4,945 scored predictions, 741 Strict TP, 1,854 Loose TP and zero structural errors. Compare all seven CSVs with the prior table-only bundle if available and summarize any differences. Note checker review counts separately and record any OCR failures. Confirm `--no-recover-table-cells` is available in the help output; its behavior was tested on the Codex laptop.
+2. Use D014 Figures 3 and 10 to test **point-level** correspondence for a source-confirmed shared series. Start with the three Figure 3 panels for the same dataset and generator and compare their repeated Answer F1 values. Compare a cross-figure pair sharing two calibrated measures if available. Use exported coordinates or native drawing coordinates. For each pair, report panel and metric locators, whether the PDF identifies the same runs, marker counts, value collisions, unique matches versus equally plausible matches at the actual calibration precision, and whether a second measure or documented marker identity resolves those ties. Keep drawing order as an observation unless evidence establishes identity. If cross-figure joint alignment is impossible, report the missing evidence.
+3. Include a keep case for the Figure 9 selection-cap condition and one for a different dataset or generator. Include one coincident-value example in a single panel. Record why each must remain independent. Report which sampled observations can safely receive a `duplicate_of` link, which should remain unlinked, and how many could be affected. Use gold only for an optional comparison after the source-based audit. Do not manually relabel or remove rows in the benchmark bundles. Defer colorbars and additional axes to a later task.
 
-Prepend `## RECALL-DEV-002` under Reports in `handoff/FROM_ANTIGRAVITY.md`. Include the status, tested commit, table-only metrics, and a concise evidence matrix with redacted excerpts or locators. Preserve earlier reports. If an input is unavailable, report what could be verified and the blocker. Commit only the report.
+Prepend `## RECALL-DEV-003` under Reports in `handoff/FROM_ANTIGRAVITY.md`. Record the tested commit, status, metrics, and a compact correspondence matrix with PDF locators, confidence limits and any blockers. Commit only the report.
 
 ```powershell
 git add -- handoff/FROM_ANTIGRAVITY.md
-git commit --only -m "Report RECALL-DEV-002 table and plot context audit" -- handoff/FROM_ANTIGRAVITY.md
+git commit --only -m "Report RECALL-DEV-003 default and plot correspondence audit" -- handoff/FROM_ANTIGRAVITY.md
 git push origin main
 ```

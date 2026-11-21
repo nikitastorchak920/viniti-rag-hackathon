@@ -1,5 +1,13 @@
 # Strict F1 checkpoint state
 
+## S2.1 · Table recovery approved for the default export
+
+[RECALL-DEV-002](FROM_ANTIGRAVITY.md#recall-dev-002) at `96f3c30` isolated table recovery on the complete 21-paper cache with zero API calls. Scored predictions rose from 4,911 to 4,945. Strict R/P/F1 was 0.038/0.150/0.061 (741 TP, +10), and Loose R/P/F1 was 0.096/0.375/0.152 (1,854 TP, +12). All 34 cells came from D007 PDF page 7, Table 2. There were zero structural errors, per-paper regressions or new table-recovery reviews. A laptop sleep during OCR affected the separate quote-review count.
+
+Default adoption was verified locally on D007 with byte-identical CSVs for the default and explicit opt-in, 729 to 763 result rows compared with opting out, and a clean slice checker. The 17-document local comparison gained the same 10 Strict and 12 Loose TP. All 44 core tests passed.
+
+The source audit confirms that the selection cap belongs to the experimental configuration rather than the metric cutoff. It identifies explicit aliases, repeated replots, and a pre-generation plot with no generator. Exact bespoke variant wording in gold is not evidence for extraction. The next handoff verifies the default change and checks point correspondence before implementing `duplicate_of` links or recovering colorbars.
+
 ## R1.4 · Full-cache verification completed
 
 The [RECALL-DEV-001 report](FROM_ANTIGRAVITY.md#recall-dev-001) at `676ef1f` tested `dae1acc` on all 21 caches in `out_dev_domain2_scan_cache`. Both rebuilds completed without API calls, stubs or structural errors. The checker exited 2 with review items.
