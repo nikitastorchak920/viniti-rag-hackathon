@@ -21,6 +21,162 @@ Antigravity prepends replies under **Reports** and pushes this file to `origin/m
 
 <!-- Prepend replies here. The template above is not a task response. -->
 
+## DOMAIN2-DEV-001
+
+- Status (`complete` or `blocked`): `complete`
+- Acceptance check: **PASS WITH NOTES** (0 structural errors, 99.63% verified quotes across all 21 dev PDFs including 3 scans, 100% native-text quote verification, +60 Strict TP over `MVP-DEV-001`, all 4 Domain 2 UI checks PASS with 0 console/network errors; note checker exit `2` due to `521` missing primary-result IDs + `29` remaining scan quotes, plus a `D013` re-extraction Strict F1 dip noted under Regressions).
+- Git commit (from `git rev-parse --short HEAD`): `b5cb065`
+- Python, Tesseract, and unit tests:
+  - Python: `3.13.1` (`.venv\Scripts\python.exe`), Tesseract: `v5.4.0.20240606` (`C:\Program Files\Tesseract-OCR\tesseract.exe`, added to session `PATH`).
+  - `python -m pytest tests/test_core.py`: exit `1` (`No module named pytest` in `.venv`).
+  - `python -m unittest discover -s tests -p "test_core.py" -v`: exit **`0`** — `Ran 34 tests in 0.979s — OK (skipped=1: test_gemini_retries_remote_protocol_error 'httpx missing')`.
+- **Stage 1 (Zero-token checkpoint on existing `cache/` → `out_dev_domain2/`)**:
+  - Commands & exit codes:
+    - `python main.py --input dev --output out_dev_domain2 --rebuild-csv-only` → exit **`0`** (`docs=21 stubs=0`)
+    - `python tools/check_submission.py out_dev_domain2 dev --json-report out_dev_domain2/validation.json` → exit **`2`** (`Errors: 0; review items: 1138`; `source_text_mode: "native PDF text only"`)
+    - `python scripts/evaluate.py out_dev_domain2 dev_gold --show-diffs 20` → exit **`0`**
+  - Row counts: `publications=21, configurations=487, datasets=105, tasks=51, experiments=135, results=5112, issues=2731`.
+  - Evaluator vs `MVP-DEV-001` baseline (`Strict TP=519 / F1=0.043`, `without D014 F1=0.083`, `Loose TP=1756 / F1=0.144`):
+    - `in_scope agreement`: `21/21 = 100.0%` (`+0`)
+    - `datasets (by name)`: `P=0.600 R=0.261 F1=0.364 (tp=63)` (**`+7 TP`**, **`+0.040 F1`**)
+    - `models (rag_variant+generator)`: `P=0.435 R=0.045 F1=0.081 (tp=212)` (`+0`)
+    - `Strict value`: `P=0.122 R=0.031 F1=0.050 (tp=605, pred=4970)` (**`+86 TP`**, **`+0.007 F1`**; without D014: `F1=0.097`, **`+0.014`**; `D008` jumped `0.024 → 0.282`, `D007` `0.074 → 0.102`)
+    - `Loose value`: `P=0.354 R=0.091 F1=0.145 (tp=1761)` (**`+5 TP`**, **`+0.001 F1`**; without D014: `F1=0.279`, `tp=1743`)
+    - Loose-to-strict mismatches: `Paired rows: 1156; dataset_name=694 (-89), rag_variant=457 (+1), generator_model=519 (+5), metric_k=81 (+0)`.
+  - Missing-reference breakdown (Stage 1): `541` total (`dataset_id=269, task_id=136, config_id=135, experiment_id=1`).
+  - Issue & quote counts (Stage 1, native-only checker): `quotes requested=7831, matched=7234, unresolved=597` (all `597` are `no text layer/OCR text on this page` from the 3 scans); **native-text unresolved quotes: `0` in `results.csv`, `0` in `issues.csv`** (down from `13` in `MVP-DEV-001`); `issues` non-empty `source_fragment`: `2719 / 2731` (**`12` unverified native-text issue quotes cleared**).
+- **Stage 2 (Targeted live 300-DPI RGB PSM-3 OCR + DeepSeek on `D002, D013, D021` in scratch cache `out_dev_domain2_scan_cache` → promoted to `out_dev/`)**:
+  - Preserved original `cache/` untouched; copied all 21 JSONs to fresh `out_dev_domain2_scan_cache`.
+  - Backend confirmed in CLI log: `backend=DeepSeekClient model=deepseek-v4-flash docs=3 workers=1`.
+  - Commands & exit codes:
+    - `python main.py --input dev --output out_dev_domain2_scan_retry --cache out_dev_domain2_scan_cache --only D002 D013 D021 --force --ocr --workers 1` → exit **`0`** (`1785s`, `docs=3 stubs=0`)
+    - `python main.py --input dev --output out_dev --cache out_dev_domain2_scan_cache --rebuild-csv-only --ocr` → exit **`0`** (`docs=21 stubs=0`)
+    - `python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json` → exit **`2`** (`Errors: 0; review items: 550`; `source_text_mode: "native plus local OCR on image-only pages"`)
+    - `python scripts/evaluate.py out_dev dev_gold --show-diffs 20` → exit **`0`**
+  - Total Stage 2 API tokens (`DeepSeekClient / deepseek-v4-flash`): **`in=262,579`, `out=87,133`** (`D002: in=84,028 out=38,306`; `D013: in=129,119 out=43,278`; `D021: in=49,432 out=5,549`).
+  - Final Stage 2 `out_dev/` row counts: `publications=21, configurations=492 (+5 vs MVP), datasets=106 (+1), tasks=54 (+3), experiments=132 (-3), results=5079 (+21), issues=2716 (+712; includes RULE_UNIT_AMBIGUITY=2286, RULE_AT_K_CONSISTENCY=13)`.
+  - **Per-scan evidence (`D002`, `D013`, `D021` — mode, row counts, and quote coverage vs `MVP-DEV-001`)**:
+    - `D002`: `OCR text mode (300 dpi RGB PSM 3)`, `227` raw / `227` results / **`216` numeric CSV rows**, `53` issues (`5` unverified issue quotes cleared), quote check `ok=187, repaired=12, unverified=28`, checker OCR quotes **`250 / 275 (90.9%)` matched**, `unresolved=25` (down from **`161`** in `MVP-DEV-001`, **`-136`**!).
+    - `D013`: `OCR text mode (300 dpi RGB PSM 3)`, `214` raw / `214` results / **`188` numeric CSV rows**, `19` issues (`1` unverified issue quote cleared), quote check `ok=204, repaired=6, unverified=4`, checker OCR quotes **`230 / 232 (99.1%)` matched**, `unresolved=2` (down from **`219`** in `MVP-DEV-001`, **`-217`**!).
+    - `D021`: `OCR text mode (300 dpi RGB PSM 3)`, `22` raw / `22` results / **`19` numeric CSV rows**, `14` issues (`1` unverified issue quote cleared), quote check `ok=20, unverified=2`, checker OCR quotes **`33 / 35 (94.3%)` matched**, `unresolved=2` (down from **`19`** in `MVP-DEV-001`, **`-17`**!).
+  - **Quote verification breakdown — cleared unverified issue quotes vs newly confirmed OCR evidence**:
+    - Overall quotes (`out_dev/validation.json`): **`7,747 / 7,776 (99.63%)` matched**, `unresolved=29` (down from `6,650 / 7,062 = 94.17%`, `unresolved=412` in `MVP-DEV-001` — **`-383` unresolved quotes, `-93.0%`**, and total checker review items dropped `953 → 550`, **`-403`**!).
+    - **Cleared as unverified in `issues.csv`**: **`19` total** (`12` on the 18 native-text PDFs + `7` on the 3 scans: `D002=5, D013=1, D021=1`; `2,697 / 2,716` issue rows retain verified `source_fragment`; `0` unresolved quotes remain in `issues.csv`).
+    - **Newly confirmed OCR evidence**: across the 3 scans, **`513 / 542 (94.6%)`** requested quotes are now exact-substring confirmed against 300-DPI RGB PSM-3 OCR text (dropping scan unresolved quotes from `399 → 29`: `D002=25, D013=2, D021=2`, with `0` unresolved across all 18 native-text PDFs).
+  - **Missing-reference breakdown (Stage 2 vs `MVP-DEV-001`)**: `521` total (`-20` vs `541` in `MVP-DEV-001`): `dataset_id=210 (-59)`, `task_id=165 (+29)`, `config_id=146 (+11)`, `experiment_id=0 (-1)`.
+  - **Stage 2 Evaluator vs `MVP-DEV-001` (and vs Stage 1)**:
+    - `in_scope agreement`: `21/21 = 100.0%`
+    - `datasets (by name)`: `P=0.604 R=0.266 F1=0.369 (tp=64)` (**`+8 TP / +0.045 F1` vs MVP**, `+1 TP` vs Stage 1)
+    - `models (rag_variant+generator)`: `P=0.419 R=0.044 F1=0.079 (tp=206)` (`-6 TP` vs MVP/Stage 1)
+    - `Strict value`: `P=0.118 R=0.030 F1=0.048 (tp=579, pred=4922)` (**`+60 TP / +0.005 F1` vs MVP**; `-26 TP` vs Stage 1 due to `D013` re-extraction; without D014: `F1=0.093`, **`+0.010` vs MVP**)
+    - `Loose value`: `P=0.350 R=0.089 F1=0.142 (tp=1721)` (`-35 TP / -0.002 F1` vs MVP; without D014: `F1=0.273`, `tp=1703`)
+    - Loose-to-strict mismatches: `Paired rows: 1142; dataset_name=696 (-87 vs MVP), rag_variant=471 (+15), generator_model=525 (+11), metric_k=51 (-30 vs MVP)`.
+- **Stage 3 UI Demo Verification (`http://127.0.0.1:8000/` via `python scripts/serve_ui.py out_dev`)**:
+  - Health & KPIs (**PASS**): 0 console errors, 9/9 HTTP 200 fetches (all 7 CSVs + `/data/validation.json`). Four KPIs: `Обработанные статьи: 21 (из 21 в пакете)`, `Извлечённые результаты: 4 973 (Числовые значения)`, `Проверенные цитаты: 99,6 % (7 747 из 7 776 подтверждены)`, `Замечания: 2 716 (Записи в issues.csv)`.
+  - Exact-context comparison with signed baseline delta (**PASS**): `Сравнить с baseline` on `D006` (`NaturalQuestions · NDCG@5 · k=5 · fraction`) compared baseline `C01` (`Retriever-Only`, `BM25`, `top_k=10`, `0.0489 fraction`) vs `C08` (`RankGPT + LCR`, `Qwen2.5-7B-Instruct`, `0.0587 fraction`) with exact signed delta **`+0,0098`**.
+  - Result with raw + normalized values & verbatim quote (**PASS**): `D001 / R001` (`EM`) shows raw `.204`, normalized `0.204 fraction`, `стр. 6 · Table 1`, quote `RA-CoT\n.204\n.330\n.202\n.261\n.142\n.210` (also verified `D006 / R002`: raw `0.0587`, normalized `0.0587 fraction`, `стр. 11 · 4.2`, quote `to 0.0587 (a 20% relative increase)`).
+  - `RULE_*` filter (**PASS**): `RULE_AT_K_CONSISTENCY` filtered `13` rows (sample: `D009 | F1: metric_k=128 exceeds configuration top_k=3; check the retrieval stage.`); `RULE_UNIT_AMBIGUITY` filtered `2 286` rows (sample: `D001 | EM=0.204: the source does not establish a unique scale. Value retained.`).
+  - Data Passport tab (`Паспорт данных`) (**PASS**): displays schema with exact row counts matching `out_dev/validation.json` (`publications=21, configurations=492, datasets=106, tasks=54, experiments=132, results=5079, issues=2716`), type/normalization rules, and the 4 `RULE_*` definitions.
+- **Parser, Checker, and UI Regressions / Notes**:
+  1. **Parser/LLM variance on `D013` re-extraction (regression in Strict F1)**: `D013` went from `235` numeric rows (`Strict F1=0.078`, `tp=28`) in Stage 1 / `MVP-DEV-001` to `188` numeric rows (`Strict F1=0.006`, `tp=2`) in Stage 2 (`-26` Strict TP overall vs Stage 1, though OCR quote coverage surged from `13/232` to `230/232 = 99.1%`). Also `D013:1-3` had 2 brief `JSONDecodeError` retries (`out=1` empty responses) before succeeding on attempt 3, and `D002:meta` had 1 `TimeoutError` retry (`1118s` total for `D002`).
+  2. **Transient Windows Tesseract timeout quirk during export**: During `out_dev_domain2_scan_retry` export, `D013` logged `WARN OCR quote check skipped (PDF page 4: Command '['tesseract', 'stdin', 'stdout', '-l', 'eng', '--psm', '3']' timed out after -19.77612660000159 seconds)` (negative elapsed timeout, likely OS clock/sleep or `pytesseract` timeout edge case). It did NOT recur during `--rebuild-csv-only --ocr`, where `D013` completed cleanly (`ok=204, repaired=6, unverified=4`).
+  3. **Checker**: `0` regressions — `errors=0`, unresolved quotes dropped `-93.0%` (`412 → 29`), review items dropped `-42.3%` (`953 → 550`). Note `results:163` (`D002`) is the only quote found on another page (`found on pages 9`).
+  4. **UI**: `0` blocking regressions (4 tabs render cleanly at `1280x800`; minor CSS slide-in transition when reopening detail drawer right after closing another).
+  5. **Test runner**: `.venv` does not have `pytest` installed (`unittest` ran all 34 tests cleanly). `test/` (111 PDFs) was not touched.
+- **Exact Stage 2 `scripts/evaluate.py out_dev dev_gold --show-diffs 20` Output**:
+  ```text
+  Scored publications: 21 (D001, D002, D003, D004, D005, D006, D007, D008, D009, D010, D011, D012, D013, D014, D015, D016, D017, D018, D019, D020, D021)
+  MISSING from result (recall=0): 0 -
+
+  == publications.csv: scope decision
+  in_scope agreement: 21/21 = 100.0%
+  unprocessed (scope unresolved): 0 -
+  included: pred 21 vs gold 21; wrong: -
+
+  == row counts (result vs gold, scored pubs only)
+  publications         21 vs      21  (+0)
+  configurations      492 vs    4733  (-4241)
+  datasets            106 vs     241  (-135)
+  tasks                54 vs      90  (-36)
+  experiments         132 vs     142  (-10)
+  results            5079 vs   37616  (-32537)
+  issues             2716 vs     134  (+2582)
+
+  == Precision / Recall / F1
+  datasets (by name)                                         P=0.604 R=0.266 F1=0.369  (tp=64, pred=106, gold=241)
+  models (rag_variant+generator)                             P=0.419 R=0.044 F1=0.079  (tp=206, pred=492, gold=4733)
+  metric values (strict: dataset+model+metric+k+value)       P=0.118 R=0.030 F1=0.048  (tp=579, pred=4922, gold=19392)
+  metric values (loose: metric name+value)                   P=0.350 R=0.089 F1=0.142  (tp=1721, pred=4922, gold=19392)
+
+  == loose matches that fail strict matching
+    D001 em=0.172: rag_variant pred='threadrag w o stm llm extracted triplets' gold='threadrag ablation no sn no stg no edp'
+    D001 em=0.206: rag_variant pred='graph free' gold='graph free controlled graph free ablation'
+    D001 em=0.224: rag_variant pred='threadrag w o stm llm extracted triplets' gold='threadrag ablation no sn no stg no edp'
+    D001 em=0.232: rag_variant pred='threadrag w o sn fixed length chunks' gold='threadrag ablation edp only no sn or stg'
+    D001 em=0.238: rag_variant pred='threadrag w o stm llm extracted triplets' gold='threadrag ablation no sn no stg no edp'
+    D001 em=0.258: rag_variant pred='graph free' gold='graph free controlled graph free ablation'
+    D001 em=0.274: rag_variant pred='graph free' gold='graph free controlled graph free ablation'
+    D001 em=0.286: rag_variant pred='no subgraph' gold='threadrag selection no subgraph'
+    D001 em=0.286: rag_variant pred='threadrag w o edp' gold='threadrag ablation sn stg no edp'
+    D001 em=0.292: rag_variant pred='threadrag full' gold='threadrag ablation stg edp no sn'
+    D001 em=0.294: rag_variant pred='bfs depth 3' gold='threadrag selection bfs depth 3'
+    D001 em=0.302: rag_variant pred='dfs depth 3' gold='threadrag selection dfs depth 3'
+    D001 em=0.304: rag_variant pred='kg paths' gold='threadrag representation kg paths'
+    D001 em=0.308: rag_variant pred='threadrag w o sn fixed length chunks' gold='threadrag ablation edp only no sn or stg'
+    D001 em=0.31: rag_variant pred='kg triplets' gold='threadrag representation kg triplets'
+    D001 em=0.316: rag_variant pred='kg texts' gold='threadrag representation kg texts'
+    D001 em=0.324: generator_model pred='' gold='llama3 8b instruct'
+    D001 em=0.324: rag_variant pred='edp' gold='threadrag selection edp'
+    D001 em=0.324: rag_variant pred='threadrag full' gold='threadrag ablation sn stg edp'
+    D001 em=0.326: rag_variant pred='threadrag w o sn fixed length chunks' gold='threadrag ablation edp only no sn or stg'
+  Paired rows: 1142; shown: 20
+  Field mismatches: dataset_name=696, rag_variant=471, generator_model=525, metric_k=51
+
+  == without D014
+  value        P=0.120 R=0.076 F1=0.093  (tp=579, pred=4831, gold=7632)
+  value_loose  P=0.353 R=0.223 F1=0.273  (tp=1703, pred=4831, gold=7632)
+
+  == per publication (strict value F1)
+  D001: F1=0.231 P=0.465 R=0.154 pred=127 gold=383
+  D002: F1=0.000 P=0.000 R=0.000 pred=216 gold=316
+  D003: F1=0.024 P=0.118 R=0.013 pred=76 gold=673
+  D004: F1=0.000 P=0.000 R=0.000 pred=225 gold=207
+  D005: F1=0.000 P=0.000 R=0.000 pred=262 gold=346
+  D006: F1=0.219 P=0.263 R=0.188 pred=403 gold=565
+  D007: F1=0.102 P=0.106 R=0.098 pred=700 gold=758
+  D008: F1=0.282 P=0.576 R=0.187 pred=125 gold=385
+  D009: F1=0.275 P=0.300 R=0.254 pred=609 gold=721
+  D010: F1=0.000 P=0.000 R=0.000 pred=62 gold=152
+  D011: F1=0.216 P=0.302 R=0.168 pred=192 gold=345
+  D012: F1=0.016 P=0.019 R=0.013 pred=525 gold=765
+  D013: F1=0.006 P=0.011 R=0.004 pred=188 gold=486
+  D014: F1=0.000 P=0.000 R=0.000 pred=91 gold=11760
+  D015: F1=0.000 P=0.000 R=0.000 pred=193 gold=222
+  D016: F1=0.000 P=0.000 R=0.000 pred=8 gold=72
+  D017: F1=0.000 P=0.000 R=0.000 pred=221 gold=232
+  D018: F1=0.000 P=0.000 R=0.000 pred=242 gold=317
+  D019: F1=0.030 P=0.048 R=0.021 pred=126 gold=280
+  D020: F1=0.000 P=0.000 R=0.000 pred=312 gold=343
+  D021: F1=0.000 P=0.000 R=0.000 pred=19 gold=64
+
+  == top-5 discrepancies (worst publications; sample missing / extra values)
+  D002 (F1=0.000) missing=316 extra=216
+     missing: ('morse general cybersecurity questions', 'morse', 'mistralai mistral 7b instruct', 'answer relevance', '', '0.9')
+     extra:   ('general cybersecurity questions', 'morse', 'mistralai mistral 7b instruct v0.2', 'answer relevance', '', '0.9')
+  D004 (F1=0.000) missing=207 extra=225
+     missing: ('e commerce seller forums', 'traditional rag raw kb', 'anthropic claude sonnet', 'entity match rate', '20', '24.8')
+     extra:   ('', 'opinion enriched kb o rag', 'anthropic claude sonnet 4.5', 'human preference rate', '', '79.2')
+  D005 (F1=0.000) missing=346 extra=262
+     missing: ('crag', 'baseline', 'meta llama instruct 70b', 'factuality', '', '34.2')
+     extra:   ('crag', 'prismrag', 'llama 3.1 70b instruct', 'factuality', '', '4.5')
+  D010 (F1=0.000) missing=152 extra=62
+     missing: ('mirage', 'ragroute', 'llama3.1 8b instruct', 'classification accuracy', '', '86.63')
+     extra:   ('mirage', 'ragroute', 'llama 3.1 8b instruct', 'communication volume reduction', '', '80.65')
+  D014 (F1=0.000) missing=11760 extra=91
+     missing: ('wow', 'simulated knowledge retrieval selection no knowledge', 'gpt 4o mini', 'knowledge precision', '', '0')
+     extra:   ('wizard of wikipedia', 'no retrieval', 'gpt 4o mini', 'kp', '', '0')
+  ```
+
 ## MVP-UI-001
 
 - Status (`complete` or `blocked`): `complete`
