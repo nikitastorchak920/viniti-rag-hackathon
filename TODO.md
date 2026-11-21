@@ -1,31 +1,29 @@
-# RAG extraction roadmap · Recall first
+# RAG extraction roadmap
 
-## Execution and checkpoints
+## Operating mode
 
-- Continue through independent work after each measurement. Record the fix, before/after predicted rows and Strict/Loose R/P/F1, elapsed time and tokens. Yield when the next step depends on Antigravity's report.
-- Record snapshots, commands and results in `handoff/STRICT_F1_STATE.md`. Use the existing cache and an offline rebuild before requesting paid extraction.
-- Keep the current LLM and provider configuration while fixing code and prompt coverage losses. Extraction must generalize to all 111 test papers. Gold is for diagnosis and scoring. Avoid paper IDs, benchmark entity names, and gold values in runtime behavior. Preserve cache v2, CSV schemas, and evaluator keys.
+- Codex executes one stage at a time on its own. After implementation and a dev measurement, record row counts, Strict and Loose R/P/F1, runtime and tokens, then wait for explicit operator approval before the next stage.
+- Keep the same configured model and provider in Stage 1. Start with a cache-only rebuild and local PDF checks. Use an isolated cache for targeted live extraction so the accepted dev bundle and raw cache remain reproducible.
+- Use no benchmark IDs, entity names, or gold values in extraction rules. Preserve cache v2 and the seven CSV schemas. Keep the frontend and the 111-paper test corpus outside these stages.
 
-## Reference
+## Reference measurements
 
-- Full 21-paper Domain 2 report `4b77325` for code `b5cb065`: 4,922 scored predictions and 19,392 gold rows. Strict R/P/F1 **0.030/0.118/0.048** (579 TP). Loose R/P/F1 **0.089/0.350/0.142** (1,721 TP). Zero structural errors.
-- Latest full-cache report [RECALL-DEV-001](handoff/FROM_ANTIGRAVITY.md#recall-dev-001) at `676ef1f`, code `dae1acc`: default Strict R/P/F1 **0.038/0.149/0.060** (731 TP, +152 vs Domain 2). Combined recovery Loose R/P/F1 **0.618/0.629/0.623** (11,989 TP). Keep the earlier 17-cache snapshots distinct.
+- Domain 2 at `b5cb065`: 4,922 scored predictions and 19,392 gold observations. Strict R/P/F1 **0.030/0.118/0.048** (579 TP). Loose R/P/F1 **0.089/0.350/0.142** (1,721 TP).
+- Latest verified full-cache reference, [RECALL-DEV-002](handoff/FROM_ANTIGRAVITY.md#recall-dev-002): 4,945 predictions, Strict R/P/F1 **0.038/0.150/0.061** (741 TP), Loose R/P/F1 **0.096/0.375/0.152** (1,854 TP). Compare local runs using the same input PDFs and available cache. Earlier experiments are in [the checkpoint log](handoff/STRICT_F1_STATE.md).
 
-## Stage 1 · Recover valid numeric coverage
+## Stage 1 · Structured PDF parsing and OCR
 
-- [x] **R1.1 Audit cache/export losses and recover missing native table cells.** Local first-pass windows contain 3,979 raw records and 59 extracted rows are excluded as duplicates. The largest coverage gap is already present in cache. `--recover-table-cells` restores 34 unique PDF table cells without API calls.
-- [x] **R1.2 Recover graphical numeric observations.** In D014, 11,643 of 11,760 scored gold rows cite figures. `--recover-plot-points` reads native vector markers on supported linear axes, records approximate values and preserves distinct coincident observations. The combined recovery pilot increased local Loose Recall from 0.06198 to 0.59169 and Strict Recall from 0.02501 to 0.02867. Keep plot recovery opt-in until full-cache verification and more complete strict context.
-- [ ] **R1.3 Remove capacity losses in long and dense PDFs.** The extraction prompt now explicitly includes appendix results and preserves baseline cells as rows. Split deduplication keeps distinct values, variants, cutoffs and experiment contexts. Remaining work covers proactive resumable slicing and distinguishing omitted windows from truncated or suspiciously sparse successful windows.
-- [x] **R1.4 Verify on the full cache.** Both offline exports covered all 21 papers with zero structural errors. The combined candidate gained 10,147 Loose TP and 10 Strict TP over the prior default with no per-paper Strict F1 regressions. Corpus Strict F1 declined from 0.060 to 0.039. The paper-by-paper report attributed the Strict gains to table recovery and confirmed the plot gains were Loose-only.
+- [x] **1.1 Native PDFs.** Use page-aligned PyMuPDF4LLM Markdown with inline HTML grids and merged headers. Try an alternate native grid detector when the first pass omits substantial numeric text. Preserve page markers and end matter. Keep native text for citation checks and disable OCR on readable pages.
+- [x] **1.2 Scanned and mixed PDFs.** Use local RapidOCR with spatial text injection, then apply the same structured page renderer. Supplement collapsed scan tables with aligned OCR baselines. Share the OCR engine with citation verification, report unreadable pages and preserve the existing multimodal fallback where available.
+- [x] **1.3 Measure the local dev pilot.** 3,913 → 3,979 scored predictions, Strict R/P/F1 0.02867/0.14209/0.04772 → 0.02707/0.13194/0.04493, Loose R/P/F1 0.06905/0.34219/0.11491 → 0.06962/0.33928/0.11553. Both bundles had zero structural errors. The pilot refreshed two papers against the 21-paper gold set and left three local cache gaps. Strict F1 declined. See [the measurement log](handoff/STRICT_F1_STATE.md#stage-1--structured-pdf-and-ocr-local-pilot) for verification and limitations.
+- [ ] **Operator checkpoint.** Review the pilot before authorizing Stage 2.
 
-## Stage 2 · Convert recovered volume into Strict Recall
+## Stage 2 · Table windows and response capacity
 
-- [x] Confirm cumulative context gains from positioned table relinking, explicit dataset aliases, and metric abbreviation resolution. The current default gained 152 Strict TP over the previous full-cache reference.
-- [x] **S2.1 Isolate table recovery and audit recoverable plot context.** [RECALL-DEV-002](handoff/FROM_ANTIGRAVITY.md#recall-dev-002) passed: table-only Strict F1 rose from 0.060 to 0.061, with +10 Strict TP, +12 Loose TP and no paper-level regressions or new table-recovery reviews. Table recovery now defaults on, with an explicit opt-out. Plot recovery remains optional.
-- [ ] **S2.2 Verify the new default and map repeated plot series.** `RECALL-DEV-003` checks the new default on the same full cache and collects source-backed duplicate/keep pairs to validate point correspondence across replotting.
-- [ ] **S2.3 Implement source-supported plot context and duplicate links.** Use explicit aliases and figure-scoped conditions, leave unsupported generator/variant details empty, and keep experiment limits separate from metric cutoffs. Link repeated observations with `duplicate_of` only when the source supports a shared series and individual points can be matched reliably. Measure this before adding colorbars or missing axes.
+- [ ] **2.1 Table-first windows.** Send one table with its caption, headers and section per result request. Split oversized tables on row boundaries, repeat required headers, and track all pieces through the final appendix.
+- [ ] **2.2 Compact responses.** Check the configured DeepSeek model and its documented output cap. Use the available cap and a validated compact row-array response, expanded to the existing cache/CSV shape. Measure capacity, output tokens per observation, Strict/Loose metrics and completeness on dev. Stop for approval.
 
-## Stage 3 · Improve Precision while preserving Recall
+## Stage 3 · Strict context and seven-field tuples
 
-- [ ] Audit false positives, evidence gaps and duplicate flags. Protect genuine distinct conditions. Require the agreed Recall and TP to hold before accepting a precision improvement.
-- [ ] After operator approval, run all 111 test papers and refresh the validated CSVs, passport and jury bundle. Keep test outside the dev iteration loop.
+- [ ] **3.1 Paper entity passport.** Collect datasets, generators, RAG variants and cutoffs in one metadata request per paper. Include the supported entities with each table and inherit keys from the applicable headers and captions.
+- [ ] **3.2 Source-backed normalization.** Split metric suffixes such as `Metric@k`, canonicalize names and spacing, and inherit unambiguous context without filling unsupported values. Keep experiment limits distinct from metric cutoffs. Measure Strict/Loose results and review diagnostics on dev. Stop for approval.

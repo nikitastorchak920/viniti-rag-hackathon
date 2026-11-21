@@ -11,7 +11,6 @@ import math
 import pathlib
 import re
 import sys
-import subprocess
 import unicodedata
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
@@ -72,12 +71,12 @@ def read_pages(path):
         raise ValueError('PDF parsers disagree about page count; manual review required')
     return [[pages[i] for pages in variants] for i in range(len(variants[0]))]
 
-def read_pages_with_ocr(path, executable='tesseract', language='eng', dpi=DEFAULT_DPI):
+def read_pages_with_ocr(path, dpi=DEFAULT_DPI):
     """OCR actual image-only PDF pages. Never trust supplied/transcribed sidecars.
 
     OCR is an additional same-page text variant, not fuzzy verification. A missed
     citation remains unresolved; numbers and minus signs are never auto-corrected.
-    Requires the Tesseract executable and its selected language data separately.
+    Uses the same local RapidOCR engine as extraction.
     """
     import pymupdf
     pages=read_pages(path)
@@ -88,10 +87,9 @@ def read_pages_with_ocr(path, executable='tesseract', language='eng', dpi=DEFAUL
             if len((page.get_text() or '').strip()) >= MIN_CHARS_PER_TEXT_PAGE:
                 continue
             try:
-                pages[i].append(recognize_page(page, executable=executable, lang=language, dpi=dpi))
-            except (OSError,subprocess.SubprocessError) as exc:
-                raise ValueError('OCR failed on page '+str(i+1)+
-                    '; install Tesseract/language data or set --tesseract: '+str(exc)) from exc
+                pages[i].append(recognize_page(page, dpi=dpi))
+            except Exception as exc:
+                raise ValueError(f'RapidOCR failed on page {i+1}: {exc}') from exc
     return pages
 
 def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, page_reader=read_pages):
@@ -286,12 +284,10 @@ def main():
     parser.add_argument('--schema',type=pathlib.Path,default=DEFAULT_SCHEMA)
     parser.add_argument('--template',action='store_true')
     parser.add_argument('--json-report',type=pathlib.Path)
-    parser.add_argument('--ocr',action='store_true',help='Run local Tesseract on image-only pages; unmatched OCR quotes remain unresolved.')
-    parser.add_argument('--tesseract',default='tesseract',help='Tesseract executable path (requires a separate installation).')
-    parser.add_argument('--ocr-language',default='eng',help='Installed Tesseract language(s), for example eng or eng+rus.')
+    parser.add_argument('--ocr',action='store_true',help='Run local RapidOCR on image-only pages; unmatched OCR quotes remain unresolved.')
     parser.add_argument('--ocr-dpi',type=int,default=DEFAULT_DPI,choices=range(150,601),metavar='150..600')
     args=parser.parse_args()
-    reader=(lambda path:read_pages_with_ocr(path,args.tesseract,args.ocr_language,args.ocr_dpi)) if args.ocr else read_pages
+    reader=(lambda path:read_pages_with_ocr(path,args.ocr_dpi)) if args.ocr else read_pages
     try: report=validate(args.submission,args.pdfdir,args.schema,args.template,page_reader=reader)
     except (OSError,ValueError) as exc:
         print('ERROR:',exc);return 1

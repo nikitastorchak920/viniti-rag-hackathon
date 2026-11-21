@@ -1,5 +1,21 @@
 # Strict F1 checkpoint state
 
+## Stage 1 · Structured PDF and OCR local pilot
+
+- All 21 local PDFs were classified by their native text layer. Eighteen required no OCR. Native Markdown checks on sampled papers retained page markers and appendix text, and emitted native table grids and merged headers. D014 retained all 18 pages and a nonempty last page. D021 OCR retained text across all 16 pages; PDF page 11 confirmed that positioned OCR baselines expose rows when the layout engine collapses a scan table.
+- The first live pass identified a native grid loss on D007 page 7. The alternate grid detector reduced omitted distinct numeric literals from 179 to 12 before the raw-text safety supplement. Replaying only pages 7–9 with the same metadata restored raw observations from 42 to 252. For the full D007 replay, Strict TP rose from 90 to 180 and Loose TP from 301 to 425 versus the first structured pass. The earlier reference had 211 Strict and 414 Loose TP. The scanned paper produced 21 observations after OCR and had zero Strict and Loose matches against gold. The exporter verified or repaired five of its result quotes; 16 remained unverified.
+- The baseline used 17 complete local caches, and the candidate used the same caches with D007 replaced and D021 added. Three local caches (D002, D009, D013) remained incomplete. All scores use the same 21-paper gold corpus, with 19,392 scored gold observations. This is a targeted live comparison against cached results from earlier extraction, so the difference includes model/run effects. It is separate from the historical 21-cache RECALL-DEV-002 benchmark.
+
+| Local export | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP |
+|---|---:|---|---:|---|---:|
+| Cached reference | 3,913 | 0.02867/0.14209/0.04772 | 556 | 0.06905/0.34219/0.11491 | 1,339 |
+| First structured pass | 3,769 | 0.02243/0.11542/0.03756 | 435 | 0.06322/0.32529/0.10587 | 1,226 |
+| Structured pass with alternate grid replay | 3,979 | 0.02707/0.13194/0.04493 | 525 | 0.06962/0.33928/0.11553 | 1,350 |
+
+Both reference and final candidate had zero structural errors. The final corpus checker used native PDF text (381 review items); the targeted live export separately ran RapidOCR for D021 quote checks. The local core suite passed 48 tests.
+
+The configured DeepSeek model was kept. The two-paper live run took 615.6 seconds, with a 173.9-second targeted replay overlapping it. Total usage reported by the API was 134,632 input and 143,206 output tokens. Reference and candidate offline checks took 22.6 and 8.4 seconds. An earlier broader attempt was interrupted during local preprocessing before extraction requests. Relative OCR speed versus Tesseract remains unmeasured. The accepted jury bundle and original cache were preserved.
+
 ## S2.1 · Table recovery approved for the default export
 
 [RECALL-DEV-002](FROM_ANTIGRAVITY.md#recall-dev-002) at `96f3c30` isolated table recovery on the complete 21-paper cache with zero API calls. Scored predictions rose from 4,911 to 4,945. Strict R/P/F1 was 0.038/0.150/0.061 (741 TP, +10), and Loose R/P/F1 was 0.096/0.375/0.152 (1,854 TP, +12). All 34 cells came from D007 PDF page 7, Table 2. There were zero structural errors, per-paper regressions or new table-recovery reviews. A laptop sleep during OCR affected the separate quote-review count.

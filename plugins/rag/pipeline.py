@@ -151,7 +151,7 @@ def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: i
         return False, "no LLM client for --verify-pass"
     from plugins.rag.schemas import Window
 
-    info = inspect_pdf(pdf)
+    info = inspect_pdf(pdf, structured=True)
     cache.setdefault("verify", {})
     todo = [p for p in select_verify_pages(info.pages, cache) if str(p) not in cache["verify"]][:max_pages]
     added = 0
@@ -184,8 +184,9 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         cache = {}
     if cache.get("complete"):
         return True, "cached"
+    wants_text = pdf_mode != "pdf" or getattr(client, "text_only", False)
     try:
-        info = inspect_pdf(pdf, ocr=ocr)
+        info = inspect_pdf(pdf, ocr=ocr and wants_text, structured=wants_text)
     except Exception as exc:  # noqa: BLE001
         return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
     if info.n_pages == 0:
@@ -203,11 +204,17 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         return False, "no text layer and --pdf-mode text forbids multimodal upload"
     mode = "pdf" if use_pdf else "text"
     used_ocr = info.used_ocr and not use_pdf
+    text_format = "markdown-v1" if info.structured_pages is not None else "plain"
+    if used_ocr:
+        text_format = "markdown-rapidocr-v1" if info.structured_pages is not None else "rapidocr-v1"
     if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != mode
-                  or (mode == "text" and bool(cache.get("ocr")) != used_ocr)):
+                  or (mode == "text" and (bool(cache.get("ocr")) != used_ocr
+                                          or cache.get("text_format", "plain") != text_format))):
         cache = {}
     cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan, ocr=used_ocr,
                  mode=mode, window=window, windows=cache.get("windows", {}), complete=False)
+    if mode == "text":
+        cache["text_format"] = text_format
     from plugins.rag.schemas import Meta  # lazy: needs pydantic
 
     uploaded = None
@@ -236,7 +243,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                     continue
                 log(f"  [{doc_id}] results pass pages {key}")
                 cache["windows"][key] = _window(client, contents, cache["meta"], first, last, doc_id,
-                                                None if use_pdf else (lambda n: info.pages[n - 1]))
+                                                None if use_pdf else (lambda n: info.prompt_pages[n - 1]))
                 save_cache(cache_dir, doc_id, cache)
         cache["complete"] = True
         save_cache(cache_dir, doc_id, cache)

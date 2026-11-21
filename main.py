@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="also export calibrated native vector scatter points (works without API calls)")
     ap.add_argument("--window", type=int, default=3, help="pages per result-extraction request (default 3)")
     ap.add_argument("--pdf-mode", choices=["auto", "text", "pdf"], default="auto",
-                    help="auto: text layer, scans sent as PDF; pdf: always send PDF; text: text layer only")
+                    help="auto: structured text, unreadable scans sent as PDF; pdf: request PDF; text: structured text only")
     ap.add_argument("--skip-scans", action="store_true",
                     help="skip image-only PDFs (status SKIPPED_SCAN); enabled automatically when GEMINI_API_KEY is not set")
     ap.add_argument("--ocr-json", type=pathlib.Path, default=None, metavar="DIR",
@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=None,
                     help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
     ap.add_argument("--ocr", action="store_true",
-                    help="try Tesseract on low-text pages and recheck OCR-cache quotes during export; Gemini auto mode falls back to PDF")
+                    help="use RapidOCR on low-text pages and recheck OCR-cache quotes; Gemini auto mode falls back to PDF")
     ap.add_argument("--verify-pass", action="store_true",
                     help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")

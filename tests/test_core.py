@@ -367,16 +367,62 @@ class OcrFallback(unittest.TestCase):
     native = "A full native page with text that exceeds the OCR threshold."
     recognized = "A recovered scan with metric values and their surrounding text."
 
-    def test_shared_renderer_passes_png_and_settings_to_tesseract(self):
+    def test_rapidocr_preserves_positioned_text_on_the_pdf_page(self):
         page = Mock()
-        page.get_pixmap.return_value.tobytes.return_value = b"png"
-        rgb = object()
-        with patch.dict(sys.modules, pymupdf=SimpleNamespace(csRGB=rgb)), \
-                patch.object(ocr.subprocess, "run", return_value=SimpleNamespace(stdout=b"words")) as run:
-            self.assertEqual(ocr.recognize_page(page, executable="ocr-bin"), "words")
-        page.get_pixmap.assert_called_once_with(dpi=300, colorspace=rgb, alpha=False)
-        run.assert_called_once_with(["ocr-bin", "stdin", "stdout", "-l", "eng", "--psm", "3"],
-                                    input=b"png", capture_output=True, check=True, timeout=120)
+        page.get_text.return_value = "words"
+        inject = Mock()
+        with patch.dict(sys.modules, {"pymupdf4llm.ocr.exec_ocr_interface": SimpleNamespace(exec_ocr_full=inject)}):
+            self.assertEqual(ocr.recognize_page(page, dpi=180), "words")
+        inject.assert_called_once_with(page, ocr._recognize_boxes, dpi=180, keep_ocr_text=False)
+        page.get_text.assert_called_once_with(sort=True)
+
+    def test_structured_pages_keep_pdf_markers_and_raw_text(self):
+        doc = object()
+        table = '<table><tr><th colspan="2">Scores</th></tr><tr><td>0.2</td><td>0.3</td></tr></table>'
+        convert = Mock(return_value=[{"text": table}, {"text": "## Appendix\nFinal result 0.4"}, {"text": ""}])
+        with patch.dict(sys.modules, pymupdf4llm=SimpleNamespace(to_markdown=convert)):
+            raw = ["Scores 0.2 0.3", "Appendix Final result 0.4", "Last page survives"]
+            structured = pdf_processor._structured_text(doc, raw, set())
+        convert.assert_called_once_with(doc, page_chunks=True, use_ocr=False, table_output="html")
+        info = pdf_processor.PdfInfo(self.pdf, 3, raw, structured_pages=structured)
+        self.assertIn(f"--- PAGE 1 ---\n{table}", info.marked_text())
+        self.assertIn("--- PAGE 2 ---\n## Appendix", info.marked_text())
+        self.assertIn("--- PAGE 3 ---\nLast page survives", info.marked_text())
+        self.assertEqual(info.pages, raw)
+
+    def test_layout_preserves_omitted_numeric_source_text(self):
+        markdown = '<table><tr><td colspan="12">0.2</td></tr></table>'
+        raw = "Earlier row 0.2\nLater table row 12 and −0.4"
+        output = pdf_processor._preserve_numeric_text(markdown, raw)
+        self.assertIn("Later table row 12 and −0.4", output)
+        self.assertNotIn("Earlier row", output)
+
+    def test_alternate_native_table_layout_recovers_dropped_cells(self):
+        native = " ".join(f"{n}.2" for n in range(10))
+        table = "<table><tr><td>" + native + "</td></tr></table>"
+        convert = Mock(side_effect=[[{"text": "Metric 0.2"}], [{"text": table}]])
+        layout = Mock()
+        with patch.dict(sys.modules, pymupdf4llm=SimpleNamespace(to_markdown=convert, use_layout=layout)):
+            self.assertEqual(pdf_processor._structured_text(object(), [native], set()), [table])
+        self.assertEqual(convert.call_args.kwargs["pages"], [0])
+        self.assertEqual([call.args for call in layout.call_args_list], [(False,), (True,)])
+
+    def test_collapsed_ocr_table_keeps_row_alignment(self):
+        html = "<table><tr><td>Method<br/>A<br/>B</td><td>F1<br/>0.8<br/>0.9</td></tr></table>"
+        page = Mock()
+        page.get_text.return_value = [
+            (10, 10, 40, 15, "Method"), (55, 10, 68, 15, "F1"),
+            (10, 20, 14, 25, "A"), (55, 21, 64, 26, "0.8"),
+            (10, 30, 14, 35, "B"), (55, 30, 64, 35, "0.9"),
+        ]
+        chunk = {"text": html + "\n\n", "page_boxes": [
+            {"class": "table", "pos": (0, len(html) + 2), "bbox": (5, 5, 80, 40)},
+        ]}
+        with patch.dict(sys.modules, pymupdf=SimpleNamespace(Rect=lambda rect: rect)):
+            text = pdf_processor._add_ocr_table_positions(page, chunk)
+        self.assertIn(html, text)
+        self.assertIn("x10: A | x55: 0.8", text)
+        self.assertIn("x10: B | x55: 0.9", text)
 
     def test_ocr_for_mixed_pdf_and_unusable_outputs(self):
         # The native scan heuristic alone considers this document text-readable.
@@ -386,19 +432,20 @@ class OcrFallback(unittest.TestCase):
         open_pdf.return_value.__exit__ = Mock(return_value=False)
         with patch.dict(sys.modules, pymupdf=SimpleNamespace(open=open_pdf)), \
                 patch.object(ocr, "ocr_available") as available, \
-                patch.object(ocr, "ocr_pages") as recognize, patch.object(llm_client, "log") as log:
-            recognize.return_value = [self.native] * 3 + [self.recognized]
+                patch.object(ocr, "recognize_page") as recognize, patch.object(llm_client, "log") as log:
+            recognize.return_value = self.recognized
             info = pdf_processor.inspect_pdf(self.pdf, ocr=True)
             self.assertTrue(info.used_ocr)
             self.assertFalse(info.is_scan)
             self.assertEqual(info.pages[-1], self.recognized)
-            for installed, error, warning in [(True, None, "insufficient text on PDF pages 4"),
+            recognize.assert_called_once_with(pages[-1])
+            for installed, error, warning in [(True, None, "insufficient text on PDF page 4"),
                                                (True, RuntimeError("OCR failed"), "OCR failed"),
                                                (False, None, "OCR unavailable")]:
                 with self.subTest(warning=warning):
                     available.return_value = installed
                     recognize.side_effect = error
-                    recognize.return_value = [self.native] * 3 + ["  "]
+                    recognize.return_value = "  "
                     info = pdf_processor.inspect_pdf(self.pdf, ocr=True)
                     self.assertTrue(info.is_scan)
                     self.assertFalse(info.used_ocr)

@@ -2,15 +2,17 @@
 
 ## Priority and ownership
 
+For the current three-stage dev effort, Codex runs the work and validation locally. The Antigravity queue is inactive. Pause after each stage's dev measurement until the operator explicitly approves the next stage.
+
 1. Deliver and sign off on a jury-ready MVP before optimizing strict F1.
 2. **OpenAI Codex, Thunderobot 911 laptop** owns code in `core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/` and the pipeline entry point, plus architecture reviews, pytest, the roadmap, and Git checkpoints. It can inspect PDFs and run local tools, OCR, and cache rebuilds where inputs are available.
-3. **Antigravity, second laptop** has the 21 PDFs in `dev/`, 111 PDFs in `test/`, local API credentials, and Tesseract. It pulls `origin/main`, runs the newest unanswered task, and pushes its report directly to `origin/main`. Its only handoff edit is the English evidence in `handoff/FROM_ANTIGRAVITY.md`.
+3. **Antigravity, second laptop**, when active, pulls `origin/main`, runs the newest unanswered task, and pushes its report directly to `origin/main`. Its only handoff edit is the English evidence in `handoff/FROM_ANTIGRAVITY.md`.
 4. **Human operator** reviews the Russian status report and demo checkpoint and signs off on the MVP before Phase 2. The agents exchange all task details and evidence through Git.
 
 ## Language, demos, and checkpoints
 
 - Communicate with the operator in Russian. Write code and comments, commit messages, `TODO.md`, `handoff/` files, and inter-agent instructions in English. Preserve source quotations in their original language.
-- After each task, update `TODO.md` with the observed checkpoint, run the relevant checks, and commit and push the intended changes to `origin/main`. Stage explicit paths if unrelated files are present. Continue independent work between checkpoints and yield when the next step depends on an Antigravity report.
+- After each task, update `TODO.md` with the observed checkpoint, run the relevant checks, and commit and push the intended changes to `origin/main`. Stage explicit paths if unrelated files are present.
 - End every operator response with `[ОТЧЁТ ДЛЯ ПОЛЬЗОВАТЕЛЯ / ЧТО МОЖНО ПОСМОТРЕТЬ СЕЙЧАС]` (Russian, up to 10 lines, with the change, a command or URL, serious blockers, and whether the gate passed). If an Antigravity task was published, give its ID and repository link. Write the `[PROMPT FOR ANTIGRAVITY]` instructions in the repository.
 
 ## Repository handoff queue
