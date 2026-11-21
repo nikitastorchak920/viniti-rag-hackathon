@@ -78,7 +78,7 @@ def verify_user(meta: dict, page: int, existing: list[str]) -> str:
     return VERIFY_USER.format(page=page, entities=ent, existing=json.dumps(existing, ensure_ascii=False))
 
 
-def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
+def window_user(meta: dict, first: int, last: int, part: bool = False, table_only: bool = False) -> str:
     ent = {
         "configurations": [{k: c.get(k, "") for k in ("config_id", "rag_variant", "generator_model", "retriever_model", "note")}
                            for c in meta["configurations"]],
@@ -89,7 +89,12 @@ def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
                         for e in meta["experiments"]],
     }
     return (
-        f"TASK: extract ALL result values (every metric value in every table, plus results stated in the running text or readable from figures) "
+        ("TASK: extract ALL measured numeric cells from the supplied rows of this single table. "
+         "Use repeated headers, captions, and cells with data-context-only=true as context only. "
+         "Treat each distinct measured cell as a separate observation. "
+         if table_only else
+         "TASK: extract ALL result values present in the supplied content, including reported values in running text or figures. ")
+        +
         f"located on PDF pages {first}-{last} ONLY. Ignore other pages. Return rows in `results`.\n\n"
         "One row = one value of one metric for one experiment/configuration/dataset/task. Use experiment_id/config_id/dataset_id/task_id "
         "ONLY from the entity lists below (copy the id exactly; \"\" if none fits). Include baseline rows reported in the paper's tables "
@@ -107,4 +112,20 @@ def window_user(meta: dict, first: int, last: int, part: bool = False) -> str:
         "ENTITIES (already extracted, ids fixed):\n" + json.dumps(ent, ensure_ascii=False)
     )
 
+RESULT_SYSTEM = SYSTEM
 SYSTEM = SYSTEM + FEWSHOT
+
+
+def compact_result_format() -> str:
+    from plugins.rag.schemas import COMPACT_FIELDS, COMPACT_REQUIRED
+
+    return (
+        "OUTPUT FORMAT: Return a JSON object with a results array of positional arrays. "
+        f"The first {COMPACT_REQUIRED} positions must be present. Include later positions through the last "
+        "field supported by the source. Use empty strings for unavailable interior positions. Omit trailing "
+        "empty positions. Use phase metadata IDs for dataset and configuration, and copy the original "
+        "printed number as a string. The paper's own or re-run measurements may omit result_origin "
+        "(primary by default). Always represent cited results with result_origin='cited' and cited_ref.\n"
+        "Positions: " + ", ".join(COMPACT_FIELDS) + '.\n'
+        'Example JSON: {"results":[["DS1","C01","Recall","5","0.72","Recall@5 0.72",3]]}'
+    )

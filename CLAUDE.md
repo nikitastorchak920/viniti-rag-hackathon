@@ -2,7 +2,7 @@
 
 ## Priority and ownership
 
-For the current three-stage dev effort, Codex runs the work and validation locally. The Antigravity queue is inactive. Pause after each stage's dev measurement until the operator explicitly approves the next stage.
+For the current three-stage dev effort, Codex runs the work and validation locally. The Antigravity queue is inactive. The operator approved completing Stages 2 and 3 in sequence without an intermediate pause. Record a separate measurement and commit for each stage.
 
 1. Deliver and sign off on a jury-ready MVP before optimizing strict F1.
 2. **OpenAI Codex, Thunderobot 911 laptop** owns code in `core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/` and the pipeline entry point, plus architecture reviews, pytest, the roadmap, and Git checkpoints. It can inspect PDFs and run local tools, OCR, and cache rebuilds where inputs are available.

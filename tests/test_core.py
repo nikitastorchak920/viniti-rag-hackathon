@@ -362,6 +362,70 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(pipeline.select_verify_pages([dense], full), [])
 
 
+class TableWindows(unittest.TestCase):
+    def test_compact_format_round_trips_every_result_field(self):
+        from plugins.rag.schemas import COMPACT_FIELDS, CompactWindow, Result
+        from pydantic import ValidationError
+
+        self.assertEqual(set(COMPACT_FIELDS), set(Result.model_fields))
+        row = Result.model_validate({**dict.fromkeys(COMPACT_FIELDS, ""), **result()}).model_dump()
+        data = CompactWindow.model_validate({"results": [[row[field] for field in COMPACT_FIELDS]]})
+        self.assertEqual(data.expanded(), {"results": [row]})
+        with self.assertRaises(ValidationError):
+            CompactWindow.model_validate({"results": [["too short"]]})
+
+    def test_tables_preserve_caption_merged_cells_and_residual_pages(self):
+        from plugins.rag.table_windows import plan
+
+        page = ("## Appendix A\nTable 4: Results by corpus\n"
+                '<table><tr><th colspan="2">Test</th></tr><tr><td rowspan="2">X</td><td>0.1</td></tr>'
+                "<tr><td>0.2</td></tr></table>\nText reports 0.4.\n"
+                "| Method | Score |\n| --- | --- |\n| B | 0.3 |\n")
+        tables, residual = plan([page, "Appendix final page, 0.5"])
+        self.assertEqual(len(tables), 2)
+        self.assertEqual(tables[0].label, "Table 4")
+        self.assertIn("## Appendix A", tables[0].source(1, 2))
+        self.assertIn('colspan="2"', tables[0].source(1, 2))
+        self.assertIn('data-context-only="true">X', tables[0].source(1, 2))
+        self.assertNotIn("0.1", tables[0].source(1, 2))
+        self.assertEqual(list(tables[0].parts(1)), [(0, 1), (1, 2)])
+        self.assertIn("Text reports 0.4.", residual[0])
+        self.assertNotIn("0.3", residual[0])
+        self.assertEqual(residual[1], "Appendix final page, 0.5")
+
+    def test_truncation_checkpoints_each_table_slice(self):
+        from plugins.rag.table_windows import Table
+
+        table = Table(3, 1, "Table 2: Study results", "Table 2", "", (),
+                      ("<tr><td>0.1</td></tr>", "<tr><td>0.2</td></tr>"), "html")
+        windows, splits = {}, []
+        meta = make_cache([])["meta"]
+        contents, persist = Mock(), Mock()
+        with patch.object(pipeline, "_gen", side_effect=[
+            llm_client.TruncatedResponseError(), {"results": [result()]}, llm_client.LLMError("network"),
+        ]):
+            with self.assertRaises(llm_client.LLMError):
+                pipeline._table_part(Mock(), contents, meta, table, 0, 2, "P", windows, splits, persist)
+        self.assertEqual(list(windows), ["3-T1-1-1"])
+        with patch.object(pipeline, "_gen", return_value={"results": [result()]}) as generate:
+            pipeline._table_part(Mock(), contents, meta, table, 0, 2, "P", windows, splits, persist)
+        generate.assert_called_once()
+        self.assertEqual(windows["3-T1-2-2"]["results"][0]["source_table"], "Table 2")
+
+    def test_captioned_flattened_grid_keeps_both_header_bands(self):
+        from plugins.rag.table_windows import plan
+
+        text = ("Table 4: Results\nGroup A\nMethod Recall Accuracy F1\n"
+                "X 0.1 0.2 0.3\nY 0.2 0.3 0.4\n"
+                "Group B\nMethod Recall Accuracy F1\n"
+                "X 0.5 0.6 0.7\nY 0.6 0.7 0.8\n\nSubsequent discussion.\n")
+        tables, residual = plan([text])
+        self.assertEqual([table.label for table in tables], ["Table 4", "Table 4"])
+        self.assertIn("Group B", tables[1].source(0, 2))
+        self.assertNotIn("0.3", tables[1].source(0, 2))
+        self.assertIn("Subsequent discussion.", residual[0])
+
+
 class OcrFallback(unittest.TestCase):
     pdf = pathlib.Path("synthetic.pdf")
     native = "A full native page with text that exceeds the OCR threshold."

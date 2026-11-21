@@ -7,7 +7,7 @@ import time
 
 from core.llm_client import GeminiClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
 from core.pdf_processor import inspect_pdf
-from plugins.rag.prompts import META_USER, SYSTEM, verify_user, window_user
+from plugins.rag.prompts import META_USER, RESULT_SYSTEM, SYSTEM, compact_result_format, verify_user, window_user
 
 CACHE_VERSION = 2
 
@@ -15,16 +15,27 @@ CACHE_VERSION = 2
 def _gen(client, contents, schema, tag: str) -> dict:
     """generate_json + strict validation (coerces "3"->3, "false"->False). Never returns unvalidated data."""
     from pydantic import ValidationError
+    from plugins.rag.schemas import CompactWindow
+
+    compact = schema is CompactWindow
+    system = RESULT_SYSTEM + "\n\n" + compact_result_format() if compact else SYSTEM
 
     last = ""
     for _ in range(3):
-        data = client.generate_json(contents, SYSTEM, schema, tag=tag)
+        data = client.generate_json(contents, system, schema, tag=tag)
         try:
-            return schema.model_validate(data).model_dump()
+            validated = schema.model_validate(data)
+            return validated.expanded() if compact else validated.model_dump()
         except ValidationError as exc:
             last = str(exc).splitlines()[0][:200] + " " + (str(exc.errors()[0].get("loc")) if exc.errors() else "")
             log(f"  [{tag}] schema validation failed ({last}); retrying")
     raise LLMError(f"model output failed schema validation 3x: {last}")
+
+
+def _result_schema(client):
+    from plugins.rag.schemas import CompactWindow, Window
+
+    return CompactWindow if getattr(client, "compact_results", False) is True else Window
 
 
 OVERLAP = 4  # lines shared by the two halves of a split page (keeps table header / context)
@@ -73,13 +84,12 @@ def _dedupe(rows: list[dict]) -> list[dict]:
 def _part(client, contents_fn, meta: dict, page: int, lines: list[str], doc_id: str, depth: int = 0,
           context: list[str] | None = None) -> list[dict]:
     """One page, or a slice of its lines. On truncation split the lines in half (with overlap), recursively."""
-    from plugins.rag.schemas import Window
-
     tag = f"{doc_id}:{page}-{page}" + (f"/L{len(lines)}" if depth else "")
     try:
         prefix = [HDR_MARK, *context, HDR_END] if context else []
         text = f"--- PAGE {page} ---\n" + "\n".join(prefix + lines)
-        data = _gen(client, contents_fn(window_user(meta, page, page, part=depth > 0), page, page, text), Window, tag)
+        data = _gen(client, contents_fn(window_user(meta, page, page, part=depth > 0), page, page, text),
+                    _result_schema(client), tag)
         return data["results"]
     except TruncatedResponseError:
         if len(lines) < 2 * OVERLAP + 2 or depth >= 8:
@@ -94,10 +104,9 @@ def _part(client, contents_fn, meta: dict, page: int, lines: list[str], doc_id: 
 
 def _window(client, contents_fn, meta: dict, first: int, last: int, doc_id: str, page_text_fn=None) -> dict:
     """Extract pages first..last; on truncation halve the page range, then (single page) halve its lines."""
-    from plugins.rag.schemas import Window
-
     try:
-        return _gen(client, contents_fn(window_user(meta, first, last), first, last, None), Window, f"{doc_id}:{first}-{last}")
+        return _gen(client, contents_fn(window_user(meta, first, last), first, last, None),
+                    _result_schema(client), f"{doc_id}:{first}-{last}")
     except TruncatedResponseError:
         if first >= last:
             text = page_text_fn(first) if page_text_fn else None
@@ -112,6 +121,34 @@ def _window(client, contents_fn, meta: dict, first: int, last: int, doc_id: str,
         a = _window(client, contents_fn, meta, first, mid, doc_id, page_text_fn)
         b = _window(client, contents_fn, meta, mid + 1, last, doc_id, page_text_fn)
         return {"results": a["results"] + b["results"]}
+
+
+def _table_part(client, contents, meta, table, first, last, doc_id, windows, splits, persist):
+    key = f"{table.page}-T{table.index}-{first + 1}-{last}"
+    if key in windows:
+        return
+    if key not in splits:
+        try:
+            prompt = window_user(meta, table.page, table.page, table_only=True)
+            data = _gen(client, contents(prompt, table.page, table.page, table.source(first, last)),
+                        _result_schema(client), f"{doc_id}:{key}")
+        except TruncatedResponseError as exc:
+            if last - first < 2:
+                raise TruncatedResponseError(f"{key}: a single physical table row exceeded the response limit") from exc
+            splits.append(key)
+            log(f"  [{doc_id}] {key} truncated; splitting at a physical row boundary")
+            persist()
+        else:
+            for row in data["results"]:
+                row["source_page"] = table.page
+                if table.label:
+                    row["source_table"] = table.label
+            windows[key] = data
+            persist()
+            return
+    mid = (first + last) // 2
+    _table_part(client, contents, meta, table, first, mid, doc_id, windows, splits, persist)
+    _table_part(client, contents, meta, table, mid, last, doc_id, windows, splits, persist)
 
 
 NUM_TOKEN = re.compile(r"(?<![\w.])[-+]?\d+(?:\.\d+)?%?(?![\w])")
@@ -149,8 +186,6 @@ def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: i
         return True, "verify skipped (no complete text-mode in-scope cache)"
     if client is None:
         return False, "no LLM client for --verify-pass"
-    from plugins.rag.schemas import Window
-
     info = inspect_pdf(pdf, structured=True)
     cache.setdefault("verify", {})
     todo = [p for p in select_verify_pages(info.pages, cache) if str(p) not in cache["verify"]][:max_pages]
@@ -162,7 +197,7 @@ def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: i
             contents = ["PAPER TEXT (page markers are PDF page numbers):\n\n" + info.marked_text(p, p),
                         verify_user(cache["meta"], p, existing)]
             log(f"  [{doc_id}] verify pass page {p}")
-            res = _gen(client, contents, Window, f"{doc_id}:verify{p}")
+            res = _gen(client, contents, _result_schema(client), f"{doc_id}:verify{p}")
             for r in res["results"]:
                 r["source_page"] = p
             cache["verify"][str(p)] = {"results": res["results"]}
@@ -211,8 +246,13 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                   or (mode == "text" and (bool(cache.get("ocr")) != used_ocr
                                           or cache.get("text_format", "plain") != text_format))):
         cache = {}
+    result_plan = "page-v1" if use_pdf else "table-v1"
+    if (cache.get("result_plan", "page-v1"), cache.get("window", window)) != (result_plan, window):
+        cache.pop("windows", None)
+        cache.pop("table_splits", None)
     cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan, ocr=used_ocr,
-                 mode=mode, window=window, windows=cache.get("windows", {}), complete=False)
+                 mode=mode, window=window, result_plan=result_plan,
+                 windows=cache.get("windows", {}), complete=False)
     if mode == "text":
         cache["text_format"] = text_format
     from plugins.rag.schemas import Meta  # lazy: needs pydantic
@@ -236,14 +276,41 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
             save_cache(cache_dir, doc_id, cache)
         in_scope = cache["meta"]["publication"].get("in_scope")
         if in_scope:
+            page_text = None
+            if not use_pdf:
+                from plugins.rag.table_windows import plan
+
+                tables, residual = plan(info.prompt_pages)
+                page_text = lambda page: residual[page - 1]
+                max_out = getattr(client, "max_out", 8192)
+                max_out = max_out if isinstance(max_out, int) else 8192
+                budget = cache.setdefault(
+                    "table_budget", max(16, min(192, max_out // 128))
+                )
+                splits = cache.setdefault("table_splits", [])
+
+                def persist():
+                    save_cache(cache_dir, doc_id, cache)
+
+                log(f"  [{doc_id}] detected {len(tables)} structured tables")
+                for table in tables:
+                    for start, stop in table.parts(budget):
+                        _table_part(client, contents, cache["meta"], table, start, stop,
+                                    doc_id, cache["windows"], splits, persist)
+
+                def text_contents(prompt, first, last, text=None):
+                    if text is None:
+                        text = "\n\n".join(f"--- PAGE {p} ---\n{page_text(p)}" for p in range(first, last + 1))
+                    return contents(prompt, first, last, text)
+            else:
+                text_contents = contents
             for first in range(1, info.n_pages + 1, window):
                 last = min(first + window - 1, info.n_pages)
                 key = f"{first}-{last}"
                 if key in cache["windows"]:
                     continue
                 log(f"  [{doc_id}] results pass pages {key}")
-                cache["windows"][key] = _window(client, contents, cache["meta"], first, last, doc_id,
-                                                None if use_pdf else (lambda n: info.prompt_pages[n - 1]))
+                cache["windows"][key] = _window(client, text_contents, cache["meta"], first, last, doc_id, page_text)
                 save_cache(cache_dir, doc_id, cache)
         cache["complete"] = True
         save_cache(cache_dir, doc_id, cache)

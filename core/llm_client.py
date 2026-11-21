@@ -251,9 +251,11 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
 # ---- DeepSeek (OpenAI-compatible chat API, stdlib urllib only; text-only) ----
 class DeepSeekClient:
     text_only = True
+    compact_results = True
     tokens_in = property(lambda self: self._tok.tokens_in)
     tokens_out = property(lambda self: self._tok.tokens_out)
     BASE_URL = "https://api.deepseek.com"
+    OFFICIAL_MAX_OUTPUT = 393_216
 
     def __init__(self) -> None:
         load_env()
@@ -263,11 +265,17 @@ class DeepSeekClient:
         self.base_url = (os.environ.get("DEEPSEEK_BASE_URL", "").strip() or self.BASE_URL).rstrip("/")
         self.URL = self.base_url + "/chat/completions"
         self.model = os.environ.get("DEEPSEEK_MODEL", "").strip() or "deepseek-flash"
+        official = self.base_url == self.BASE_URL
+        if official and self.model in {"deepseek-v4-flash", "deepseek-v4-flash-vision-exp"}:
+            self.model = "deepseek-flash"
         self.max_retries = int(_f("DEEPSEEK_MAX_RETRIES", 6))
         self.base = _f("GEMINI_BACKOFF_BASE", 2)
         self.cap = _f("GEMINI_BACKOFF_MAX", 60)
         self.timeout = _f("DEEPSEEK_TIMEOUT_S", 300)
-        self.max_out = int(_f("DEEPSEEK_MAX_TOKENS", 8192))
+        default_cap = self.OFFICIAL_MAX_OUTPUT if official else 8192
+        self.max_out = max(1, int(_f("DEEPSEEK_MAX_TOKENS", default_cap)))
+        if official:
+            self.max_out = min(self.max_out, self.OFFICIAL_MAX_OUTPUT)
         self.temperature = _f("DEEPSEEK_TEMPERATURE", 0)
         self.freq_penalty = _f("DEEPSEEK_FREQUENCY_PENALTY", 0)
         self._tok = TokenCounter()

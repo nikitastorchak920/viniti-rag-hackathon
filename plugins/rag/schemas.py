@@ -150,3 +150,36 @@ class Result(BaseModel):
 
 class Window(BaseModel):
     results: list[Result]
+
+
+# Dataset and configuration IDs reference the names already present in Meta.
+COMPACT_FIELDS = (
+    "dataset_id", "config_id", "metric_name", "metric_k", "raw_value",
+    "source_fragment", "source_page", "raw_unit", "experiment_id", "task_id",
+    "source_table", "source_section", "source_figure", "result_origin", "cited_ref",
+    "metric_group", "metric_variant", "metric_direction", "baseline_value",
+    "aggregation", "sample_size", "extraction_status", "note",
+)
+COMPACT_REQUIRED = 7
+
+
+class CompactWindow(BaseModel):
+    results: list[list[str | int | float | None]]
+
+    @_coerce("results")
+    @classmethod
+    def _lengths(cls, rows):
+        if not isinstance(rows, list) or any(
+            not isinstance(row, list) or not COMPACT_REQUIRED <= len(row) <= len(COMPACT_FIELDS)
+            for row in rows
+        ):
+            raise ValueError("results must be positional rows of 7 to 23 cells")
+        return rows
+
+    def expanded(self) -> dict:
+        rows = []
+        for row in self.results:
+            fields = dict.fromkeys(COMPACT_FIELDS, "")
+            fields.update(zip(COMPACT_FIELDS, row))
+            rows.append(fields)
+        return Window.model_validate({"results": rows}).model_dump()

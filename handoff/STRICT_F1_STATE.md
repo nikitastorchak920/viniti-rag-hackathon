@@ -1,5 +1,16 @@
 # Strict F1 checkpoint state
 
+## Stage 2 · Table requests and compact results
+
+The same D007 pages 7–9 and Stage 1 metadata were replayed on the configured DeepSeek gateway. The first pass exposed a captioned table rendered as plain text. The final planner captured both header groups and returned 210 observations in the two slices of that table. It also kept the other table and residual prose requests. Eight identical table responses were reused between experiments.
+
+| 21-paper gold comparison (18 complete local caches) | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP |
+|---|---:|---|---:|---|---:|
+| Stage 1 reference | 3,979 | 0.02707/0.13194/0.04493 | 525 | 0.06962/0.33928/0.11553 | 1,350 |
+| Stage 2 targeted replay | 3,994 | 0.02707/0.13145/0.04490 | 525 | 0.06962/0.33801/0.11545 | 1,350 |
+
+The replay produced 269 raw results versus 252, and used 16,687 completion tokens versus 37,980 for the same pages, a 2.43× reduction per raw result. Related input tokens rose from 12,402 to 66,483 because table calls repeated the entity list. The two Stage 2 executions took 187.7 seconds in total and spent 75,877 input and 31,235 output tokens, including the first attempt. The checker reported zero structural errors, and 52 core tests passed. Cache-only replay of the Stage 1 data reproduced its previous scores. Official DeepSeek defaults to 393,216 completion tokens; the configured custom gateway ran at its existing 16,384-token setting.
+
 ## Stage 1 · Structured PDF and OCR local pilot
 
 - All 21 local PDFs were classified by their native text layer. Eighteen required no OCR. Native Markdown checks on sampled papers retained page markers and appendix text, and emitted native table grids and merged headers. D014 retained all 18 pages and a nonempty last page. D021 OCR retained text across all 16 pages; PDF page 11 confirmed that positioned OCR baselines expose rows when the layout engine collapses a scan table.
