@@ -320,17 +320,23 @@ class DeepSeekClient:
             try:
                 resp = self._post(payload)
                 u = resp.get("usage") or {}
-                t_in, t_out = self._tok.add(u.get("prompt_tokens", 0), u.get("completion_tokens", 0))
-                log(f"  [{tag}] tokens in={u.get('prompt_tokens', 0)} out={u.get('completion_tokens', 0)} "
+                completion_tokens = u.get("completion_tokens") or 0
+                t_in, t_out = self._tok.add(u.get("prompt_tokens", 0), completion_tokens)
+                log(f"  [{tag}] tokens in={u.get('prompt_tokens', 0)} out={completion_tokens} "
                     f"(total in={t_in} out={t_out})")
                 ch = (resp.get("choices") or [{}])[0]
                 if ch.get("finish_reason") == "length":
                     raise TruncatedResponseError("output truncated (finish_reason=length): window will be split")
                 text = ((ch.get("message") or {}).get("content") or "").strip()
-                if not text:
-                    raise ValueError("empty response")
                 m = re.match(r"^```(?:json)?\s*(.*?)\s*```$", text, re.S | re.I)
-                data = json.loads(m.group(1) if m else text)
+                try:
+                    data = json.loads(m.group(1) if m else text)
+                except json.JSONDecodeError as exc:
+                    if self.max_out > 0 and completion_tokens >= self.max_out:
+                        raise TruncatedResponseError(
+                            f"invalid JSON at output limit ({completion_tokens}/{self.max_out} tokens): window will be split"
+                        ) from exc
+                    raise
                 if not isinstance(data, dict):
                     raise ValueError("response is not a JSON object")
                 return data

@@ -2,7 +2,7 @@
 
 Формат: UTF-8, запятая, десятичная точка, 7 CSV (колонки и порядок — `submission_template/schema.json`). Пустая ячейка = в статье нет сведений (не 0). Ноль пишется `0`. Везде есть `publication_id` (имя PDF без расширения); остальные ключи уникальны внутри публикации. Номер страницы — страница PDF с 1.
 
-## Измеренный снимок dev-пакета
+## Принятый снимок MVP на dev
 
 На ноутбуке Antigravity пакет `out_dev/` пересобран из кэша версии 2 без API для всех 21 PDF. Заглушек нет. D002, D009, D013 и D021 дали соответственно 216, 612, 235 и 20 числовых строк. Источник статистики — [отчёт MVP-DEV-001](handoff/FROM_ANTIGRAVITY.md#mvp-dev-001).
 
@@ -16,7 +16,9 @@
 | `results` | 5 058 |
 | `issues` | 2 004 |
 
-Валидатор запущен с PDF и OCR. Структурных ошибок 0, из 7 062 цитат найдено 6 650. Открыто 953 замечания (412 неподтверждённых цитат и 541 пропущенная ссылка у результата). Код проверки — 2. Число строк в интерфейсе совпало с `out_dev/validation.json`.
+Пакет и дашборд приняты для демонстрации. [Проверка интерфейса MVP-UI-001](handoff/FROM_ANTIGRAVITY.md#mvp-ui-001) подтвердила загрузку всех таблиц, поиск, фильтры и карточку источника. Интерфейс показал 5 020 числовых результатов из 5 058 строк таблицы и 94,2% проверенных цитат.
+
+Валидатор запущен с PDF и OCR. Структурных ошибок 0, из 7 062 цитат найдено 6 650. Код проверки — 2: остаются 412 неподтверждённых цитат и 541 пропущенная ссылка у результата. Из 412 неподтверждённых цитат 399 относятся к трём отсканированным статьям. Базовая оценка по `dev_gold/`: strict F1 0,043 (519 совпадений), loose F1 0,144 (1 756 совпадений). Эти цифры относятся к принятому снимку, до изменений Фазы 2.
 
 ## Таблицы
 | Таблица | Ключ | Содержание |
@@ -65,12 +67,12 @@
 | `ocr_json` | Импорт готового OCR-JSON со второго ноутбука | 2 |
 | `local` | только PyMuPDF + регулярные выражения (эвристика, не для сдачи) | 1 |
 
-Формат OCR-JSON: `{"publication_id":"P001","pages":[{"source_page":1,"is_scanned":true,"raw_text":"","normalized_text":"","primary_section":"","tables":[{"caption":"Table 1: ...","rows":[["Method","EM"],["X",".31"]]}]}]}`. Для независимой проверки цитат на сканах запустите `check_submission.py` с `--ocr` и Tesseract.
+Формат OCR-JSON: `{"publication_id":"P001","pages":[{"source_page":1,"is_scanned":true,"raw_text":"","normalized_text":"","primary_section":"","tables":[{"caption":"Table 1: ...","rows":[["Method","EM"],["X",".31"]]}]}]}`. Извлечение и валидатор используют общий режим Tesseract для страниц со слабым текстовым слоем: 300 dpi, RGB, PSM 3. При пересборке `--ocr` позволяет заново сверить цитаты из OCR-кэша с той же страницей. При сокращении цитаты сохраняется точное напечатанное число, а неподтверждённая цитата остаётся видимой. Для независимой проверки запустите `check_submission.py --ocr`.
 
 ## Воспроизведение
 ```powershell
 python -m pip install -r requirements.txt -r tools/requirements.txt
-python main.py --input dev --output out_dev --rebuild-csv-only
+python main.py --input dev --output out_dev --rebuild-csv-only --ocr
 python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
 python scripts/evaluate.py out_dev dev_gold --show-diffs 20
 python scripts/serve_ui.py out_dev

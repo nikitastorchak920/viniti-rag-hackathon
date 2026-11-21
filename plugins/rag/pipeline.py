@@ -32,27 +32,29 @@ OVERLAP = 4  # lines shared by the two halves of a split page (keeps table heade
 
 CAPTION = re.compile(r"(?i)^\s*(table|tab\.|figure|fig\.)\s*[A-Z]?\d+")
 COLHEAD = re.compile(r"(?i)\b(method|model|dataset|metric|setting|config\w*|EM|F1|recall|precision|accuracy|MRR|nDCG)\b.*\b(EM|F1|recall|precision|accuracy|MRR|nDCG|score|avg|average)\b")
+SECTION = re.compile(r"(?i)^\s*(?:(?:section\s+)?\d+(?:\.\d+)*\.?|appendix\s+[a-z])\s+([^\W\d_].{1,99})$")
+TABLE_VALUES = re.compile(r"(?<!\w)[+−-]?(?:\d+\.\d+|\.\d+|\d+%)|(?:\s+\d+){2}(?:\s|$)")
 HDR_MARK, HDR_END = "[TABLE HEADER CONTEXT - do not extract values from these lines]", "[END HEADER CONTEXT]"
 HEADER_LINES = 4
 
 
 def _header(lines: list[str], idx: int) -> list[str]:
-    """Table caption + column-header lines found above split index idx (empty if none or already in the overlap)."""
+    """Return the heading, two nearby pre-table lines, and the table header before the split."""
     for i in range(idx - 1, -1, -1):
-        if lines[i] in (HDR_MARK, HDR_END):
-            continue
-        if CAPTION.match(lines[i]) or (COLHEAD.search(lines[i]) and not re.search(r"\d+\.\d", lines[i])):
+        if CAPTION.match(lines[i]) or (COLHEAD.search(lines[i]) and not TABLE_VALUES.search(lines[i])):
             for j in range(i - 1, max(-1, i - 4), -1):  # caption just above the column-header line
                 if CAPTION.match(lines[j]):
                     i = j
                     break
-            if i >= idx - OVERLAP:
-                return []
-            out = []
-            for x in lines[i:min(i + HEADER_LINES, idx - OVERLAP)]:
-                if x in (HDR_MARK, HDR_END) or (out and re.search(r"\d+\.\d", x)):  # stop at first data row
+            heading = next((j for j in range(i - 1, -1, -1)
+                            if (section := SECTION.match(lines[j])) and not TABLE_VALUES.search(section[1])), None)
+            start = (heading + 1) if heading is not None else 0
+            pre_table = [line for line in lines[start:i] if line.strip()][-2:]
+            out = ([lines[heading]] if heading is not None else []) + pre_table
+            for j in range(i, min(i + HEADER_LINES, idx)):
+                if j > i and TABLE_VALUES.search(lines[j]):
                     break
-                out.append(x)
+                out.append(lines[j])
             return out
     return []
 
@@ -67,26 +69,25 @@ def _dedupe(rows: list[dict]) -> list[dict]:
     return out
 
 
-def _part(client, contents_fn, meta: dict, page: int, lines: list[str], doc_id: str, depth: int = 0) -> list[dict]:
+def _part(client, contents_fn, meta: dict, page: int, lines: list[str], doc_id: str, depth: int = 0,
+          context: list[str] | None = None) -> list[dict]:
     """One page, or a slice of its lines. On truncation split the lines in half (with overlap), recursively."""
     from plugins.rag.schemas import Window
 
     tag = f"{doc_id}:{page}-{page}" + (f"/L{len(lines)}" if depth else "")
     try:
-        text = f"--- PAGE {page} ---\n" + "\n".join(lines)
+        prefix = [HDR_MARK, *context, HDR_END] if context else []
+        text = f"--- PAGE {page} ---\n" + "\n".join(prefix + lines)
         data = _gen(client, contents_fn(window_user(meta, page, page, part=depth > 0), page, page, text), Window, tag)
         return data["results"]
     except TruncatedResponseError:
-        if len([x for x in lines if x not in (HDR_MARK, HDR_END)]) < 2 * OVERLAP + 2 or depth >= 8:
+        if len(lines) < 2 * OVERLAP + 2 or depth >= 8:
             raise
         mid = len(lines) // 2
         log(f"  [{doc_id}] page {page} still truncated ({len(lines)} lines): splitting by lines")
-        a = _part(client, contents_fn, meta, page, lines[:mid + OVERLAP], doc_id, depth + 1)
-        low = lines[mid - OVERLAP:]
-        hdr = _header(lines, mid - OVERLAP)
-        if hdr and HDR_MARK not in low:
-            low = [HDR_MARK, *hdr, HDR_END, *low]
-        b = _part(client, contents_fn, meta, page, low, doc_id, depth + 1)
+        a = _part(client, contents_fn, meta, page, lines[:mid + OVERLAP], doc_id, depth + 1, context)
+        split = mid - OVERLAP
+        b = _part(client, contents_fn, meta, page, lines[split:], doc_id, depth + 1, _header(lines, split) or context)
         return _dedupe(a + b)
 
 

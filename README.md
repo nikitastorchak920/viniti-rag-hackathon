@@ -18,13 +18,13 @@ python -m pip install -r requirements.txt -r tools/requirements.txt pytest
 Copy-Item .env.example .env
 ```
 
-На Linux активируйте окружение через `source venv/bin/activate`. Для `--ocr` установите Tesseract с английскими языковыми данными и выполните `python -m pip install pytesseract`. Для API настройте в локальном `.env` ключ `GEMINI_API_KEY` (также подходит `GOOGLE_API_KEY`) или `DEEPSEEK_API_KEY`. Модели, таймауты и число повторов настраиваются через `.env.example`. Ключи, PDF, кэш и результаты остаются вне Git.
+На Linux активируйте окружение через `source venv/bin/activate`. Для `--ocr` установите Tesseract с английскими языковыми данными и добавьте его в `PATH`. Для API настройте в локальном `.env` ключ `GEMINI_API_KEY` (также подходит `GOOGLE_API_KEY`) или `DEEPSEEK_API_KEY`. Модели, таймауты и число повторов настраиваются через `.env.example`. Ключи, PDF, кэш и результаты остаются вне Git.
 
 ## Проверка и демонстрация
 
 ```powershell
 python -m pytest tests/test_core.py
-python main.py --input dev --output out_dev --rebuild-csv-only
+python main.py --input dev --output out_dev --rebuild-csv-only --ocr
 python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
 python scripts/evaluate.py out_dev dev_gold --show-diffs 20
 python scripts/serve_ui.py out_dev

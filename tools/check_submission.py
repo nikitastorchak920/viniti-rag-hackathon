@@ -12,11 +12,15 @@ import pathlib
 import re
 import sys
 import subprocess
-import tempfile
 import unicodedata
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 DEFAULT_SCHEMA = pathlib.Path(__file__).resolve().parent.parent / 'submission_template' / 'schema.json'
+sys.path.insert(0, str(DEFAULT_SCHEMA.parents[1]))
+
+from core.ocr import DEFAULT_DPI, recognize_page  # noqa: E402
+from core.pdf_processor import MIN_CHARS_PER_TEXT_PAGE  # noqa: E402
+
 NUMBERS = {
     'publications': {'year'},
     'configurations': {'chunk_size', 'chunk_overlap', 'top_k'},
@@ -68,7 +72,7 @@ def read_pages(path):
         raise ValueError('PDF parsers disagree about page count; manual review required')
     return [[pages[i] for pages in variants] for i in range(len(variants[0]))]
 
-def read_pages_with_ocr(path, executable='tesseract', language='eng', dpi=300):
+def read_pages_with_ocr(path, executable='tesseract', language='eng', dpi=DEFAULT_DPI):
     """OCR actual image-only PDF pages. Never trust supplied/transcribed sidecars.
 
     OCR is an additional same-page text variant, not fuzzy verification. A missed
@@ -77,23 +81,17 @@ def read_pages_with_ocr(path, executable='tesseract', language='eng', dpi=300):
     """
     import pymupdf
     pages=read_pages(path)
-    with pymupdf.open(path) as document, tempfile.TemporaryDirectory(prefix='rag_ocr_') as temp:
+    with pymupdf.open(path) as document:
         if len(document)!=len(pages):
             raise ValueError('OCR renderer and text parsers disagree about page count')
         for i,page in enumerate(document):
-            if any(norm(text) for text in pages[i]):
+            if len((page.get_text() or '').strip()) >= MIN_CHARS_PER_TEXT_PAGE:
                 continue
-            png=pathlib.Path(temp)/('page_'+str(i+1)+'.png')
-            page.get_pixmap(dpi=dpi,colorspace=pymupdf.csRGB,alpha=False).save(png)
             try:
-                process=subprocess.run(
-                    [str(executable),str(png),'stdout','-l',language,'--psm','3'],
-                    capture_output=True,encoding='utf-8',errors='replace',
-                    check=True,timeout=120)
+                pages[i].append(recognize_page(page, executable=executable, lang=language, dpi=dpi))
             except (OSError,subprocess.SubprocessError) as exc:
                 raise ValueError('OCR failed on page '+str(i+1)+
                     '; install Tesseract/language data or set --tesseract: '+str(exc)) from exc
-            pages[i].append(process.stdout or '')
     return pages
 
 def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, page_reader=read_pages):
@@ -291,7 +289,7 @@ def main():
     parser.add_argument('--ocr',action='store_true',help='Run local Tesseract on image-only pages; unmatched OCR quotes remain unresolved.')
     parser.add_argument('--tesseract',default='tesseract',help='Tesseract executable path (requires a separate installation).')
     parser.add_argument('--ocr-language',default='eng',help='Installed Tesseract language(s), for example eng or eng+rus.')
-    parser.add_argument('--ocr-dpi',type=int,default=300,choices=range(150,601),metavar='150..600')
+    parser.add_argument('--ocr-dpi',type=int,default=DEFAULT_DPI,choices=range(150,601),metavar='150..600')
     args=parser.parse_args()
     reader=(lambda path:read_pages_with_ocr(path,args.tesseract,args.ocr_language,args.ocr_dpi)) if args.ocr else read_pages
     try: report=validate(args.submission,args.pdfdir,args.schema,args.template,page_reader=reader)

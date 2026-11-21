@@ -139,6 +139,30 @@ def _subfragment(frag: str, raw: str, page: int, pages_norm: list[str]) -> tuple
     return best
 
 
+def _ground_ocr(frag: str, raw: str, page_text: str) -> tuple[str, str]:
+    """Only accept same-page text. A shorter quote must keep the metric's literal number and context."""
+    quote = norm(frag)
+    raw = norm(raw)
+    value = re.compile(rf"(?<![\w.+−-]){re.escape(raw)}(?![\w.%])")
+    if raw and (literal := value.search(quote)):
+        exact = re.escape(quote[:literal.start()]) + value.pattern + re.escape(quote[literal.end():])
+        if re.search(exact, page_text):
+            return frag, "ok"
+    elif quote and quote in page_text:
+        return frag, "ok"
+    if not raw or not re.search(r"\d", raw):
+        return frag, "unverified"
+    words = quote.split()
+    for size in range(len(words) - 1, 1, -1):
+        for first in range(len(words) - size + 1):
+            candidate = " ".join(words[first:first + size])
+            if (literal := value.search(candidate)) and any(c.isalpha() for c in candidate) and candidate in page_text:
+                exact = re.escape(candidate[:literal.start()]) + value.pattern + re.escape(candidate[literal.end():])
+                if re.search(exact, page_text):
+                    return candidate, "repaired"
+    return frag, "unverified"
+
+
 def strip_names(variant: str, *names: str) -> str:
     """Remove generator/retriever names (and 'with/using/+/()' glue) from a rag_variant."""
     v = (variant or "").strip()
@@ -152,6 +176,15 @@ def strip_names(variant: str, *names: str) -> str:
 def canon_space(t: str) -> str:
     t = re.sub(r"\[?模型名称已隐藏\]?", "GPT", t or "")  # masked vendor token in some PDF text layers
     return re.sub(r"\s+", " ", t.replace("\u00a0", " ")).strip()
+
+
+def dataset_display_name(name: str, version: str) -> str:
+    """Remove an explicitly recorded version suffix from the display name."""
+    version = canon_space(version)
+    if not re.fullmatch(r"(?:v(?:ersion)?\s*)?\d+(?:\.\d+)*[a-z]?", version, re.I):
+        return name
+    suffix = re.escape(version)
+    return re.sub(rf"(?:\s+{suffix}|\s*\({suffix}\)|\s*\[{suffix}\])$", "", name, flags=re.I).strip() or name
 
 
 def canon_metric(name: str) -> str:
@@ -322,6 +355,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
 
     # ---- results ----
     n_pages = cache.get("n_pages", 0)
+    ocr_pages_norm = pages_norm if cache.get("ocr") else None
     rows: list[dict] = []
     drops = defaultdict(int)
     fstat = defaultdict(int)
@@ -398,7 +432,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
             if bl and blv is None:
                 note = (note + " | " if note else "") + f"baseline_value: {bl}"
             frag, fpage = row["source_fragment"], page
-            if pages_norm is not None and frag:
+            if pages_norm is not None and ocr_pages_norm is None and frag:
                 frag, fpage, st = ground(frag, page, pages_norm)
                 fstat[st] += 1
                 if st == "unverified":
@@ -420,6 +454,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
                        extraction_status=status, note=note)
             rows.append(row)
     _fill_ids(rows, out)
+    for dataset in out["datasets"]:
+        dataset["dataset_name"] = dataset_display_name(dataset["dataset_name"], dataset["dataset_version"])
     if len(nonnum) > 40:  # keep issues.csv readable: group the rest per page
         by_page: dict[str, list[dict]] = defaultdict(list)
         for x in nonnum[40:]:
@@ -427,8 +463,6 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
         nonnum = nonnum[:40] + [{"page": pg, "name": "; ".join(sorted({y["name"] for y in xs}))[:200],
                                  "raw": f"{len(xs)} qualitative values", "frag": xs[0]["frag"], "note": ""}
                                 for pg, xs in by_page.items()]
-    if fstat:
-        log(f"  {doc_id}: quote check {dict(fstat)}")
     for why, n in drops.items():
         log(f"  {doc_id}: dropped {n} result rows ({why})")
 
@@ -451,6 +485,17 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log) -> di
     rows = keep
     if drops.get("repeat of same extraction"):
         log(f"  {doc_id}: dropped {drops['repeat of same extraction']} repeated rows (same value, same location)")
+    if ocr_pages_norm is not None:
+        # Keep linking and duplicate detection based on the original extraction evidence.
+        for row in rows:
+            if row["source_fragment"]:
+                quote, status = _ground_ocr(row["source_fragment"], row["raw_value"], ocr_pages_norm[int(row["source_page"]) - 1])
+                row["source_fragment"] = quote
+                fstat[status] += 1
+                if status == "unverified":
+                    row["note"] = (row["note"] + " | " if row["note"] else "") + "quote not verified in OCR text"
+    if fstat:
+        log(f"  {doc_id}: quote check {dict(fstat)}")
     for i, r in enumerate(rows, 1):
         r["result_id"] = f"R{i:03d}"
     issues: list[dict] = []

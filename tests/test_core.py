@@ -48,6 +48,43 @@ def build(cache):
 
 
 class Normalization(unittest.TestCase):
+    def test_dataset_version_suffix_is_removed_after_linking(self):
+        datasets = [
+            {"dataset_id": "DS1", "dataset_name": "ExampleQA v1.2", "dataset_version": "v1.2"},
+            {"dataset_id": "DS2", "dataset_name": "ExampleQA (V2.1)", "dataset_version": "v2.1"},
+            {"dataset_id": "DS3", "dataset_name": "ExampleQA v3.0", "dataset_version": ""},
+            {"dataset_id": "DS4", "dataset_name": "ExampleQA v1.2 / Legal", "dataset_version": "v1.2"},
+        ]
+        doc = build(make_cache([result(source_fragment="ExampleQA (V2.1) 0.204")], datasets=datasets))
+        self.assertEqual([(d["dataset_name"], d["dataset_version"]) for d in doc["datasets"]],
+                         [("ExampleQA", "v1.2"), ("ExampleQA", "v2.1"),
+                          ("ExampleQA v3.0", ""), ("ExampleQA v1.2 / Legal", "v1.2")])
+        self.assertEqual(doc["results"][0]["dataset_id"], "DS2")
+
+    def test_ocr_repair_keeps_exact_number_and_same_page(self):
+        cache = make_cache([
+            result(raw_value="1.2", source_fragment="Cohort model Recall 1.2 truncated"),
+            result(raw_value="1", source_fragment="Model Score 1"),
+            result(raw_value="1.5", source_fragment="Other model 1.5"),
+        ])
+        cache["ocr"] = True
+        doc = exporter.build_doc("P1", cache, ["model Recall 1.2 Model Score 10", "Other model 1.5"], Mock())
+        rows = doc["results"]
+        self.assertEqual(rows[0]["source_fragment"], "model Recall 1.2")
+        self.assertEqual(rows[0]["metric_value"], "1.2")
+        self.assertEqual(rows[1]["source_fragment"], "Model Score 1")
+        self.assertEqual(rows[2]["source_page"], "1")
+        for row in rows[1:]:
+            self.assertIn("quote not verified in OCR text", row["note"])
+
+    def test_ocr_repair_preserves_result_identity(self):
+        cache = make_cache([result(config_id="C01", dataset_id="DS1", source_fragment=prefix + " Model 0.204")
+                            for prefix in ("Prefix", "Another")])
+        cache["ocr"] = True
+        doc = exporter.build_doc("P1", cache, ["Model 0.204", ""], Mock())
+        self.assertEqual([r["source_fragment"] for r in doc["results"]], ["Model 0.204", "Model 0.204"])
+        self.assertEqual(doc["results"][1]["duplicate_of"], "R001")
+
     def test_strip_generator_from_variant(self):
         self.assertEqual(exporter.strip_names("vanilla rag llama 3.1 8b instruct", "llama 3.1 8b instruct"), "vanilla rag")
         self.assertEqual(exporter.strip_names("Vanilla RAG (Llama 3.1 8B)", "Llama 3.1 8B"), "Vanilla RAG")
@@ -149,10 +186,16 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(self._run(1), self._run(4))
 
     def test_header_preserved_on_split(self):
-        lines = ["Table 1: Results", "Method EM F1"] + [f"row{i} 0.{i} 0.{i}" for i in range(30)]
+        lines = ["4.2 Evaluation results", "Older context", "Shared settings", "Corpus labels",
+                 "Table 1: Results", "Method EM F1"] + [f"row{i} 0.{i} 0.{i}" for i in range(30)]
         hdr = pipeline._header(lines, 20)
-        self.assertEqual(hdr[0], "Table 1: Results")
-        self.assertIn("Method EM F1", hdr)
+        self.assertEqual(hdr, ["4.2 Evaluation results", "Shared settings", "Corpus labels", "Table 1: Results", "Method EM F1"])
+        contents = lambda _prompt, _first, _last, text: text
+        with patch.object(pipeline, "_gen", side_effect=[llm_client.TruncatedResponseError(),
+                {"results": []}, llm_client.TruncatedResponseError(), {"results": []}, {"results": []}]) as generate:
+            pipeline._part(Mock(), contents, make_cache([])["meta"], 1, lines, "P1")
+        for call in generate.call_args_list[2:]:
+            self.assertIn("\n".join([pipeline.HDR_MARK, *hdr, pipeline.HDR_END]), call.args[1])
 
     def test_verify_page_selection(self):
         dense = " ".join(f"{i}.5" for i in range(60))
@@ -166,6 +209,17 @@ class OcrFallback(unittest.TestCase):
     pdf = pathlib.Path("synthetic.pdf")
     native = "A full native page with text that exceeds the OCR threshold."
     recognized = "A recovered scan with metric values and their surrounding text."
+
+    def test_shared_renderer_passes_png_and_settings_to_tesseract(self):
+        page = Mock()
+        page.get_pixmap.return_value.tobytes.return_value = b"png"
+        rgb = object()
+        with patch.dict(sys.modules, pymupdf=SimpleNamespace(csRGB=rgb)), \
+                patch.object(ocr.subprocess, "run", return_value=SimpleNamespace(stdout=b"words")) as run:
+            self.assertEqual(ocr.recognize_page(page, executable="ocr-bin"), "words")
+        page.get_pixmap.assert_called_once_with(dpi=300, colorspace=rgb, alpha=False)
+        run.assert_called_once_with(["ocr-bin", "stdin", "stdout", "-l", "eng", "--psm", "3"],
+                                    input=b"png", capture_output=True, check=True, timeout=120)
 
     def test_ocr_for_mixed_pdf_and_unusable_outputs(self):
         # The native scan heuristic alone considers this document text-readable.
@@ -226,6 +280,27 @@ class OcrFallback(unittest.TestCase):
 
 
 class NetworkRetries(unittest.TestCase):
+    def test_deepseek_splits_malformed_json_at_cap_and_retries_below_cap(self):
+        from plugins.rag.schemas import Window
+
+        client = llm_client.DeepSeekClient.__new__(llm_client.DeepSeekClient)
+        client.model, client.temperature, client.freq_penalty = "test", 0, 0
+        client.max_out, client.max_retries, client.base, client.cap = 100, 1, 1, 1
+        client._tok = llm_client.TokenCounter()
+
+        def response(content, tokens):
+            return {"usage": {"completion_tokens": tokens},
+                    "choices": [{"finish_reason": "stop", "message": {"content": content}}]}
+
+        client._post = Mock(return_value=response('{"resul', 100))
+        with self.assertRaises(llm_client.TruncatedResponseError):
+            client.generate_json([], "", Window)
+        client._post.assert_called_once()
+        client._post = Mock(side_effect=[response('{"resul', 20), response('{"results": []}', 105)])
+        with patch.object(llm_client.time, "sleep") as sleep:
+            self.assertEqual(client.generate_json([], "", Window), {"results": []})
+        sleep.assert_called_once()
+
     def test_gemini_retries_remote_protocol_error(self):
         try:
             from httpx import RemoteProtocolError
@@ -267,6 +342,25 @@ class EvaluationDiffs(unittest.TestCase):
 
 
 class SubmissionCompliance(unittest.TestCase):
+    def test_cache_rebuild_can_repair_ocr_quote_without_api(self):
+        from main import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            source, cache_dir, output = root / "input", root / "cache", root / "out"
+            source.mkdir()
+            pdf = source / "SCAN.pdf"
+            pdf.touch()
+            cache = make_cache([result(source_fragment="prefix Vanilla RAG 0.204 suffix")])
+            cache.update(version=2, complete=True, mode="text", ocr=True)
+            llm_client.save_cache(cache_dir, "SCAN", cache)
+            with patch.object(ocr, "ocr_pages", return_value=[TEXT, ""]) as local_ocr:
+                self.assertEqual(main(["--input", str(source), "--output", str(output), "--cache", str(cache_dir),
+                                       "--rebuild-csv-only", "--ocr"]), 0)
+            local_ocr.assert_called_once_with(pdf)
+            rows = evaluate.read(output, "results")
+            self.assertEqual((rows[0]["source_fragment"], rows[0]["metric_value"]), ("Vanilla RAG 0.204", "0.204"))
+
     def test_rebuild_marks_missing_and_empty_extractions_as_unprocessed(self):
         import check_submission as cs
         from main import main

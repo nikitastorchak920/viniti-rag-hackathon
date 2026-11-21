@@ -37,7 +37,7 @@ def inspect_pdf(path: str | pathlib.Path, ocr: bool = False) -> PdfInfo:
         # Even one unreadable page may contain results in a mixed PDF.
         is_scan = True
         if not ocr_available():
-            log(f"  [{path.stem}] WARN: OCR unavailable (check pytesseract and the Tesseract executable)")
+            log(f"  [{path.stem}] WARN: OCR unavailable (Tesseract executable was not found on PATH)")
         else:
             try:
                 recognized = ocr_pages(path)

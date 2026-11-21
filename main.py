@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=None,
                     help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
     ap.add_argument("--ocr", action="store_true",
-                    help="try Tesseract on pages with little text; Gemini auto mode uses the PDF if OCR is unusable")
+                    help="try Tesseract on low-text pages and recheck OCR-cache quotes during export; Gemini auto mode falls back to PDF")
     ap.add_argument("--verify-pass", action="store_true",
                     help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
@@ -154,7 +154,17 @@ def main(argv: list[str] | None = None) -> int:
                 stub(pdf.stem)
                 continue
             pages_norm = None
-            if not cache.get("is_scan") and not cache.get("ocr") and cache.get("mode") in ("text", "local"):
+            if a.ocr and cache.get("ocr"):
+                from core.ocr import ocr_pages
+
+                try:
+                    pages_norm = [exporter.norm(text) for text in ocr_pages(pdf)]
+                    if len(pages_norm) != cache.get("n_pages"):
+                        pages_norm = None
+                        log(f"  {pdf.stem}: WARN OCR quote check skipped (page count differs from cache)")
+                except Exception as exc:  # noqa: BLE001
+                    log(f"  {pdf.stem}: WARN OCR quote check skipped ({exc})")
+            elif not cache.get("is_scan") and not cache.get("ocr") and cache.get("mode") in ("text", "local"):
                 try:
                     pages_norm = [exporter.norm(t) for t in inspect_pdf(pdf).pages]
                 except Exception as exc:  # noqa: BLE001
