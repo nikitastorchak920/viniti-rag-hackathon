@@ -221,6 +221,7 @@ class DeepSeekClient:
         self.timeout = _f("DEEPSEEK_TIMEOUT_S", 300)
         self.max_out = int(_f("DEEPSEEK_MAX_TOKENS", 8192))
         self.temperature = _f("DEEPSEEK_TEMPERATURE", 0)
+        self.freq_penalty = _f("DEEPSEEK_FREQUENCY_PENALTY", 0.2)
         self.tokens_in = 0
         self.tokens_out = 0
 
@@ -262,6 +263,7 @@ class DeepSeekClient:
         sys_msg = system + "\n\nReturn ONLY a valid json object that matches this JSON Schema (all fields required):\n" + shape
         payload = {
             "model": self.model, "temperature": self.temperature, "max_tokens": self.max_out,
+            "frequency_penalty": self.freq_penalty,
             "thinking": {"type": "disabled"}, "response_format": {"type": "json_object"},
             "messages": [{"role": "system", "content": sys_msg},
                          {"role": "user", "content": "\n\n".join(str(c) for c in contents)}]}
