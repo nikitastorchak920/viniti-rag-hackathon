@@ -4,7 +4,17 @@ After `git pull --ff-only origin main`, run the newest task without a matching r
 
 ## Open tasks
 
-### RECALL-DEV-003 · Verify default table recovery and build a plot correspondence audit
+### STRICT-DEV-PLOT-001 · Audit source-backed plot configuration and safe export scope
+
+Use the full 21-paper dev cache if available and use local PDFs for provenance. Work offline. Leave code, TODO, accepted exports, and the test corpus alone. Codex owns frozen-cache text and table linkage.
+
+1. Start with D014. Find PDF evidence for methods, datasets, generators and conditions in vector panels, especially the input cap, generator-free panels, and repeated views with two independent axes. Distinguish printed evidence from gold naming conventions.
+2. Identify the smallest source-supported export slice that could improve Strict precision and recall. Report eligible rows, abstentions and a generalizable decision rule. Include positive and negative cases with page, figure and section locators. Do not infer configurations or point identity from order or gold.
+3. If a reproducible isolated candidate already exists, report scored rows, Strict and Loose P/R/F1 and TP, structural errors, and matched citations. A source-only proposal with quantified coverage also completes the audit.
+
+Prepend `## STRICT-DEV-PLOT-001` to `handoff/FROM_ANTIGRAVITY.md` with the tested commit, status, acceptance result, and evidence. Commit and push that report alone.
+
+### RECALL-DEV-003 · Suspended · Verify default table recovery and build a plot correspondence audit
 
 Use the same complete 21-paper `out_dev_domain2_scan_cache` and the existing `out_dev_recall21_candidate` vector export from RECALL-DEV-001. Use zero API tokens. Leave `out_dev/`, the comparison bundles, the configured provider and the 111-paper test set alone. Do not edit source files.
 

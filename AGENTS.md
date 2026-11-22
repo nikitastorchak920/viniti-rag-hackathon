@@ -2,7 +2,7 @@
 
 ## Priority and ownership
 
-Antigravity is occupied with a separate task. Codex owns the current repository work. Treat both handoff queue files as read-only until the operator explicitly authorizes queue changes. Existing unanswered entries are suspended while this restriction applies.
+Codex owns the Strict F1 work. The operator reactivated Antigravity for independent tasks through the handoff queue. Previously suspended entries stay suspended unless explicitly reactivated.
 
 1. Deliver and sign off on a jury-ready MVP before optimizing strict F1.
 2. **OpenAI Codex, Thunderobot 911 laptop** owns code in `core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/` and the pipeline entry point, plus architecture reviews, pytest, the roadmap, and Git checkpoints. It can inspect PDFs and run local tools, OCR, and cache rebuilds where inputs are available.
@@ -31,7 +31,7 @@ Antigravity is occupied with a separate task. Codex owns the current repository 
 
 ## Repository handoff queue
 
-This protocol applies after explicit authorization from the operator. While Antigravity is occupied, Codex reads `handoff/FROM_ANTIGRAVITY.md` for context and leaves both queue files intact. Architecture notes belong in `TODO.md`.
+Use this protocol for explicitly authorized handoffs. Architecture notes belong in `TODO.md`.
 
 - Codex prepends each task to `handoff/FOR_ANTIGRAVITY.md` with a unique ID, instructions, and acceptance evidence, then commits and pushes it. Keep the ID stable. Issue a new ID for a follow-up.
 - At the start of its work, Antigravity runs `git pull --ff-only origin main` and reads both handoff files. It takes the newest task with no report for that ID. If all tasks have reports, it is idle.
