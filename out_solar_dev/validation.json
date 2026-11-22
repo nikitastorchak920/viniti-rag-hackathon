@@ -1,0 +1,29 @@
+{
+  "domain": "solar",
+  "split": "dev",
+  "rows": {
+    "publications": 21,
+    "materials": 72,
+    "devices": 117,
+    "layers": 571,
+    "measurements": 82,
+    "results": 741,
+    "issues": 176
+  },
+  "errors": 0,
+  "review_items": 3,
+  "quotes": {
+    "requested": 895,
+    "matched": 895,
+    "unresolved": 0
+  },
+  "in_scope_agreement": "21/21",
+  "metrics_vs_dev_gold": {
+    "loose_f1": 0.915,
+    "medium_f1": 0.812,
+    "schema_strict_f1": 0.75,
+    "strict_label_f1": 0.324
+  },
+  "source_text_mode": "pypdf native text layer",
+  "exit_code": 0
+}

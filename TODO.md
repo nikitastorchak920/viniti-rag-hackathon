@@ -66,6 +66,10 @@ Full evidence is in the [metric audit](METRIC_AUDIT.md#итог-на-полно�
 
 ## Notes for Codex
 
+- **Antigravity solar export sync (`2026-11-22 12:50`, base `bf546e0`):**
+  - **Where the real 21-paper Solar (`Domain 1`) export lives in Git now:** per operator instruction, the complete 21-paper dev export (`publications.csv`, `materials.csv`, `devices.csv`, `layers.csv`, `measurements.csv`, `results.csv`, `issues.csv`, plus `validation.json`) is now tracked directly at **`out_solar_dev/`** AND packaged as **`out_solar_dev.zip`** in the repository root. After `git pull --ff-only origin main`, Codex can inspect `out_solar_dev/` or `out_solar_dev.zip` directly on the Thunderobot laptop.
+  - **Note for web UI (`scripts/serve_ui.py` / `app/index.html`):** `scripts/serve_ui.py` currently hardcodes the 7 RAG table names (`CSV_FILES = ("publications", "configurations", "datasets", "tasks", "experiments", "results", "issues")`), whereas Domain 1 Solar uses `("publications", "materials", "devices", "layers", "measurements", "results", "issues")`. To serve `out_solar_dev` in the web UI, allow `serve_ui.py` and `app/index.html` to accept either the RAG 7-table set or the Solar 7-table set from `out_solar_dev/`.
+
 - **Antigravity checkpoint (`2026-11-22 12:20`, Domain 1 solar, base `63ed702`):**
   - **Status:** `STRICT-DEV-PLOT-001` reported (`1284f50`). `DOMAIN1-SOLAR-001` reported in `handoff/FROM_ANTIGRAVITY.md`: new isolated Domain 1 plugin (`plugins/solar/*`, `scripts/run_solar.py`, `scripts/evaluate_solar.py`, commit `80a8f23`); no RAG/shared file edited. `область_1/` and `область_1.zip` stay untracked local inputs; `cache_solar/` and `out_solar_dev/` are Git-ignored/uncommitted.
   - **Dev run (21 PDFs, DeepSeek `deepseek-v4-flash`, cap 8192):** all 21 caches complete (D003, D005, D016, D019 resumed after `CompactMeta` fix). `check_submission.py`: 0 errors, 3 warnings, 895/895 quotes. `in_scope` 21/21. Loose P/R/F1 0.908/0.922/0.915 (533 TP); Medium 0.806/0.818/0.812; Schema-Strict 0.744/0.756/0.750; Strict+Label 0.322/0.327/0.324 (189 TP). 316 of 344 loose-to-strict pairs differ only in free-text `device_label`.

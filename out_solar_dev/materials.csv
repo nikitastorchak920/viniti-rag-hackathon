@@ -1,0 +1,73 @@
+publication_id,material_id,material_name_raw,formula_normalized,material_class,dimensionality,additives,bandgap_value,bandgap_unit,bandgap_method,note
+D001,M1,pristine CsPbI2Br,CsPbI2Br,perovskite,3D,,,,cited,"Bandgap ~1.9 eV cited from literature (Sutton et al., 2016; Yan et al., 2018); not measured in this work"
+D001,M2,0.001 M SrCl2-doped CsPbI2Br,CsPbI2Br,perovskite,3D,SrCl2 (0.001 M),,,,
+D001,M3,0.005 M SrCl2-doped CsPbI2Br,CsPbI2Br,perovskite,3D,SrCl2 (0.005 M),,,,
+D001,M4,0.01 M SrCl2-doped CsPbI2Br,CsPbI2Br,perovskite,3D,SrCl2 (0.01 M),,,,
+D001,M5,0.05 M SrCl2-doped CsPbI2Br,CsPbI2Br,perovskite,3D,SrCl2 (0.05 M),,,,Excess SrCl2 leads to non-perovskite phase and pinholes
+D001,M6,0.01 M NiCl2-doped CsPbI2Br,CsPbI2Br,perovskite,3D,"NiCl2 (0.01 M, 0.83% molar ratio with Pb)",,,,
+D002,M1,CH3NH3PbI3 perovskite (from PbI2 + methylammonium iodide),CH3NH3PbI3,perovskite,3D,,,,,Absorber formed by sequential spin-coating of PbI2 then CH3NH3I; no bandgap value reported
+D002,M2,"NiO (nickel acetate tetrahydrate + monoethanolamine in ethanol, 0.1 M)",,other,,,,,,"Hole transport layer material, not absorber; WF -5.05 eV reported"
+D002,M3,"Graphene oxide (GO, modified Hummer method)",,other,,,,,,Second hole transport layer; not absorber
+D002,M4,ZnO nanoparticles (zinc acetate dihydrate + KOH),,other,,,,,,Electron transport layer; not absorber
+D003,M1,perovskite absorber from FAI/MAI/CsI/PbCl2/MABr precursor (Cs-MA-FA lead halide perovskite),,perovskite,3D,,,,,"Precursor: 146.2 mg FAI, 23.85 mg MAI, 12 mg CsI, 11 mg PbCl2, 4.5 mg MABr in DMF/DMSO; no final stoichiometric formula given; bandgap not reported in main text (UV-Vis in Figure S8)"
+D004,M1,"CsFAMAPbI3-xBrx (CsI 0.087 M, FAI 1.47 M, MABr 0.23 M, PbI2 1.47 M, PbBr2 0.23 M)",CsFAMAPbI3-xBrx,perovskite,3D,,,,,Mixed-cation mixed-halide perovskite; also referred to as CH3NH3PbI3 phase coexisting with PbI2; no bandgap value reported
+D005,M1,"perovskite absorber (PbI2 1.73 M, FAI 1.47 M, MAI 0.173 M, PbBr2 0.0519 M, CsI 0.0865 M, MACl 0.268 M in DMF/DMSO 5:1)",,perovskite,3D,MACl; PEAI surface treatment,,,,Cs/FA/MA mixed-cation mixed-halide perovskite; no final stoichiometric formula printed; PEAI (5 mg/ml in IPA) spin-coated on top
+D007,M1,perovskite thin film (composition not specified in main text),,perovskite,,,,,,Absorber composition not stated in main text; thickness ~700 nm; details in SI
+D007,M2,V1553 (diphenylamine-based enamine HTM),,other,,,,,,"Hole transporting material, not absorber; Eg 2.87 eV, IP 4.85 eV"
+D007,M3,V1565 (diphenylamine-based enamine HTM),,other,,,,,,"Hole transporting material, not absorber; Eg 2.87 eV, IP 5.20 eV"
+D007,M4,spiro-OMeTAD,,other,,,,,,Reference HTM; not absorber
+D008,M1,Cs0.15FA0.85PbI2.85Br0.15 (w/o PbCl2),Cs0.15FA0.85PbI2.85Br0.15,perovskite,3D,,,,,Absorber without PbCl2 additive; annealed at 130-170 °C
+D008,M2,Cs0.15FA0.85PbI2.85Br0.15 w/ PbCl2,Cs0.15FA0.85PbI2.85Br0.15,perovskite,3D,PbCl2 (1.8% molar ratio to PbI2),,,,PbCl2 deposited between PbI2 and FAI layers in each stack; Cl not detected in film by XPS
+D009,M1,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 0 (Cs0),,perovskite,2D-3D,SnF2; NH4SCN,1.435,eV,cited,Cs0 control 2D/3D tin halide perovskite; bandgap from Supplementary Fig. 17
+D009,M2,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 5 (Cs5),,perovskite,2D-3D,SnF2; NH4SCN,1.415,eV,cited,Cs5 target 2D/3D tin halide perovskite; bandgap from Supplementary Fig. 17
+D009,M3,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 1 (Cs1),,perovskite,2D-3D,SnF2; NH4SCN,,,,Cs1 precursor composition
+D009,M4,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 3 (Cs3),,perovskite,2D-3D,SnF2; NH4SCN,,,,Cs3 precursor composition
+D009,M5,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 7 (Cs7),,perovskite,2D-3D,SnF2; NH4SCN,,,,Cs7 precursor composition
+D009,M6,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 10 (Cs10),,perovskite,2D-3D,SnF2; NH4SCN,,,,Cs10 precursor composition
+D009,M7,(CsI)x/100(PEA0.15FA0.85SnI2.85Br0.15)1-x/100 with x = 20 (Cs20),,perovskite,2D-3D,SnF2; NH4SCN,,,,Cs20 precursor composition (DLS only)
+D009,M8,FASnI3,CH(NH2)2SnI3,perovskite,3D,SnF2; NH4SCN,,,,pristine 3D perovskite film for reference
+D009,M9,PEA2SnI4,C8H12N2SnI4,perovskite,2D,SnF2; NH4SCN,,,,pristine 2D perovskite film for reference
+D009,M10,Cs0.05FA0.95SnI3,Cs0.05CH(NH2)2 0.95SnI3,perovskite,3D,SnF2; NH4SCN,,,,pristine Cs-substituted 3D perovskite film
+D009,M11,PEA2FASn2I7,C8H12N2CH(NH2)2Sn2I7,perovskite,2D,SnF2; NH4SCN,,,,pristine 2D perovskite film (n=2)
+D009,M12,PEA2(Cs0.05FA0.95)Sn2I7,C8H12N2Cs0.05CH(NH2)2 0.95Sn2I7,perovskite,2D,SnF2; NH4SCN,,,,pristine Cs-substituted 2D perovskite film (n=2)
+D010,M1,"Cu2ZnSn(S,Se)4","Cu2ZnSn(S,Se)4",kesterite,3D,,,,,Undoped CZTSSe absorber used as reference/control; selenized at 540 °C
+D010,M2,"(Na0.1Cu0.9)2ZnSn(S,Se)4","(Na0.1Cu0.9)2ZnSn(S,Se)4",kesterite,3D,"Na (NaCl precursor, 0.600 × 10−3 mol)",1.02,eV,Tauc,"Na-doped CZTSSe selenized at 540 °C; band gaps 1.03, 1.02, 1.00 eV for 520, 540, 560 °C respectively"
+D010,M3,"(Na0.1Cu0.9)2ZnSn(S,Se)4 selenized at 520 °C","(Na0.1Cu0.9)2ZnSn(S,Se)4",kesterite,3D,,1.03,eV,Tauc,Sample T520
+D010,M4,"(Na0.1Cu0.9)2ZnSn(S,Se)4 selenized at 560 °C","(Na0.1Cu0.9)2ZnSn(S,Se)4",kesterite,3D,,1,eV,Tauc,Sample T560
+D012,M1,Cu2ZnSnS4 (CZTS) with 5 mg/mL DIO additive,Cu2ZnSnS4,kesterite,,1.62,,,Tauc,bandgap_method_raw=DIO additive concentration 5 mg/mL; bandgap from Tauc plot; bandgap_raw=eV
+D012,M2,Cu2ZnSnS4 (CZTS) with 10 mg/mL DIO additive,Cu2ZnSnS4,kesterite,,1.61,,,,bandgap_method_raw=DIO additive concentration 10 mg/mL; bandgap_raw=eV
+D012,M3,Cu2ZnSnS4 (CZTS) with 15 mg/mL DIO additive,Cu2ZnSnS4,kesterite,,1.55,,,,bandgap_method_raw=DIO additive concentration 15 mg/mL; bandgap_raw=eV
+D012,M4,Cu2ZnSnS4 (CZTS) with 20 mg/mL DIO additive,Cu2ZnSnS4,kesterite,,1.51,,,,bandgap_method_raw=DIO additive concentration 20 mg/mL; Cu:Zn:Sn:S = 24.2:13.3:12.3:50.2; bandgap_raw=eV
+D013,M1,ACZTGSSe with Ge/(Ge+Sn) = 0 % (0Ge),Ag0.15Cu1.85Zn1.10SnSe4,kesterite,3D,Ag alloying (Ag/(Ag+Cu)=0.15),1.15,eV,PL,"Eg,PL = 1.15 eV; Eg,EQE = 1.14 eV; S/(S+Se) = 0.04"
+D013,M2,ACZTGSSe with Ge/(Ge+Sn) = 40 % (40Ge),Ag0.15Cu1.85Zn1.10Sn0.6Ge0.4Se4,kesterite,3D,Ag alloying (Ag/(Ag+Cu)=0.15); Ge alloying,1.21,eV,PL,"Eg,PL = 1.21 eV; Eg,EQE = 1.19 eV; XRF Ge/(Sn+Ge) = 0.4"
+D013,M3,ACZTGSSe with Ge/(Ge+Sn) = 60 % (60Ge),Ag0.15Cu1.85Zn1.10Sn0.4Ge0.6Se4,kesterite,3D,Ag alloying (Ag/(Ag+Cu)=0.15); Ge alloying,1.26,eV,PL,"Eg,PL = 1.26 eV; Eg,EQE = 1.24 eV; XRF Ge/(Sn+Ge) = 0.6"
+D013,M4,ACZTGSSe with Ge/(Ge+Sn) = 80 % (80Ge),Ag0.15Cu1.85Zn1.10Sn0.2Ge0.8Se4,kesterite,3D,Ag alloying (Ag/(Ag+Cu)=0.15); Ge alloying,1.43,eV,PL,"Eg,PL = 1.43 eV; Eg,EQE = 1.40 eV; XRF Ge/(Sn+Ge) = 0.79"
+D013,M5,ACZTGSSe with Ge/(Ge+Sn) = 100 % (100Ge),Ag0.15Cu1.85Zn1.10GeSe4,kesterite,3D,Ag alloying (Ag/(Ag+Cu)=0.15); Ge alloying,1.48,eV,PL,"Eg,PL = 1.48 eV; Eg,EQE = 1.49 eV; XRF Ge/(Sn+Ge) = 1"
+D014,M1,pyridine-capped CdTe nanocrystals,CdTe,CdTe,,pyridine ligand; 1-propanol,,,,Standard non-R2R-friendly ink; CdCl2 bath sintering
+D014,M2,pyr-CdCl3-capped CdTe nanocrystals with 0 wt% additional pyr-CdCl3,CdTe,CdTe,,pyr-CdCl3 (pyridinium trichlorocadmate) ligand,,,,"Bath-free ink, no extra sintering agent added"
+D014,M3,pyr-CdCl3-capped CdTe nanocrystals with 2 wt% additional pyr-CdCl3,CdTe,CdTe,,pyr-CdCl3 (2 wt% with respect to solid CdTe NC weight),,,,Bath-free ink with 2 wt% extra sintering agent
+D014,M4,pyr-CdCl3-capped CdTe nanocrystals with 4 wt% additional pyr-CdCl3,CdTe,CdTe,,pyr-CdCl3 (4 wt% with respect to solid CdTe NC weight),,,,Bath-free ink with 4 wt% extra sintering agent
+D015,M1,CdTe,CdTe,CdTe,3D,,,,,Absorber deposited by vapor transport deposition (VTD) on TEC-15M glass; absorber thickness in the range of 3.5 um
+D015,M2,CuxCryOz,CuxCryOz,other,,,,,,"Solution-processed copper chromium oxide back-buffer layer; empirical formula CuxCryOz (stoichiometry far from ideal CuCrO2); bandgap ~3.2 eV and electron affinity ~2.1 eV cited from literature, not measured here"
+D015,M3,CdS,CdS,other,,,,,,Window/ETL layer in the CdTe/CdS stack provided by Willard and Kelsey Solar Group
+D017,M1,"Cu(In,Ga)Se2 (CIGS) absorber, reference series R1","Cu(In,Ga)Se2",CIGS,3D,,1.144,eV,EQE,GGI 0.31; CGI 0.86; ΔGGI 0.20; Eg from linear extrapolation of (photon energy × EQE)^2
+D017,M2,"Cu(In,Ga)Se2 (CIGS) absorber, reference series R2","Cu(In,Ga)Se2",CIGS,3D,,1.142,eV,EQE,GGI 0.32; CGI 0.87; ΔGGI 0.20
+D017,M3,"Cu(In,Ga)Se2 (CIGS) absorber, Ga series G1","Cu(In,Ga)Se2",CIGS,3D,,1.138,eV,EQE,GGI 0.33; CGI 0.88; ΔGGI 0.21
+D017,M4,"Cu(In,Ga)Se2 (CIGS) absorber, Ga series G2","Cu(In,Ga)Se2",CIGS,3D,,1.14,eV,EQE,GGI 0.34; CGI 0.90; ΔGGI 0.23
+D017,M5,"Cu(In,Ga)Se2 (CIGS) absorber, In series I1","Cu(In,Ga)Se2",CIGS,3D,,1.147,eV,EQE,GGI 0.34; CGI 0.88; ΔGGI 0.26
+D017,M6,"Cu(In,Ga)Se2 (CIGS) absorber, In series I2","Cu(In,Ga)Se2",CIGS,3D,,1.137,eV,EQE,GGI 0.32; CGI 0.91; ΔGGI 0.25
+D017,M7,"Cu(In,Ga)Se2 (CIGS) absorber, In series I3","Cu(In,Ga)Se2",CIGS,3D,,1.123,eV,EQE,GGI 0.31; CGI 0.88; ΔGGI 0.32
+D017,M8,"Cu(In,Ga)Se2 (CIGS) absorber, In series I4","Cu(In,Ga)Se2",CIGS,3D,,1.121,eV,EQE,GGI 0.28; CGI 0.88; ΔGGI 0.29
+D017,M9,"Cu(In,Ga)Se2 (CIGS) absorber, early stage In-free series O1","Cu(In,Ga)Se2",CIGS,3D,,1.132,eV,EQE,GGI 0.34; CGI 0.89; ΔGGI 0.41
+D017,M10,"Cu(In,Ga)Se2 (CIGS) absorber, early stage In-free series O2","Cu(In,Ga)Se2",CIGS,3D,,1.15,eV,EQE,GGI 0.35; CGI 0.90; ΔGGI 0.43
+D017,M11,"Cu(In,Ga)Se2 (CIGS) absorber, early stage In-free series O3","Cu(In,Ga)Se2",CIGS,3D,,1.135,eV,EQE,GGI 0.34; CGI 0.87; ΔGGI 0.50
+D018,M1,"Cu(In,Ga)Se2 (CIGS) untreated","Cu(In,Ga)Se2",CIGS,3D,,,,,Absorber deposited by pulsed hybrid reactive magnetron sputtering (PHRMS); two-stage process with Ga grading; no bandgap value reported
+D018,M2,Cs-ST CIGS (cesium carbonate solution-treated),"Cu(In,Ga)Se2",CIGS,3D,Cs (from Cs2CO3 spin-coating),,,,Cs surface treatment (Cs-ST) by spin-coating Cs2CO3 solution then vacuum annealing at 400 C; Cu-depleted near-surface layer; no bandgap value reported
+D019,M1,Sb2Se3,Sb2Se3,Sb2Se3,3D,,,,,Co-evaporated Sb2Se3 nanorod array absorber; thickness approximately 500 nm; bandgap not reported in text
+D020,M1,Sb2S3,Sb2S3,other,,,1.72,eV,Tauc,antimony sulfide absorber; bandgap from Tauc plot (Figure 3f)
+D020,M2,"Sb2(S, Se)3","Sb2(S, Se)3",other,,,1.58,eV,Tauc,antimony selenosulfide absorber; Se/(S+Se)=23.70% by EDS; bandgap from Tauc plot
+D020,M3,"Sb2S3/Sb2(S, Se)3","Sb2S3/Sb2(S, Se)3",other,,,1.62,eV,Tauc,stacked bilayer absorber with composition gradient; Se/(S+Se)=20.81% by EDS; bandgap from Tauc plot
+D021,M1,Sb2Se3,Sb2Se3,Sb2Se3,3D,,1.2,eV,cited,Undoped antimony selenide absorber; optimal optical bandgap around 1.2 eV stated in introduction
+D021,M2,5%Cu:Sb2Se3,Cu-doped Sb2Se3,Sb2Se3,3D,Cu (5 at.%),,,,Cu-doped Sb2Se3 target/film with nominal 5% Cu atomic concentration confirmed by EDX; bandgap not reported
+D022,M1,"intrinsic hydrogenated amorphous silicon (a-Si:H), 15 nm",a-Si:H,thin-film Si,,,,,,"Ultrathin absorber; direct bandgap reported 1.8 eV in bulk, extended up to 2.1 eV via quantum confinement at nanometric thickness (cited, not measured here); no single bandgap value given for the 15 nm film"
+D022,M2,"intrinsic hydrogenated amorphous silicon (a-Si:H), 30 nm",a-Si:H,thin-film Si,,,,,,"Ultrathin absorber; direct bandgap reported 1.8 eV in bulk, extended up to 2.1 eV via quantum confinement (cited); no single bandgap value given for the 30 nm film"
