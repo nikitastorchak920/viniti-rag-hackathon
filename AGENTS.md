@@ -15,6 +15,13 @@ Antigravity is occupied with a separate task. Codex owns the current repository 
 - Read `git log -n 5 --oneline`, `TODO.md`, and `handoff/FROM_ANTIGRAVITY.md` after synchronization. Check for changes from Antigravity or the operator that affect the active task.
 - Work on shared modules sequentially. If another agent is changing the same files or has an active assignment covering them, record the overlap in `TODO.md` and coordinate before editing the overlapping area. Record architectural ideas, hazards, and validation evidence in `TODO.md` under `## Notes for Antigravity` without posting an active handoff task.
 
+## Antigravity mirror protocol (sequential work and context resets)
+
+- **Sequential work and file boundaries:** Antigravity and Codex work sequentially in the same repository. Antigravity does not edit core, parser, exporter, test, or UI modules owned by Codex (`core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/`, `main.py`) without explicit operator instruction, and does not overwrite Codex's active task queue or `## Current checkpoint` in `TODO.md`.
+- **Mandatory start-of-session sync:** Before starting any task (and especially in every new clean chat), Antigravity runs `git status --short --branch`, `git fetch origin`, and `git pull --ff-only origin main`, then reads `git log -n 5 --oneline`, `TODO.md` (including `## Current checkpoint` and `## Notes for Antigravity`), and `handoff/FOR_ANTIGRAVITY.md` so all recent Codex changes and notes are accounted for.
+- **Cross-agent notes without overlapping edits:** When Antigravity has architectural ideas, schema/interface warnings, audit evidence, or validation notes for Codex, it records them under `## Notes for Codex` in `TODO.md` (or `handoff/NOTES.md` if created) without modifying Codex-owned files or read-only handoff queues unless explicitly instructed.
+- **Regular context-reset checkpointing:** `TODO.md` is the single source of truth between clean sessions. After completing any task and before resetting chat context, Antigravity updates its status, touched files, notes for Codex, and next step under `## Notes for Codex` in `TODO.md`, runs relevant local checks (keeping paused UI servers stopped unless asked), verifies `.gitignore` and the staged file list, commits only intended paths, and pushes to `origin/main` (verifying the remote commit).
+
 ## Language, demos, and checkpoints
 
 - Communicate with the operator in Russian. Write code and comments, commit messages, `TODO.md`, `handoff/` files, and inter-agent instructions in English. Preserve source quotations in their original language.
