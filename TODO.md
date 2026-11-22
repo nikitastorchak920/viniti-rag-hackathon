@@ -34,7 +34,7 @@ The local measurements cover 18 complete caches against all 21 gold papers. D002
 
 ## Next priorities from the metric audit
 
-- [ ] Restore complete cache coverage and preserve compatible per-document progress across extraction retries.
+- [x] Restore complete cache coverage and preserve compatible per-document progress across extraction retries. The local recovery benchmark processed 21/21 with 860 Strict TP and 1,853 Loose TP, after 668 and 1,350 at the initial baseline. Saved D009 windows and metadata were preserved.
 - [ ] Verify chart provenance and source-supported series context. Evaluate vector recovery separately from the default bundle.
 - [ ] Reduce confirmed dataset, generator and variant mismatches with source evidence on a frozen cache.
-- [ ] Run controlled gateway and OCR experiments after measuring the dominant coverage and context losses.
+- [x] Run controlled gateway and OCR experiments after measuring the dominant coverage and context losses. The sampled source cells favored 200 dpi over 150 dpi. A matched Flash/Pro source row tied at 15/15; keep the configured model.

@@ -351,7 +351,7 @@ class Pipeline(unittest.TestCase):
         configs = [{"config_id": "C1", "rag_variant": "Sparse search", "generator_model": "Model 2"}]
         self.assertEqual(_panel_configuration("Corpus — Sparse search / Model-2", "Model 2", configs), "C1")
         self.assertEqual(_panel_configuration("Corpus — Model-2", "Model 2", configs), "")
-        self.assertEqual(_panel_configuration("Sparse search / Model-2 k=3", "Model 2", configs), "")
+        self.assertEqual(_panel_configuration("Sparse search / Model-2 k=12", "Model 2", configs), "")
 
     def test_unmapped_dataset_header_does_not_shift_neighbor_columns(self):
         from core.pdf_processor import TextLine

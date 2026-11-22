@@ -14,7 +14,7 @@ REFERENCE = re.compile(r"\bfig(?:ure)?s?\.?\s+([a-z]?\d+(?:\s*[-–]\s*[a-z]?\d+
                        r"(?:\s*(?:,|&|and)\s*[a-z]?\d+(?:\s*[-–]\s*[a-z]?\d+)?)*)", re.I)
 NUMERIC = re.compile(r"[-+−]?(?:\d+(?:\.\d+)?|\.\d+)%?")
 RATIO_METRIC = re.compile(r"\b(?:precision|recall|f1|accuracy)\b", re.I)
-EXPLICIT_SETTING = re.compile(r"\b(?:\w+\s*=\s*\d|top[-\s]*\d+)\b", re.I)
+EXPLICIT_SETTING = re.compile(r"\b(?:\w+\s*=\s*[-+]?\d+(?:[.,]\d+)?|top[-\s]*\d+)\b", re.I)
 
 
 @dataclass(frozen=True)

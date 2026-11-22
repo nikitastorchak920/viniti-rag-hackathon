@@ -1,5 +1,11 @@
 # Strict F1 checkpoint state
 
+## Recovery plan execution · 21 complete papers
+
+The frozen local baseline had 18 complete caches and scored 668 Strict/1,350 Loose TP. The full recovery benchmark scored 860 Strict/1,853 Loose TP (5,305 scored predictions, 19,392 gold). Strict R/P/F1 changed from 0.03445/0.16725/0.05713 to 0.04435/0.16211/0.06964. Loose R/P/F1 changed from 0.06962/0.33801/0.11545 to 0.09555/0.34929/0.15006. Scope agreement was 21/21, zero stubs and zero structural errors. The native-text-only checker left 941 unmatched citations, including image-only pages.
+
+D009 resumed the legacy page plan with saved entity IDs and two unchanged result windows. D002's expanded passport hit the 16,384-token gateway limit. The compact passport succeeded at the same limit with 3,113 output tokens. D013 completed using the existing parser. Plot recovery yielded +10,135 Loose TP and zero Strict TP in its controlled comparison and remains opt-in. The corpus context comparison preserved the previous scores. See [the audit](../METRIC_AUDIT.md#выполнение-плана--22112026) for the OCR and model A/B and operational evidence.
+
 ## Metric audit · Saved rows from incomplete caches
 
 The same Stage 3 export over the frozen Stage 2 cache gained 101 Strict and 150 Loose TP after including saved windows from one incomplete paper. This moved the corpus from 3,994 to 4,183 scored predictions, Strict F1 from 0.05713 to 0.06524, and Loose F1 from 0.11545 to 0.12725. The candidate has 18 fully processed papers, one partial paper, and two unresolved scope decisions. The checker reported zero structural errors and 476 review findings. The run used zero API tokens and took 8.2 seconds. The default export and raw cache status remain compatible. See [the audit and execution prompt](../METRIC_AUDIT.md).
