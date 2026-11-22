@@ -291,6 +291,22 @@ class Linking(unittest.TestCase):
             "Program 2024 Information Retrieval track. Program 2024 Image Recognition track.",
         ]), "Program IR24")
 
+    def test_display_labels_keep_split_codes_and_parameter_values_in_the_evidence(self):
+        datasets = [{"dataset_name": "Corpus MAIN_TEST", "dataset_version": "", "note": ""},
+                    {"dataset_name": "Corpus SECOND_TEST", "dataset_version": "", "note": ""}]
+        exporter._canonicalize_datasets(datasets, ["MAIN_TEST is the main evaluation split."])
+        self.assertEqual([row["dataset_name"] for row in datasets], ["Corpus MAIN TEST", "Corpus SECOND_TEST"])
+        self.assertIn("MAIN_TEST", datasets[0]["note"])
+
+        configs = [{"rag_variant": name} for name in ("Method alpha = 0.5", "Method alpha = 1.0", "Method beta 0.5")]
+        exporter._compact_named_parameters(configs, ["The weight was α = 0.5."])
+        self.assertEqual([row["rag_variant"] for row in configs], ["Method alpha0.5", "Method alpha = 1.0", "Method beta 0.5"])
+        raw = result(source_fragment="Ours (Alpha only) 0.204")
+        cache = make_cache([raw], configs=[{"config_id": "C01", "rag_variant": "Ours (Alpha only)"}])
+        doc = exporter.build_doc("P1", cache, ["Ours (Alpha only) 0.204", ""], Mock())
+        self.assertEqual(doc["configurations"][0]["rag_variant"], "Alpha only")
+        self.assertEqual(doc["results"][0]["source_fragment"], raw["source_fragment"])
+
     def test_aggregate_link_requires_unique_cell_and_verified_quote(self):
         from core.pdf_processor import TextLine
         from plugins.rag.table_context import link_aggregates

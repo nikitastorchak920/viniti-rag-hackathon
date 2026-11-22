@@ -189,8 +189,11 @@ _MODEL_DECLARATION = re.compile(
     r"\(\s*(?P<identifier>[\w.]+(?:-[\w.]+)+)\s*\)"
 )
 _AUTHOR_LABEL = re.compile(r"(?i)\s*(?:\(\s*ours\s*\)|\[\s*ours\s*\])$")
+_AUTHOR_WITH_NAME = re.compile(r"(?i)ours\s*\(([^()]+)\)$")
 _ACRONYM_DEFINITION = re.compile(r"\b((?:[A-Za-z][A-Za-z-]* ){2,5})\(([A-Z]{2,5})\)")
 _EXCLUDED_COMPONENT = re.compile(r"(?i:\bw/o |\bwithout )([A-Z]{2,5})\b")
+_ASSIGNED_PARAMETER = re.compile(r"(?<!\w)([\u0370-\u03ff])\s*=\s*([+-]?\d+(?:\.\d+)?)(?![\w%]|[.,–-]\d)")
+_NAMED_PARAMETER = re.compile(r"(?<!\w)([A-Za-z]+)(?:\s*=\s*|\s+)([+-]?\d+(?:\.\d+)?)(?![\w%]|[.,–-]\d)")
 
 
 def _model_parts(name: str) -> tuple[str, ...]:
@@ -242,6 +245,20 @@ def _expand_excluded_components(configurations, pages_norm):
         config["rag_variant"] = _EXCLUDED_COMPONENT.sub(expand, config["rag_variant"])
 
 
+def _compact_named_parameters(configurations, pages_norm):
+    """Keep a symbol and its assigned value together in the configuration label."""
+    assignments = {(unicodedata.name(symbol, "").split()[-1].casefold(), value)
+                   for page in pages_norm or () for symbol, value in _ASSIGNED_PARAMETER.findall(page)
+                   if unicodedata.name(symbol, "").startswith("GREEK SMALL LETTER ")}
+
+    def compact(match):
+        name, value = match.groups()
+        return name + value if (name.casefold(), value) in assignments else match[0]
+
+    for config in configurations:
+        config["rag_variant"] = _NAMED_PARAMETER.sub(compact, config["rag_variant"])
+
+
 def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -> None:
     """Use a printed subset label when the paper explicitly lists the family and its members."""
     families = defaultdict(list)
@@ -267,6 +284,28 @@ def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -
         for row, child in members:
             row["dataset_name"] = child
             row["note"] = (row["note"] + " | " if row["note"] else "") + f"Dataset family: {parent}"
+    _display_split_codes(datasets, pages_norm)
+
+
+def _display_split_codes(datasets, pages_norm):
+    """Use readable separators for a dataset family's explicitly printed split codes."""
+    families = defaultdict(list)
+    for row in datasets:
+        if match := re.fullmatch(r"(.+) ([A-Z][A-Z0-9]*(?:_[A-Z][A-Z0-9]*)+)", row["dataset_name"]):
+            families[match[1]].append((row, match[2]))
+    dataset_names = {label(row["dataset_name"]) for row in datasets}
+    for members in families.values():
+        if len(members) < 2:
+            continue
+        for row, code in members:
+            display = row["dataset_name"].removesuffix(code) + code.replace("_", " ")
+            if label(display) in dataset_names:
+                continue
+            if not any(re.search(rf"(?<!\w){re.escape(code)}(?!\w)", page) for page in pages_norm or ()):
+                continue
+            row["dataset_name"] = display
+            row["note"] = " | ".join(filter(None, (row["note"], f"Printed split code: {code}")))
+            dataset_names.add(label(display))
 
 
 def _expand_track_edition(name, pages_norm):
@@ -550,6 +589,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         if generator != c["generator_model"]:
             model_aliases[generator] = c["generator_model"]
         variant = canon_space(c.get("rag_variant", ""))
+        if author_label := _AUTHOR_WITH_NAME.fullmatch(variant):
+            variant = author_label[1].strip()
         variant = _AUTHOR_LABEL.sub("", variant).strip() or variant
         c["rag_variant"] = strip_names(variant, generator, c["generator_model"], c["retriever_model"])
     cfgs = merge_entities(cfg_in, "config_id")
@@ -727,6 +768,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
 
         link_aggregates(rows, table_layout, pages_norm, out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
+    _compact_named_parameters(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
