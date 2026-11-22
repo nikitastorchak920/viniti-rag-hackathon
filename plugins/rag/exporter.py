@@ -2,20 +2,23 @@
 from __future__ import annotations
 
 import csv
-import json
 import pathlib
 import re
 import unicodedata
 from collections import defaultdict
 from decimal import Decimal
 from itertools import chain
+from typing import get_args
 
 from core.validator import RULE_PROVENANCE_COMPLETE, check_result, finding
+from domains.base_schema import ExtractionStatus
+from domains.rag.schema import MetricDirection
+from domains.rag.submission import SUBMISSION_MODELS, submission_row
 from plugins.rag.table_context import dataset_aliases, identity_label, label, mentions_identity, native_captions
 
-SCHEMA_PATH = pathlib.Path(__file__).resolve().parents[2] / "submission_template" / "schema.json"
-TABLES = ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"]
-DIRECTIONS = {"higher_is_better", "lower_is_better", "target"}
+TABLES = tuple(SUBMISSION_MODELS)
+DIRECTIONS = frozenset(get_args(MetricDirection))
+STATUSES = frozenset(get_args(ExtractionStatus))
 BOUNDED = re.compile(
     r"(?i)^(accuracy|acc|precision|recall|f1|f-?score|exact match|em|hit(?:s|\s*rate)?|mrr|ndcg|map|"
     r"faithfulness|answer relevan\w*|context (?:precision|recall|relevan\w*)|correctness)(?:\s*@\s*\d+)?$")
@@ -27,7 +30,7 @@ NUM = re.compile(r"^[≈~]?\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:%|±.*|\+/-.*)
 
 
 def columns() -> dict[str, list[str]]:
-    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))["tables"]
+    return {table: list(model.model_fields) for table, model in SUBMISSION_MODELS.items()}
 
 
 def norm(text: str) -> str:
@@ -407,6 +410,7 @@ def _fill_ids(rows: list[dict], out: dict, captions=None, row_captions=None, pag
 def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, table_layout=None,
               recover_table_cells: bool = False, plot_rows=()) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {t: [] for t in TABLES}
+    fields = columns()
     meta = cache["meta"]
     p = meta["publication"]
     year = (re.search(r"(?:19|20)\d{2}", p.get("year", "")) or [""])[0]
@@ -523,7 +527,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     for e in exs:
         num_fields(e, {"latency_ms": as_num, "tokens_per_query": as_num, "sample_size": as_int})
     for tab, items in (("configurations", cfgs), ("datasets", dss), ("tasks", tks), ("experiments", exs)):
-        cols = columns()[tab]
+        cols = fields[tab]
         for it in items:
             out[tab].append({c: (it.get(c, "") or "").strip() if c != "publication_id" else doc_id for c in cols})
 
@@ -572,7 +576,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                 issues.append(finding(evidence, RULE_PROVENANCE_COMPLETE,
                                       f"Cached observation has no metric name; raw value was {r.get('raw_value', '')!r}."))
                 continue
-            row = {c: "" for c in columns()["results"]}
+            row = dict.fromkeys(fields["results"], "")
             row.update(publication_id=doc_id, result_id=f"R{len(rows) + 1:03d}", metric_name=name, source_page=str(page or ""))
             for k in ("metric_group", "metric_variant", "aggregation", "source_section", "source_table",
                       "source_figure", "source_fragment"):
@@ -591,7 +595,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                     v = ""
                 row[k] = v
             status = (r.get("extraction_status") or "extracted").strip()
-            status = status if status in {"extracted", "present_not_extractable", "absent"} else "extracted"
+            status = status if status in STATUSES else "extracted"
             raw = (r.get("raw_value") or "").strip()
             raw_unit = (r.get("raw_unit") or "").strip()
             if status == "extracted" and not raw:
@@ -731,7 +735,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
                        "description": (mi.get("description") or "").strip(), "source_page": pg,
                        "source_fragment": (mi.get("source_fragment") or "").strip() if pg else ""})
     for i, it in enumerate(issues, 1):
-        row = {c: "" for c in columns()["issues"]}
+        row = dict.fromkeys(fields["issues"], "")
         row.update(it, publication_id=doc_id, issue_id=f"I{i:02d}")
         if pages_norm is not None and row["source_fragment"] and row["source_page"]:
             page = int(row["source_page"])
@@ -760,14 +764,15 @@ class TableWriter:
         self.files, self.writers, self.counts = {}, {}, {t: 0 for t in TABLES}
         for t in TABLES:
             f = (self.dir / f"{t}.csv.tmp").open("w", encoding="utf-8", newline="")
-            w = csv.DictWriter(f, fieldnames=cols[t], lineterminator="\n", extrasaction="ignore")
+            w = csv.DictWriter(f, fieldnames=cols[t], lineterminator="\n")
             w.writeheader()
             self.files[t], self.writers[t] = f, w
 
     def write_doc(self, doc: dict[str, list[dict]]) -> None:
+        rows = {table: [submission_row(table, row) for row in doc.get(table, [])] for table in TABLES}
         for t in TABLES:
-            self.writers[t].writerows(doc.get(t, []))
-            self.counts[t] += len(doc.get(t, []))
+            self.writers[t].writerows(rows[t])
+            self.counts[t] += len(rows[t])
 
     def close(self, commit: bool) -> None:
         import os

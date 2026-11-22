@@ -315,7 +315,7 @@ class DeepSeekClient:
             shape = json.dumps(schema.model_json_schema(), ensure_ascii=False)
         except Exception:  # noqa: BLE001
             shape = ""
-        sys_msg = system + "\n\nReturn ONLY a valid json object that matches this JSON Schema (all fields required):\n" + shape
+        sys_msg = system + "\n\nReturn ONLY a valid JSON object that matches this JSON Schema:\n" + shape
         payload = {
             "model": self.model, "temperature": self.temperature, "max_tokens": self.max_out,
             "frequency_penalty": self.freq_penalty,

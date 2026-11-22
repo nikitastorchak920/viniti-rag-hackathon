@@ -51,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
     if a.cache is None:
         a.cache = pathlib.Path("cache_local" if a.local else "cache")
 
+    from pydantic import ValidationError
+
     from core.llm_client import log
     from core.pdf_processor import inspect_pdf
     from plugins.rag import exporter
@@ -224,7 +226,14 @@ def main(argv: list[str] | None = None) -> int:
                 if not doc["results"]:
                     stub(pdf.stem)
                     continue
-            writer.write_doc(doc)
+            try:
+                writer.write_doc(doc)
+            except ValidationError as exc:
+                log(f"{pdf.stem}: FAIL - normalized CSV rows failed validation: {exc}")
+                if pdf.stem not in failed:
+                    failed.append(pdf.stem)
+                stub(pdf.stem)
+                continue
             built += 1
             if partial:
                 partials.append(pdf.stem)

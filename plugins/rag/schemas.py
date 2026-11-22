@@ -1,21 +1,25 @@
-"""Pydantic models for LLM structured output. Every field is required (no defaults, which
-Gemini response schemas handle poorly); "" means "not stated in the paper"."""
+"""Project the domain contract onto the LLM wire format and cache v2."""
 from __future__ import annotations
 
 import re
+from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, create_model, field_validator
 
-try:  # pydantic v2
-    from pydantic import field_validator
+from domains.base_schema import ContractModel, ExtractionStatus, ResultOrigin
+from domains.rag.schema import MetricDirection
+from domains.rag.submission import SUBMISSION_MODELS
 
-    def _coerce(*fields):
-        return field_validator(*fields, mode="before")
-except ImportError:  # pydantic v1
-    from pydantic import validator
 
-    def _coerce(*fields):
-        return validator(*fields, pre=True, allow_reuse=True)
+class WireModel(ContractModel):
+    # Preserve the legacy input coercion for standard metadata and positional numbers.
+    model_config = ConfigDict(strict=False)
+
+
+def wire_fields(table, *, omit=(), rename=None, types=None):
+    """Use submission/domain names while allowing unnormalized evidence as text."""
+    return {(rename or {}).get(key, key): ((types or {}).get(key, str), ...)
+            for key in SUBMISSION_MODELS[table].model_fields if key not in omit}
 
 
 def to_text(v) -> str:
@@ -38,72 +42,17 @@ def to_page_int(v) -> int:
     return int(m.group()) if m else 0
 
 
-class Publication(BaseModel):
-    title: str
-    year: str
-    doi: str
-    authors: str  # "A B; C D"
-    in_scope: bool
-    exclusion_reason: str
+Publication = create_model("Publication", __base__=WireModel, **wire_fields(
+    "publications", omit=("publication_id",), rename={"DOI": "doi"}, types={"in_scope": bool}))
+Config = create_model("Config", __base__=WireModel, **wire_fields("configurations", omit=("publication_id",)))
+Dataset = create_model("Dataset", __base__=WireModel, **wire_fields("datasets", omit=("publication_id",)))
+Task = create_model("Task", __base__=WireModel, **wire_fields("tasks", omit=("publication_id",)))
+Experiment = create_model("Experiment", __base__=WireModel, **wire_fields("experiments", omit=("publication_id",)))
+MetaIssue = create_model("MetaIssue", __base__=WireModel, **wire_fields(
+    "issues", omit=("publication_id", "issue_id", "record_ids"), types={"source_page": int}))
 
 
-class Config(BaseModel):
-    config_id: str
-    rag_variant: str
-    retrieval_method: str
-    retriever_model: str
-    embedding_model: str
-    embedding_version: str
-    chunking_method: str
-    chunk_size: str
-    chunk_overlap: str
-    chunk_unit: str
-    index_type: str
-    vector_store: str
-    top_k: str
-    reranker_model: str
-    generator_model: str
-    generator_version: str
-    prompt_strategy: str
-    context_strategy: str
-    note: str
-
-
-class Dataset(BaseModel):
-    dataset_id: str
-    dataset_name: str
-    dataset_version: str
-    language: str
-    data_split: str
-    scientific_domain: str
-    note: str
-
-
-class Task(BaseModel):
-    task_id: str
-    task_type: str
-    note: str
-
-
-class Experiment(BaseModel):
-    experiment_id: str
-    evaluation_protocol: str
-    baseline_name: str
-    hardware: str
-    latency_ms: str
-    tokens_per_query: str
-    sample_size: str
-    note: str
-
-
-class MetaIssue(BaseModel):
-    check_name: str
-    description: str
-    source_page: int
-    source_fragment: str
-
-
-class Meta(BaseModel):
+class Meta(WireModel):
     publication: Publication
     configurations: list[Config]
     datasets: list[Dataset]
@@ -112,25 +61,25 @@ class Meta(BaseModel):
     issues: list[MetaIssue]
 
 
-class MetricCutoff(BaseModel):
+class MetricCutoff(WireModel):
     metric_name: str
     metric_k: str
     source_fragment: str
 
-    @_coerce("metric_name", "metric_k", "source_fragment")
+    @field_validator("metric_name", "metric_k", "source_fragment", mode="before")
     @classmethod
     def _text(cls, value):
         return to_text(value)
 
 
-class TableScope(BaseModel):
+class TableScope(WireModel):
     source_page: int
     source_table: str
     dataset_ids: list[str]
     config_ids: list[str]
     metric_cutoffs: list[MetricCutoff]
 
-    @_coerce("source_page")
+    @field_validator("source_page", mode="before")
     @classmethod
     def _page(cls, value):
         return to_page_int(value)
@@ -153,7 +102,7 @@ def passport_fields(model, first):
     return (*first, *(field for field in model.model_fields if field not in first))
 
 
-class CompactPassport(BaseModel):
+class CompactPassport(WireModel):
     publication: Publication
     configurations: list[list[str | int | float | None]]
     datasets: list[list[str | int | float | None]]
@@ -180,43 +129,24 @@ class CompactPassport(BaseModel):
         return Passport.model_validate(output).model_dump()
 
 
-class Result(BaseModel):
-    experiment_id: str
-    config_id: str
-    dataset_id: str
-    task_id: str
-    metric_group: str
-    metric_name: str
-    metric_variant: str
-    metric_direction: str
-    metric_k: str
-    raw_value: str
-    raw_unit: str
-    baseline_value: str
-    aggregation: str
-    sample_size: str
-    result_origin: str  # primary | cited
-    cited_ref: str
-    source_page: int
-    source_section: str
-    source_table: str
-    source_figure: str
-    source_fragment: str
-    extraction_status: str  # extracted | present_not_extractable | absent
-    note: str
-
-    @_coerce("experiment_id", "config_id", "dataset_id", "task_id", "metric_group", "metric_name", "metric_variant", "metric_direction", "metric_k", "raw_value", "raw_unit", "baseline_value", "aggregation", "sample_size", "result_origin", "cited_ref", "source_section", "source_table", "source_figure", "source_fragment", "extraction_status", "note")
-    @classmethod
-    def _text(cls, v):
-        return to_text(v)
-
-    @_coerce("source_page")
-    @classmethod
-    def _page(cls, v):
-        return to_page_int(v)
+result_fields = wire_fields(
+    "results", omit=("publication_id", "result_id", "metric_value", "metric_unit",
+                     "normalized_value", "normalized_unit", "duplicate_of"),
+    rename={"cited_publication_id": "cited_ref"},
+    types={"source_page": int, "result_origin": ResultOrigin | Literal[""],
+           "extraction_status": ExtractionStatus | Literal[""], "metric_direction": MetricDirection | Literal[""]},
+)
+Result = create_model(
+    "Result", __base__=WireModel,
+    __validators__={
+        "text_values": field_validator(*(key for key in result_fields if key != "source_page"), mode="before")(to_text),
+        "page_value": field_validator("source_page", mode="before")(to_page_int),
+    },
+    **result_fields,
+)
 
 
-class Window(BaseModel):
+class Window(WireModel):
     results: list[Result]
 
 
@@ -231,17 +161,17 @@ COMPACT_FIELDS = (
 COMPACT_REQUIRED = 7
 
 
-class CompactWindow(BaseModel):
+class CompactWindow(WireModel):
     results: list[list[str | int | float | None]]
 
-    @_coerce("results")
+    @field_validator("results", mode="before")
     @classmethod
     def _lengths(cls, rows):
         if not isinstance(rows, list) or any(
             not isinstance(row, list) or not COMPACT_REQUIRED <= len(row) <= len(COMPACT_FIELDS)
             for row in rows
         ):
-            raise ValueError("results must be positional rows of 7 to 23 cells")
+            raise ValueError(f"results must be positional rows of {COMPACT_REQUIRED} to {len(COMPACT_FIELDS)} cells")
         return rows
 
     def expanded(self) -> dict:
