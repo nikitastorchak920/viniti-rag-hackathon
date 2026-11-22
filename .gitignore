@@ -9,6 +9,9 @@ __pycache__/
 *.pyc
 cache/
 cache_local/
+cache_solar/
+/область_1/
+/область_1.zip
 /cache.zip
 /*.pdf
 /dev_metrics_21.csv

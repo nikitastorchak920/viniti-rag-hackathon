@@ -137,6 +137,7 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
 
 # ---- DeepSeek (OpenAI-compatible chat API, stdlib urllib only; text-only) ----
 class DeepSeekClient:
+    text_only = True
     compact_results = True
     tokens_in = property(lambda self: self._tok.tokens_in)
     tokens_out = property(lambda self: self._tok.tokens_out)

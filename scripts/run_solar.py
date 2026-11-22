@@ -33,8 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--force", action="store_true", help="ignore cache and re-query the API")
     ap.add_argument("--rebuild-csv-only", action="store_true", help="no API calls: rebuild CSV from cache")
     ap.add_argument("--window", type=int, default=3, help="pages per result-extraction request (default 3)")
-    ap.add_argument("--pdf-mode", choices=["auto", "text", "pdf"], default="auto",
-                    help="auto: structured text (or OCR when --ocr), pdf: multimodal upload, text: text only")
+    ap.add_argument("--pdf-mode", choices=["auto", "text"], default="auto", help="use PDF text or local OCR with --ocr")
     ap.add_argument("--skip-scans", action="store_true", help="skip image-only PDFs without text layer")
     ap.add_argument("--workers", type=int, default=None, help="parallel documents for LLM mode (default: env WORKERS or 4)")
     ap.add_argument("--ocr", action="store_true", help="run local OCR on image-only pages")
@@ -61,15 +60,12 @@ def main(argv: list[str] | None = None) -> int:
     client = None
 
     if not a.rebuild_csv_only:
-        from core.llm_client import DeepSeekClient, GeminiClient, LLMError, load_env
+        from core.llm_client import DeepSeekClient, LLMError, load_env
 
         load_env()
         try:
-            # Prefer DeepSeek when DEEPSEEK_API_KEY is configured (Domain 1 default)
-            if os.environ.get("DEEPSEEK_API_KEY"):
+            if os.environ.get("DEEPSEEK_API_KEY", "").strip():
                 client = DeepSeekClient()
-            elif os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
-                client = GeminiClient()
         except (LLMError, ImportError) as exc:
             log(f"ERROR: {exc}")
             return 1
@@ -83,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
             log(f"backend={type(client).__name__} model={client.model} max_out={getattr(client, 'max_out', '?')} docs={len(pdfs)}")
         else:
             a.skip_scans = True
-            log("WARN: no DEEPSEEK_API_KEY / GEMINI_API_KEY; only already cached documents can be exported")
+            log("WARN: no DEEPSEEK_API_KEY; only already cached documents can be exported")
 
         from plugins.solar.pipeline import process_document, run_documents
 
