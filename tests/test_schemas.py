@@ -76,6 +76,24 @@ def test_rag_prompt_and_reply_use_the_projected_contract():
         Result.model_validate(dict(output["results"][0], extraction_status="unknown"))
 
 
+def test_rag_retries_invalid_compact_results_as_named_rows():
+    from plugins.rag.schemas import Window
+
+    invalid = dict.fromkeys(COMPACT_FIELDS, "")
+    invalid.update(raw_value=".70", source_page=2, extraction_status="unknown")
+    valid = dict(invalid, extraction_status="extracted")
+    attempts = []
+
+    class Client:
+        def generate_json(self, contents, system, schema, tag):
+            attempts.append(schema)
+            return {"results": [list(invalid.values()) if schema is CompactWindow else valid]}
+
+    output = pipeline._gen(Client(), ["source"], CompactWindow, "P1")
+    assert attempts == [CompactWindow, CompactWindow, CompactWindow, Window]
+    assert output["results"] == [valid]
+
+
 def test_thin_films_extract_normalize_and_round_trip(tmp_path):
     result = {
         "publication_id": "P1", "result_id": "R1", "device_id": "D1", "measurement_id": "M1",

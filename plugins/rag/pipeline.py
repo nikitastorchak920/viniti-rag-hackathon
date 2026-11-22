@@ -20,12 +20,14 @@ class SchemaResponseError(LLMError):
 def _gen(client, contents, schema, tag: str) -> dict:
     """generate_json + strict validation (coerces "3"->3, "false"->False). Never returns unvalidated data."""
     from pydantic import ValidationError
-    from plugins.rag.schemas import CompactPassport, CompactWindow
+    from plugins.rag.schemas import CompactPassport, CompactWindow, Window
 
     if schema is CompactWindow:
         system = RESULT_SYSTEM + "\n\n" + compact_result_format()
     elif schema is CompactPassport:
         system = SYSTEM + "\n\n" + compact_passport_format()
+    elif schema is Window:
+        system = RESULT_SYSTEM + "\n\nReturn a results array of named JSON objects, with each value in its named field."
     else:
         system = SYSTEM
 
@@ -39,6 +41,9 @@ def _gen(client, contents, schema, tag: str) -> dict:
             errors = exc.errors() if isinstance(exc, ValidationError) else []
             last = str(exc).splitlines()[0][:200] + " " + (str(errors[0].get("loc")) if errors else "")
             log(f"  [{tag}] schema validation failed ({last}); retrying")
+    if schema is CompactWindow:
+        log(f"  [{tag}] compact results rejected; retrying with named fields")
+        return _gen(client, contents, Window, tag)
     raise SchemaResponseError(f"model output failed schema validation 3x: {last}")
 
 
