@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAG Atlas — обзор корпуса</title>
+<link rel="icon" href="data:,">
+<style>
+:root{color-scheme:light;--bg:#F4F7FB;--surface:#FFFFFF;--tone:#F4F7FB;--text:#162A42;--muted:#50647D;--line:#D8E2F0;--accent:#124B8C;--bright:#1D63B8;--accent-bg:#E8F2FE;--verified:#17674f;--verified-bg:#e8f5ef;--issue:#87500e;--issue-bg:#fbf0df;--shadow:0 2px 6px #18213406}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit;color:inherit}
+button,select{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+button:disabled{cursor:default;opacity:.45}
+button{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-weight:600}
+button:hover:not(:disabled){background:var(--tone)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.shell{width:min(1360px,100%);margin-inline:auto;padding-inline:clamp(16px,4vw,56px)}
+.masthead{background:var(--surface);border-bottom:1px solid var(--line)}
+.masthead .shell{min-height:66px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:10px}
+.brand,.actions{display:flex;align-items:center;gap:10px}
+.brand{font-size:17px;font-weight:750;letter-spacing:-.025em;white-space:nowrap}
+.brand strong{color:var(--accent)}
+.domains{display:flex;flex-wrap:wrap;gap:6px}
+.domains button{text-align:left;font-size:13px}
+.domains button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);border-color:var(--bright)}
+.domains b{margin-right:5px;font-variant-numeric:tabular-nums}
+.mark{display:grid;place-content:center;background:var(--accent-bg);color:var(--accent);border-radius:9px;width:31px;height:31px}
+.mark::before{content:"";width:14px;height:14px;border:2px solid currentColor;border-radius:3px;box-shadow:inset 0 -3px 0 var(--accent-bg),inset 0 -5px 0 currentColor}
+main{padding-block:clamp(24px,3.8vw,44px)}
+.overview{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:23px}
+h1,h2,h3,p{margin:0}
+h1{font-size:clamp(28px,4vw,43px);line-height:1.1;letter-spacing:-.045em;font-weight:750}
+h2{font-size:22px;letter-spacing:-.02em}
+h3{font-size:14px;margin-bottom:9px}
+#bundle{margin-top:8px;font-size:13px;overflow-wrap:anywhere}
+.notice{margin-bottom:16px;padding:10px 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:27px}
+.kpi{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:16px 19px}
+.kpi-label{color:var(--muted);font-weight:560;font-size:13px}
+.kpi strong{display:block;margin:5px 0 1px;font-size:clamp(25px,3.5vw,35px);font-weight:740;line-height:1.2;letter-spacing:-.04em}
+.kpi small{display:block;min-height:1.5em;color:var(--muted)}
+.kpi .confirmed{color:var(--verified)}
+.kpi .attention{color:var(--issue)}
+.tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.tabs button{border-color:transparent;background:transparent;color:var(--muted);padding:7px 13px;font-size:13px}
+.tabs button[aria-pressed=true]{background:var(--surface);border-color:var(--line);color:var(--accent);box-shadow:var(--shadow)}
+.badge{margin-left:6px;border-radius:5px;padding:1px 5px;background:var(--accent-bg);color:var(--accent);font-size:11px;font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:15px}
+.search{position:relative;display:flex;align-items:center;flex:1 1 260px;max-width:470px}
+.search::before{position:absolute;left:12px;width:10px;height:10px;border:1.5px solid var(--muted);border-radius:50%;content:"";pointer-events:none}
+.search::after{position:absolute;left:22px;top:55%;width:6px;height:1.5px;background:var(--muted);transform:rotate(45deg);content:"";pointer-events:none}
+.search input{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px 12px 8px 36px}
+.search input::placeholder{color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.pill{border-radius:999px;font-size:12px;padding:6px 11px;white-space:nowrap}
+.pill[aria-pressed=true]{color:var(--accent);background:var(--accent-bg);border-color:transparent}
+select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:105px}
+.table-scroll{overflow-x:auto}
+table{width:100%;min-width:660px;border-collapse:collapse;table-layout:fixed}
+table.wide{min-width:1090px}
+thead{background:var(--tone);color:var(--muted)}
+th,td{border-top:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:middle;overflow-wrap:anywhere}
+th:first-child,td:first-child{padding-left:17px}
+th{font-size:12px;font-weight:620}
+td{height:51px;font-size:13px}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr:focus-within,tbody tr[data-selected=true]{background:var(--accent-bg)}
+.cell-label{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.row-button{border:0;background:transparent;padding:0;color:var(--accent);text-align:left;font-weight:650;border-radius:3px}
+.row-button:hover:not(:disabled){background:transparent;text-decoration:underline}
+.row-end{color:var(--muted);text-align:right}
+.state{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 7px;font-size:11px;color:var(--muted);background:var(--tone)}
+.state::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.state.verified{color:var(--verified);background:var(--verified-bg)}
+.state.issue{color:var(--issue);background:var(--issue-bg)}
+.subnav{display:flex;gap:7px;flex-wrap:wrap;padding:12px 15px 0}
+.comparison{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 15px 14px}
+.comparison select{max-width:100%;min-width:0}
+.delta-good{color:var(--verified);font-weight:650}
+.delta-bad{color:var(--issue);font-weight:650}
+.empty{text-align:center;padding:43px 16px;color:var(--muted);border-top:1px solid var(--line)}
+.pagination{border-top:1px solid var(--line);padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:12px}
+.paging-buttons{display:flex;gap:7px}
+.paging-buttons button{padding:5px 10px;font-size:12px}
+dialog{position:fixed;inset:0 0 0 auto;margin:0;width:min(580px,100%);max-width:none;height:100dvh;max-height:none;padding:0;border:0;border-left:1px solid var(--line);background:var(--surface);color:var(--text);box-shadow:-12px 0 44px #19223a24}
+dialog[open]{animation:slide-in .2s ease-out}
+dialog::backdrop{background:#14203654}
+@keyframes slide-in{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.drawer-head{position:sticky;top:0;background:var(--surface);padding:19px 22px;border-bottom:1px solid var(--line);display:flex;align-items:start;justify-content:space-between;gap:14px;z-index:1}
+.drawer-body{padding:20px 22px;display:grid;gap:24px}
+.drawer-close{font-size:20px;line-height:1;padding:6px 8px}
+.drawer-section{min-width:0}
+blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0 0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;background:var(--tone);padding:12px 14px}
+mark{background:#d4e8fc;color:var(--accent);border-radius:3px;padding:0 2px;font-weight:650}
+dl{margin:0;display:grid;grid-template-columns:minmax(112px,1fr) minmax(0,2fr);font-size:13px}
+dt,dd{margin:0;padding:7px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;white-space:pre-wrap}
+dt{color:var(--muted);padding-right:12px}
+.issue-list{margin:0;padding-left:18px}
+.issue-list li+li{margin-top:8px}
+@media(max-width:850px){.search{max-width:none}.domains{order:3;flex-basis:100%}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.kpi{padding:12px}.overview{display:block}.actions{gap:5px}.actions button{font-size:12px;padding:6px 8px}.tabs button{font-size:11px;padding:6px 7px}.hide-small{display:none}th,td{padding:8px 6px}th:first-child,td:first-child{padding-left:9px}.pagination{padding:10px}.drawer-head,.drawer-body{padding-inline:16px}}
+@media(prefers-reduced-motion:reduce){dialog[open]{animation:none}}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="shell">
+    <div class="brand"><span class="mark" aria-hidden="true"></span><strong>RAG Atlas</strong></div>
+    <nav class="domains" aria-label="Предметные области">
+      <button type="button" data-domain="solar" aria-pressed="false"><b>01</b> Тонкоплёночные солнечные элементы</button>
+      <button type="button" data-domain="rag" aria-pressed="true"><b>02</b> RAG и поиск по документам</button>
+    </nav>
+    <div class="actions">
+      <button id="folder" type="button">Открыть CSV</button>
+      <input id="files" type="file" webkitdirectory multiple hidden>
+    </div>
+  </div>
+</header>
+<main class="shell">
+  <div class="overview">
+    <div><h1 id="domain-title">RAG и поиск по документам</h1><p id="bundle" class="muted" aria-live="polite">Загрузка пакета…</p></div>
+  </div>
+  <p id="notice" class="notice" role="status" hidden></p>
+  <section class="kpis" aria-label="Показатели корпуса">
+    <div class="kpi"><p class="kpi-label">Обработанные статьи</p><strong id="paper-count" class="num">—</strong><small id="paper-note"></small></div>
+    <div class="kpi"><p class="kpi-label">Извлечённые результаты</p><strong id="result-count" class="num">—</strong><small id="result-note"></small></div>
+    <div class="kpi"><p class="kpi-label">Проверенные цитаты</p><strong id="quote-count" class="num confirmed">—</strong><small id="quote-note">Ожидается отчёт проверки</small></div>
+    <div class="kpi"><p class="kpi-label">Замечания по правилам</p><strong id="issue-count" class="num attention">—</strong><small id="issue-note"></small></div>
+  </section>
+  <nav id="tabs" class="tabs" aria-label="Таблицы"></nav>
+  <section id="explorer" class="panel" aria-label="Обозреватель данных">
+    <div id="subnav" class="subnav" hidden></div>
+    <div class="toolbar">
+      <label class="search"><input id="q" type="search" aria-label="Поиск по данным и цитатам" placeholder="Поиск по данным и цитатам"></label>
+      <div class="filters" aria-label="Фильтры">
+        <button class="pill" type="button" data-filter="all" aria-pressed="true">Все</button>
+        <button class="pill" type="button" data-filter="verified" aria-pressed="false">Подтверждено</button>
+        <button class="pill" type="button" data-filter="issues" aria-pressed="false">С замечаниями RULE_*</button>
+        <select id="paper" aria-label="ID статьи"><option value="">Все статьи</option></select>
+        <select id="rule" aria-label="Код правила" hidden><option value="">Все правила</option></select>
+      </div>
+    </div>
+    <div id="comparison" class="comparison">
+      <button id="compare" type="button" class="pill" aria-pressed="false">Сравнить с baseline</button>
+      <select id="compare-group" aria-label="Контекст сравнения" hidden></select>
+      <span id="compare-note" class="muted" hidden>Положительная дельта означает улучшение.</span>
+    </div>
+    <div class="table-scroll" tabindex="0" aria-label="Прокручиваемая таблица">
+      <table id="grid"><thead></thead><tbody></tbody></table>
+    </div>
+    <p id="empty" class="empty" hidden></p>
+    <div class="pagination">
+      <span id="range" class="num" aria-live="polite"></span>
+      <div class="paging-buttons"><button type="button" id="prev">Назад</button><button type="button" id="next">Далее</button></div>
+    </div>
+  </section>
+</main>
+<dialog id="detail" aria-labelledby="detail-title">
+  <div class="drawer-head">
+    <div><p id="detail-kicker" class="muted num"></p><h2 id="detail-title">Путь одного числа</h2></div>
+    <form method="dialog"><button class="drawer-close" aria-label="Закрыть карточку">×</button></form>
+  </div>
+  <div class="drawer-body" id="detail-body"></div>
+</dialog>
+<script src="atlas.js"></script>
+</body>
+</html>

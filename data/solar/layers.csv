@@ -1,0 +1,572 @@
+publication_id,layer_id,device_id,layer_order,layer_function,layer_material,layer_thickness,thickness_unit,deposition_method,annealing_temperature,annealing_time,atmosphere,note
+D001,L1,D1,1,front_contact,FTO,,,,,,,"Fluorine-doped tin oxide glass, 8 ohm/square"
+D001,L2,D1,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,25 mM TiCl4 at 70 C for 60 min
+D001,L3,D1,3,absorber,CsPbI2Br,,,spin-coating,,,nitrogen glove box,pristine
+D001,L4,D1,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,15 mg/ml in chlorobenzene
+D001,L5,D1,5,back_contact,Ag,100,nm,thermal evaporation,,,,Text states Ag electrode; Figure 5A caption/architecture text mentions Au
+D001,L6,D2,1,front_contact,FTO,,,,,,,
+D001,L7,D2,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L8,D2,3,absorber,CsPbI2Br with 0.001 M SrCl2,,,spin-coating,,,nitrogen glove box,
+D001,L9,D2,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L10,D2,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L11,D3,1,front_contact,FTO,,,,,,,
+D001,L12,D3,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L13,D3,3,absorber,CsPbI2Br with 0.005 M SrCl2,,,spin-coating,,,nitrogen glove box,
+D001,L14,D3,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L15,D3,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L16,D4,1,front_contact,FTO,,,,,,,
+D001,L17,D4,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L18,D4,3,absorber,CsPbI2Br with 0.01 M SrCl2,,,spin-coating,,,nitrogen glove box,
+D001,L19,D4,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L20,D4,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L21,D5,1,front_contact,FTO,,,,,,,
+D001,L22,D5,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L23,D5,3,absorber,CsPbI2Br with 0.05 M SrCl2,,,spin-coating,,,nitrogen glove box,
+D001,L24,D5,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L25,D5,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L26,D6,1,front_contact,FTO,,,,,,,
+D001,L27,D6,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L28,D6,3,absorber,CsPbI2Br with 0.01 M SrCl2,,,spin-coating,,,nitrogen glove box,
+D001,L29,D6,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L30,D6,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L31,D7,1,front_contact,FTO,,,,,,,
+D001,L32,D7,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L33,D7,3,absorber,CsPbI2Br with 0.01 M SrCl2,,,spin-coating,,,nitrogen glove box,
+D001,L34,D7,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L35,D7,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L36,D8,1,front_contact,FTO,,,,,,,
+D001,L37,D8,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L38,D8,3,absorber,CsPbI2Br,,,spin-coating,,,nitrogen glove box,pristine
+D001,L39,D8,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L40,D8,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D001,L41,D9,1,front_contact,FTO,,,,,,,
+D001,L42,D9,2,ETL,compact TiO2,,,TiCl4 aqueous solution immersion,500,60 min,muffle oven,
+D001,L43,D9,3,absorber,CsPbI2Br with 0.01 M NiCl2,,,spin-coating,,,nitrogen glove box,
+D001,L44,D9,4,HTL,P3HT,,,spin-coating 2500 rpm 30 s,120,10 min,,
+D001,L45,D9,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D002,L1,D1,1,front_contact,FTO,,,,,,,"Fluorine-doped tin oxide glass; cleaned ultrasonically with acetone, detergent, UV-ozone 25 min"
+D002,L2,D1,2,HTL,NiO,,,spin-coating,,,,Spin-coated at 1000 rpm for 45 s
+D002,L3,D1,3,absorber,CH3NH3PbI3,,,spin-coating,100,3,,PbI2 spin-coated 1000 rpm 30 s then CH3NH3I 1000 rpm 30 s; annealed 100 C for 3 min
+D002,L4,D1,4,ETL,ZnO,,,spin-coating,100,3,,Spin-coated 1000 rpm 30 s; annealed 100 C for 3 min
+D002,L5,D1,5,back_contact,Ag,100,nm,thermal evaporation,,,1e-6 mbar,Thermal evaporator at 1e-6 mbar
+D002,L6,D2,1,front_contact,FTO,,,,,,,Fluorine-doped tin oxide glass
+D002,L7,D2,2,HTL,NiO,,,spin-coating,,,,Spin-coated at 1000 rpm for 45 s
+D002,L8,D2,3,HTL,GO,,,spin-coating,200,1 h,,"GO dripped on NiO film, spin-coated 1000 rpm 30 s, annealed 200 C for 1 h"
+D002,L9,D2,4,absorber,CH3NH3PbI3,,,spin-coating,100,3,,PbI2 then CH3NH3I spin-coated 1000 rpm 30 s each; annealed 100 C for 3 min
+D002,L10,D2,5,ETL,ZnO,,,spin-coating,100,3,,Spin-coated 1000 rpm 30 s; annealed 100 C for 3 min
+D002,L11,D2,6,back_contact,Ag,100,nm,thermal evaporation,,,1e-6 mbar,Thermal evaporator at 1e-6 mbar
+D003,L1,D1,1,front_contact,ITO,,,,,,,ITO glass substrate/contact
+D003,L2,D1,2,ETL,Sn3O4,35,nm,"spin coating (4000 rpm, 30 s, 3 times)",140,30 min,,Cross-sectional SEM thickness ~35 nm in device; conductivity samples ~100 nm
+D003,L3,D1,3,absorber,Cs-MA-FA lead halide perovskite,530,nm,two-step spin coating (1000 and 6000 rpm) with chlorobenzene antisolvent,100,30 min,,
+D003,L4,D1,4,HTL,Spiro-OMeTAD,,,"spin coating (4000 rpm, 30 s)",,,,"with tert-butylpyridine, FK209, Li-TFSI additives"
+D003,L5,D1,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D003,L6,D2,1,front_contact,ITO,,,,,,,
+D003,L7,D2,2,ETL,Y-Sn3O4 (5% Y),35,nm,"spin coating (4000 rpm, 30 s, 3 times)",140,30 min,,YCl3·6H2O added to Sn3O4 hydrosol synthesis; hydrothermal 180 C 3 h
+D003,L8,D2,3,absorber,Cs-MA-FA lead halide perovskite,530,nm,two-step spin coating (1000 and 6000 rpm) with chlorobenzene antisolvent,100,30 min,,
+D003,L9,D2,4,HTL,Spiro-OMeTAD,,,"spin coating (4000 rpm, 30 s)",,,,
+D003,L10,D2,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D004,L1,D1,1,front_contact,FTO,,,,,,,"fluorine-doped tin oxide glass, 7 ohm/sq"
+D004,L2,D1,2,ETL,MoS2 (ED-treated),,,spin-coating,150,1 h,,"100 uL, 4000 rpm 30 s"
+D004,L3,D1,3,absorber,CsFAMAPbI3-xBrx,,,spin-coating,100,1 h,,"70 uL, 3000 rpm 35 s, ~70% RH, MA antisolvent"
+D004,L4,D1,4,HTL,spiro-OMeTAD,,,spin-coating,,,,"70 uL, 2000 rpm 30 s, with 4-tBP, Li-TFSI, FK209"
+D004,L5,D1,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D004,L6,D2,1,front_contact,FTO,,,,,,,"fluorine-doped tin oxide glass, 7 ohm/sq"
+D004,L7,D2,2,ETL,MoS2 (BCC-ED-treated),,,spin-coating,150,1 h,,"100 uL, 4000 rpm 30 s"
+D004,L8,D2,3,absorber,CsFAMAPbI3-xBrx,,,spin-coating,100,1 h,,"70 uL, 3000 rpm 35 s, ~70% RH, MA antisolvent"
+D004,L9,D2,4,HTL,spiro-OMeTAD,,,spin-coating,,,,"70 uL, 2000 rpm 30 s, with 4-tBP, Li-TFSI, FK209"
+D004,L10,D2,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D004,L11,D3,1,front_contact,FTO,,,,,,,"fluorine-doped tin oxide glass, 7 ohm/sq"
+D004,L12,D3,2,ETL,MoS2 (C-ED-1),,,spin-coating,150,1 h,,"100 uL, 4000 rpm 30 s"
+D004,L13,D3,3,absorber,CsFAMAPbI3-xBrx,,,spin-coating,100,1 h,,"70 uL, 3000 rpm 35 s, ~70% RH, MA antisolvent"
+D004,L14,D3,4,HTL,spiro-OMeTAD,,,spin-coating,,,,"70 uL, 2000 rpm 30 s, with 4-tBP, Li-TFSI, FK209"
+D004,L15,D3,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D004,L16,D4,1,front_contact,FTO,,,,,,,"fluorine-doped tin oxide glass, 7 ohm/sq"
+D004,L17,D4,2,ETL,MoS2 (C-ED-2),,,spin-coating,150,1 h,,"100 uL, 4000 rpm 30 s; thickness 63-68 nm"
+D004,L18,D4,3,absorber,CsFAMAPbI3-xBrx,,,spin-coating,100,1 h,,"70 uL, 3000 rpm 35 s, ~70% RH, MA antisolvent"
+D004,L19,D4,4,HTL,spiro-OMeTAD,,,spin-coating,,,,"70 uL, 2000 rpm 30 s, with 4-tBP, Li-TFSI, FK209"
+D004,L20,D4,5,back_contact,Ag,100,nm,thermal evaporation,,,,
+D005,L1,D1,1,front_contact,FTO,,,,,,,"F-doped tin oxide glass, 8 ohm per square"
+D005,L2,D1,2,ETL,TiO2,,,chemical water bath (TiCl4/deionized water 3 ml/150 ml),90,50 min,,deposited in water bath at 90 C for 50 min
+D005,L3,D1,3,absorber,Cs/FA/MA perovskite,,,"two-step spin-coating 1500 rpm 4 s / 5000 rpm 20 s, diethyl ether drip",150,15 min,,
+D005,L4,D1,4,passivation,PEAI,,,spin-coating 5500 rpm 20 s,,,,"5 mg/ml in IPA, 60 ul"
+D005,L5,D1,5,HTL,Spiro-OMeTAD,,,spin-coating 4000 rpm 30 s,,,,73 mg Spiro-OMeTAD + 28 ul t-BP + 20 ul Li-TFSI (520 mg/ml ACN) + 20 ul FK-209 (300 mg/ml ACN) in 1 ml CB
+D005,L6,D1,6,back_contact,Au,100,nm,thermal evaporation under high vacuum,,,,~100 nm
+D005,L7,D2,1,front_contact,FTO,,,,,,,"F-doped tin oxide glass, 8 ohm per square"
+D005,L8,D2,2,ETL,TiO2,,,chemical water bath (TiCl4/deionized water 3 ml/150 ml),90,50 min,,
+D005,L9,D2,3,absorber,Cs/FA/MA perovskite,,,"two-step spin-coating 1500 rpm 4 s / 5000 rpm 20 s, diethyl ether drip",150,15 min,,
+D005,L10,D2,4,passivation,PEAI,,,spin-coating 5500 rpm 20 s,,,,"5 mg/ml in IPA, 60 ul"
+D005,L11,D2,5,HTL,SF-MPA-MCz,,,spin-coating 4000 rpm 30 s,,,,30 mg/ml in CB + 15 ul t-BP + 10 ul Li-TFSI (520 mg/ml ACN) + 10 ul FK-209 (300 mg/ml ACN); thickness much reduced vs Spiro-OMeTAD
+D005,L12,D2,6,back_contact,Au,100,nm,thermal evaporation under high vacuum,,,,~100 nm
+D007,L1,D1,1,front_contact,FTO,,,,,,,
+D007,L2,D1,2,ETL,SnO2,,,,,,,
+D007,L3,D1,3,absorber,perovskite,700,nm,,,,,
+D007,L4,D1,4,HTL,V1553,,,,,,,Thinner than spiro-OMeTAD layer
+D007,L5,D1,5,back_contact,Au,70,nm,,,,,
+D007,L6,D2,1,front_contact,FTO,,,,,,,
+D007,L7,D2,2,ETL,SnO2,,,,,,,
+D007,L8,D2,3,absorber,perovskite,700,nm,,,,,
+D007,L9,D2,4,HTL,spiro-OMeTAD,,,,,,,
+D007,L10,D2,5,back_contact,Au,70,nm,,,,,
+D008,L1,D1,1,front_contact,ITO,,,,,,,ITO-coated glass
+D008,L2,D1,2,HTL,PTAA,,,spin coating,100,10 min,,"1.5 mg/mL, 6000 rpm"
+D008,L3,D1,3,absorber,Cs0.15FA0.85PbI2.85Br0.15,600,nm,sequential thermal evaporation,150,10 min,,"Three cycles, total ~600 nm"
+D008,L4,D1,4,ETL,C60,20,nm,thermal evaporation,,,,
+D008,L5,D1,5,interlayer,BCP,2,nm,thermal evaporation,,,,
+D008,L6,D1,6,back_contact,Ag,100,nm,thermal evaporation,,,,Metal mask defines cell area
+D008,L7,D2,1,front_contact,ITO,,,,,,,ITO-coated glass
+D008,L8,D2,2,HTL,PTAA,,,spin coating,100,10 min,,"1.5 mg/mL, 6000 rpm"
+D008,L9,D2,3,absorber,Cs0.15FA0.85PbI2.85Br0.15 w/ PbCl2,600,nm,sequential thermal evaporation,150,10 min,,PbCl2 1.8% molar ratio to PbI2
+D008,L10,D2,4,ETL,C60,20,nm,thermal evaporation,,,,
+D008,L11,D2,5,interlayer,BCP,2,nm,thermal evaporation,,,,
+D008,L12,D2,6,back_contact,Ag,100,nm,thermal evaporation,,,,Metal mask defines cell area
+D008,L13,D3,1,front_contact,ITO,,,,,,,ITO-coated glass
+D008,L14,D3,2,HTL,PTAA,,,spin coating,100,10 min,,
+D008,L15,D3,3,absorber,Cs0.15FA0.85PbI2.85Br0.15 w/ PbCl2,600,nm,sequential thermal evaporation,150,10 min,,
+D008,L16,D3,4,ETL,C60,20,nm,thermal evaporation,,,,
+D008,L17,D3,5,interlayer,BCP,2,nm,thermal evaporation,,,,
+D008,L18,D3,6,back_contact,Ag,100,nm,thermal evaporation,,,,
+D009,L1,D1,1,front_contact,ITO,,,,,,,patterned ITO glass
+D009,L2,D1,2,HTL,PEDOT:PSS,,,spin-coating,140,20 min,ambient,Clevios P VP AI 4083; 6000 rpm 40 s
+D009,L3,D1,3,absorber,Cs0 2D/3D THP,300,nm,spin-coating,80,10 min,nitrogen,toluene antisolvent drip
+D009,L4,D1,4,ETL,ICBA,,,spin-coating,80,10 min,,20 mg/ml in chlorobenzene; 1000 rpm 30 s
+D009,L5,D1,5,interlayer,BCP,6,nm,thermal evaporation,,,,
+D009,L6,D1,6,back_contact,Ag,80,nm,thermal evaporation,,,,
+D009,L7,D2,1,front_contact,ITO,,,,,,,patterned ITO glass
+D009,L8,D2,2,HTL,PEDOT:PSS,,,spin-coating,140,20 min,ambient,Clevios P VP AI 4083; 6000 rpm 40 s
+D009,L9,D2,3,absorber,Cs5 2D/3D THP,300,nm,spin-coating,80,10 min,nitrogen,toluene antisolvent drip
+D009,L10,D2,4,ETL,ICBA,,,spin-coating,80,10 min,,20 mg/ml in chlorobenzene; 1000 rpm 30 s
+D009,L11,D2,5,interlayer,BCP,6,nm,thermal evaporation,,,,
+D009,L12,D2,6,back_contact,Ag,80,nm,thermal evaporation,,,,
+D010,L1,D1,1,back_contact,Mo,,,sputtering,,,,Molybdenum-coated soda lime glass
+D010,L2,D1,2,absorber,"Cu2ZnSn(S,Se)4",,,sol–gel spin coating,540,15 min,Se atmosphere,
+D010,L3,D1,3,ETL,CdS,,,chemical bath deposition,75,14 min,,CdS buffer layer
+D010,L4,D1,4,interlayer,ZnO,,,sputtering,,,,intrinsic zinc oxide
+D010,L5,D1,5,front_contact,ITO/AZO,,,sputtering,,,,transparent conducting layer (i-ZnO/AZO)
+D010,L6,D1,6,front_contact,Al,,,evaporation,,,,Al gate electrode (text also mentions Ag gate electrode)
+D010,L7,D2,1,back_contact,Mo,,,sputtering,,,,Molybdenum-coated soda lime glass
+D010,L8,D2,2,absorber,"(Na0.1Cu0.9)2ZnSn(S,Se)4",,,sol–gel spin coating,540,15 min,Se atmosphere,
+D010,L9,D2,3,ETL,CdS,,,chemical bath deposition,75,14 min,,CdS buffer layer
+D010,L10,D2,4,interlayer,ZnO,,,sputtering,,,,intrinsic zinc oxide
+D010,L11,D2,5,front_contact,ITO/AZO,,,sputtering,,,,transparent conducting layer (i-ZnO/AZO)
+D010,L12,D2,6,front_contact,Al,,,evaporation,,,,Al gate electrode (text also mentions Ag gate electrode)
+D012,L1,D1,1,back_contact,Mo,1000,nm,,,,,Mo-coated soda-lime glass
+D012,L2,D1,2,absorber,CZTS,1000,nm,electrochemical deposition,580,2 h,sulfurization with 200 mg S,
+D012,L3,D1,3,ETL,CdS,80,nm,chemical bath deposition,180,15 min,,n-type buffer layer
+D012,L4,D1,4,interlayer,i-ZnO,80,nm,Rf magnetron sputtering,350,20 min,N2,window layer
+D012,L5,D1,5,front_contact,AZO,300,nm,Rf magnetron sputtering,350,20 min,N2,transparent conducting oxide
+D012,L6,D1,6,front_contact,Ag,250,nm,thermal evaporation,,,,metal contact
+D012,L7,D2,1,back_contact,Mo,1000,nm,,,,,Mo-coated soda-lime glass
+D012,L8,D2,2,absorber,CZTS,1000,nm,electrochemical deposition,580,2 h,sulfurization with 200 mg S,
+D012,L9,D2,3,ETL,CdS,80,nm,chemical bath deposition,180,15 min,,n-type buffer layer
+D012,L10,D2,4,interlayer,i-ZnO,80,nm,Rf magnetron sputtering,350,20 min,N2,window layer
+D012,L11,D2,5,front_contact,AZO,300,nm,Rf magnetron sputtering,350,20 min,N2,transparent conducting oxide
+D012,L12,D2,6,front_contact,Ag,250,nm,thermal evaporation,,,,metal contact
+D012,L13,D3,1,back_contact,Mo,1000,nm,,,,,Mo-coated soda-lime glass
+D012,L14,D3,2,absorber,CZTS,1000,nm,electrochemical deposition,580,2 h,sulfurization with 200 mg S,
+D012,L15,D3,3,ETL,CdS,80,nm,chemical bath deposition,180,15 min,,n-type buffer layer
+D012,L16,D3,4,interlayer,i-ZnO,80,nm,Rf magnetron sputtering,350,20 min,N2,window layer
+D012,L17,D3,5,front_contact,AZO,300,nm,Rf magnetron sputtering,350,20 min,N2,transparent conducting oxide
+D012,L18,D3,6,front_contact,Ag,250,nm,thermal evaporation,,,,metal contact
+D012,L19,D4,1,back_contact,Mo,1000,nm,,,,,Mo-coated soda-lime glass
+D012,L20,D4,2,absorber,CZTS,1000,nm,electrochemical deposition,580,2 h,sulfurization with 200 mg S,
+D012,L21,D4,3,ETL,CdS,80,nm,chemical bath deposition,180,15 min,,n-type buffer layer
+D012,L22,D4,4,interlayer,i-ZnO,80,nm,Rf magnetron sputtering,350,20 min,N2,window layer
+D012,L23,D4,5,front_contact,AZO,300,nm,Rf magnetron sputtering,350,20 min,N2,transparent conducting oxide
+D012,L24,D4,6,front_contact,Ag,250,nm,thermal evaporation,,,,metal contact
+D013,L1,D1,1,back_contact,Mo,,,sputtering,,,,SLG/Mo substrate back contact
+D013,L2,D1,2,interlayer,"Mo(Sx,Se2-x)",,,natural formation during selenization,560,15,Se/Ar,formed during high-temperature annealing in Se excess
+D013,L3,D1,3,absorber,ACZTGSSe (0Ge),1000,nm,spin-coating + selenization,560,15,Se/Ar,"precursor spin-coated 8 times at 3000 rpm, hotplate 340 C 3 min; ~1 um target"
+D013,L4,D1,4,ETL,CdS,50,nm,chemical bath deposition,,,,buffer layer
+D013,L5,D1,5,interlayer,i-ZnO,40,nm,RF sputtering,,,,window layer
+D013,L6,D1,6,front_contact,ITO,150,nm,RF sputtering,,,,window layer
+D013,L7,D1,7,front_contact,Ag grid,500,nm,thermal evaporation,,,,metal grid
+D013,L8,D2,1,back_contact,Mo,,,sputtering,,,,SLG/Mo substrate back contact
+D013,L9,D2,2,interlayer,"Mo(Sx,Se2-x)",,,natural formation during selenization,560,15,Se/Ar,formed during high-temperature annealing in Se excess
+D013,L10,D2,3,absorber,ACZTGSSe (40Ge),1000,nm,spin-coating + selenization,560,15,Se/Ar,"precursor spin-coated 8 times at 3000 rpm, hotplate 340 C 3 min; ~1 um target"
+D013,L11,D2,4,ETL,CdS,50,nm,chemical bath deposition,,,,buffer layer
+D013,L12,D2,5,interlayer,i-ZnO,40,nm,RF sputtering,,,,window layer
+D013,L13,D2,6,front_contact,ITO,150,nm,RF sputtering,,,,window layer
+D013,L14,D2,7,front_contact,Ag grid,500,nm,thermal evaporation,,,,metal grid
+D013,L15,D3,1,back_contact,Mo,,,sputtering,,,,SLG/Mo substrate back contact
+D013,L16,D3,2,interlayer,"Mo(Sx,Se2-x)",,,natural formation during selenization,560,15,Se/Ar,formed during high-temperature annealing in Se excess
+D013,L17,D3,3,absorber,ACZTGSSe (60Ge),1000,nm,spin-coating + selenization,560,15,Se/Ar,HCl added to precursor for full dissolution
+D013,L18,D3,4,ETL,CdS,50,nm,chemical bath deposition,,,,buffer layer
+D013,L19,D3,5,interlayer,i-ZnO,40,nm,RF sputtering,,,,window layer
+D013,L20,D3,6,front_contact,ITO,150,nm,RF sputtering,,,,window layer
+D013,L21,D3,7,front_contact,Ag grid,500,nm,thermal evaporation,,,,metal grid
+D013,L22,D4,1,back_contact,Mo,,,sputtering,,,,SLG/Mo substrate back contact
+D013,L23,D4,2,interlayer,"Mo(Sx,Se2-x)",,,natural formation during selenization,560,15,Se/Ar,formed during high-temperature annealing in Se excess
+D013,L24,D4,3,absorber,ACZTGSSe (80Ge),1000,nm,spin-coating + selenization,560,15,Se/Ar,HCl added to precursor for full dissolution
+D013,L25,D4,4,ETL,CdS,50,nm,chemical bath deposition,,,,buffer layer
+D013,L26,D4,5,interlayer,i-ZnO,40,nm,RF sputtering,,,,window layer
+D013,L27,D4,6,front_contact,ITO,150,nm,RF sputtering,,,,window layer
+D013,L28,D4,7,front_contact,Ag grid,500,nm,thermal evaporation,,,,metal grid
+D013,L29,D5,1,back_contact,Mo,,,sputtering,,,,SLG/Mo substrate back contact
+D013,L30,D5,2,interlayer,"Mo(Sx,Se2-x)",,,natural formation during selenization,560,15,Se/Ar,formed during high-temperature annealing in Se excess
+D013,L31,D5,3,absorber,ACZTGSSe (100Ge),1000,nm,spin-coating + selenization,560,15,Se/Ar,HCl added to precursor for full dissolution
+D013,L32,D5,4,ETL,CdS,50,nm,chemical bath deposition,,,,buffer layer
+D013,L33,D5,5,interlayer,i-ZnO,40,nm,RF sputtering,,,,window layer
+D013,L34,D5,6,front_contact,ITO,150,nm,RF sputtering,,,,window layer
+D013,L35,D5,7,front_contact,Ag grid,500,nm,thermal evaporation,,,,metal grid
+D014,L1,D1,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,"25 mm x 25 mm ITO-coated glass, Thin Film Devices Inc."
+D014,L2,D1,2,absorber,CdTe,500,nm,"spin-coating (layer-by-layer, 12-20 layers)",350,20 s,air,"CdCl2 bath (saturated in methanol, ~60 C, 15 s) then hot plate anneal"
+D014,L3,D1,3,ETL,ZnO:In,,,"spin-coating (3000 rpm, 30 s)",300,2 min,,In-doped ZnO sol-gel
+D014,L4,D1,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,8 mm2 hole mask; Ag (100 nm) on top of Al
+D014,L5,D2,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L6,D2,2,absorber,CdTe,500,nm,doctor-blading (layer-by-layer),350,20 s,air,CdCl2 bath then hot plate anneal
+D014,L7,D2,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L8,D2,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D014,L9,D3,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L10,D3,2,absorber,CdTe,500,nm,spray-coating (layer-by-layer),350,20 s,air,CdCl2 bath then hot plate anneal
+D014,L11,D3,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L12,D3,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D014,L13,D4,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L14,D4,2,absorber,CdTe,,,spin-coating (bath-free ink),350,20 s,air,"pyr-CdCl3-capped NCs, no extra ligand"
+D014,L15,D4,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L16,D4,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D014,L17,D5,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L18,D5,2,absorber,CdTe,,,spin-coating (bath-free ink),350,20 s,air,2 wt% extra pyr-CdCl3
+D014,L19,D5,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L20,D5,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D014,L21,D6,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L22,D6,2,absorber,CdTe,,,spin-coating (bath-free ink),350,20 s,air,4 wt% extra pyr-CdCl3
+D014,L23,D6,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L24,D6,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D014,L25,D7,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L26,D7,2,absorber,CdTe,,,doctor-blading (bath-free ink),350,20 s,air,IR lamp annealing; 2 wt% extra pyr-CdCl3
+D014,L27,D7,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L28,D7,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D014,L29,D8,1,front_contact,ITO,,,sputtered (commercial ITO-coated glass),,,,
+D014,L30,D8,2,absorber,CdTe,,,spin-coating (pyridine-capped ink),350,20 s,air,CdCl2 bath then hot plate anneal
+D014,L31,D8,3,ETL,ZnO:In,,,spin-coating,300,2 min,,In-doped ZnO sol-gel
+D014,L32,D8,4,back_contact,Al,100,nm,thermal evaporation,,,high vacuum,Ag (100 nm) on top of Al
+D015,L1,D1,1,front_contact,FTO,,,,,,,TEC-15M Pilkington glass substrate (glass not counted as layer)
+D015,L2,D1,2,ETL,CdS,,,vapor transport deposition,,,,CdS window layer in VTD CdTe/CdS stack
+D015,L3,D1,3,absorber,CdTe,,,vapor transport deposition,,,,"CdTe absorber, ~3.5 um range"
+D015,L4,D1,4,back_contact,Au,45,nm,thermal evaporation,,,,Au electrode deposited using a shadow mask; Cu-doped via CuCl2 treatment
+D015,L5,D2,1,front_contact,FTO,,,,,,,TEC-15M Pilkington glass substrate
+D015,L6,D2,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L7,D2,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L8,D2,4,interlayer,CuxCryOz,,,spin coating,,,,"Buffer layer from 50 uL precursor, 30% Cu compound; not annealed (0 min)"
+D015,L9,D2,5,back_contact,Au,45,nm,thermal evaporation,,,,
+D015,L10,D3,1,front_contact,FTO,,,,,,,
+D015,L11,D3,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L12,D3,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L13,D3,4,interlayer,CuxCryOz,,,spin coating,200,6 min,,Buffer annealed at 200 C for 6 min
+D015,L14,D3,5,back_contact,Au,45,nm,thermal evaporation,,,,
+D015,L15,D4,1,front_contact,FTO,,,,,,,
+D015,L16,D4,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L17,D4,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L18,D4,4,interlayer,CuxCryOz,,,spin coating,200,8 min,,Buffer annealed at 200 C for 8 min
+D015,L19,D4,5,back_contact,Au,45,nm,thermal evaporation,,,,
+D015,L20,D5,1,front_contact,FTO,,,,,,,
+D015,L21,D5,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L22,D5,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L23,D5,4,interlayer,CuxCryOz,,,spin coating,200,10 min,,Buffer annealed at 200 C for 10 min
+D015,L24,D5,5,back_contact,Au,45,nm,thermal evaporation,,,,
+D015,L25,D6,1,front_contact,FTO,,,,,,,
+D015,L26,D6,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L27,D6,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L28,D6,4,interlayer,CuxCryOz,,,spin coating,200,12 min,,Buffer annealed at 200 C for 12 min
+D015,L29,D6,5,back_contact,Au,45,nm,thermal evaporation,,,,
+D015,L30,D7,1,front_contact,FTO,,,,,,,
+D015,L31,D7,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L32,D7,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L33,D7,4,back_contact,ITO,250,nm,RF sputtering,,,,Transparent back contact; Cu-doped by CuCl2 treatment
+D015,L34,D8,1,front_contact,FTO,,,,,,,
+D015,L35,D8,2,ETL,CdS,,,vapor transport deposition,,,,
+D015,L36,D8,3,absorber,CdTe,,,vapor transport deposition,,,,
+D015,L37,D8,4,interlayer,CuxCryOz,,,spin coating,200,8 min,,Buffer annealed at 200 C for 8 min
+D015,L38,D8,5,back_contact,ITO,250,nm,RF sputtering,,,,Transparent back contact deposited at room temperature
+D017,L1,D1,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick; SiOx barrier layer below Mo back contact
+D017,L2,D1,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs 20 min each at ~350 °C in Se ambient
+D017,L3,D1,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L4,D1,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L5,D1,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L6,D1,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L7,D1,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L8,D2,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L9,D2,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L10,D2,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L11,D2,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L12,D2,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L13,D2,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L14,D2,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L15,D3,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L16,D3,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L17,D3,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L18,D3,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L19,D3,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L20,D3,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L21,D3,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L22,D4,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L23,D4,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L24,D4,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L25,D4,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L26,D4,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L27,D4,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L28,D4,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L29,D5,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L30,D5,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L31,D5,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L32,D5,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L33,D5,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L34,D5,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L35,D5,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L36,D6,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L37,D6,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L38,D6,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L39,D6,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L40,D6,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L41,D6,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L42,D6,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L43,D7,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L44,D7,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L45,D7,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L46,D7,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L47,D7,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L48,D7,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L49,D7,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L50,D8,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L51,D8,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L52,D8,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L53,D8,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L54,D8,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L55,D8,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L56,D8,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L57,D9,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L58,D9,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L59,D9,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L60,D9,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L61,D9,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L62,D9,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L63,D9,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L64,D10,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L65,D10,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L66,D10,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L67,D10,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L68,D10,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L69,D10,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L70,D10,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D017,L71,D11,1,back_contact,Mo,500,nm,sputtering,,,,approx. 500 nm thick
+D017,L72,D11,2,absorber,"Cu(In,Ga)Se2",,,"co-evaporation (multistage, low temperature)",450,,Se overpressure,≈450 °C; NaF and RbF PDTs
+D017,L73,D11,3,ETL,CdS,30,nm,chemical bath deposition,,,,buffer layer
+D017,L74,D11,4,interlayer,intrinsic ZnO,80,nm,RF sputtering,,,,window layer
+D017,L75,D11,5,front_contact,Al-doped ZnO (Al2O3 2 wt.%),200,nm,RF sputtering,,,,window layer
+D017,L76,D11,6,front_contact,Ni/Al grids,,,electron beam evaporation,,,,metal grid
+D017,L77,D11,7,interlayer,MgF2,,,,,,,anti-reflective coating
+D018,L1,D1,1,back_contact,Mo,,,sputtering,,,,Molybdenum-coated glass substrate
+D018,L2,D1,2,absorber,"Cu(In,Ga)Se2",1500,nm,pulsed hybrid reactive magnetron sputtering (PHRMS),,,,First-stage slightly Cu-rich CIGS layer ~1500 nm; second-stage In-Se layer ~600 nm; Ga grading
+D018,L3,D1,3,ETL,CdS,,,chemical bath deposition,,,,CdS buffer layer; bath at 60 C
+D018,L4,D1,4,interlayer,i-ZnO,50,nm,radio-frequency sputtering,,,Ar,"Intrinsic ZnO ~50 nm, room temperature, 5.6e-3 mbar, 40 W"
+D018,L5,D1,5,front_contact,ZnO:Al,200,nm,radio-frequency sputtering,,,Ar,"Al-doped ZnO ~200 nm, room temperature, 5.6e-3 mbar, 60 W"
+D018,L6,D2,1,back_contact,Mo,,,sputtering,,,,Molybdenum-coated glass substrate
+D018,L7,D2,2,absorber,"Cu(In,Ga)Se2",1500,nm,pulsed hybrid reactive magnetron sputtering (PHRMS),400,2 min,vacuum (~6e-6 mbar),"Cs-ST applied by spin-coating Cs2CO3 solution (1000 rpm, 60 s) then vacuum annealing at 400 C for 2 min; first-stage CIGS ~1500 nm plus ~600 nm In-Se"
+D018,L8,D2,3,ETL,CdS,,,chemical bath deposition,,,,CdS buffer layer; bath at 60 C
+D018,L9,D2,4,interlayer,i-ZnO,50,nm,radio-frequency sputtering,,,Ar,"Intrinsic ZnO ~50 nm, room temperature, 5.6e-3 mbar, 40 W"
+D018,L10,D2,5,front_contact,ZnO:Al,200,nm,radio-frequency sputtering,,,Ar,"Al-doped ZnO ~200 nm, room temperature, 5.6e-3 mbar, 60 W"
+D019,L1,D1,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L2,D1,2,absorber,Sb2Se3,500,nm,co-evaporation,290,,,
+D019,L3,D1,3,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,n-type buffer layer
+D019,L4,D1,4,interlayer,i-ZnO,50,nm,RF sputtering,,,,intrinsic ZnO window layer
+D019,L5,D1,5,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,transparent conducting oxide
+D019,L6,D1,6,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D019,L7,D2,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L8,D2,2,interlayer,MoSe2,100,nm,selenization in tube furnace,430,10 min,Se atmosphere,seed layer; quasi-ohmic contact
+D019,L9,D2,3,absorber,Sb2Se3,500,nm,co-evaporation,290,,,
+D019,L10,D2,4,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,
+D019,L11,D2,5,interlayer,i-ZnO,50,nm,RF sputtering,,,,
+D019,L12,D2,6,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,
+D019,L13,D2,7,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D019,L14,D3,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L15,D3,2,interlayer,MoSe2,100,nm,selenization in tube furnace,430,10 min,Se atmosphere,
+D019,L16,D3,3,absorber,Sb2Se3,500,nm,co-evaporation,290,,,
+D019,L17,D3,4,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,
+D019,L18,D3,5,interlayer,i-ZnO,50,nm,RF sputtering,,,,
+D019,L19,D3,6,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,
+D019,L20,D3,7,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D019,L21,D4,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L22,D4,2,interlayer,MoSe2,100,nm,selenization in tube furnace,430,10 min,Se atmosphere,
+D019,L23,D4,3,absorber,Sb2Se3,500,nm,co-evaporation,250,,,
+D019,L24,D4,4,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,
+D019,L25,D4,5,interlayer,i-ZnO,50,nm,RF sputtering,,,,
+D019,L26,D4,6,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,
+D019,L27,D4,7,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D019,L28,D5,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L29,D5,2,interlayer,MoSe2,100,nm,selenization in tube furnace,430,10 min,Se atmosphere,
+D019,L30,D5,3,absorber,Sb2Se3,500,nm,co-evaporation,260,,,
+D019,L31,D5,4,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,
+D019,L32,D5,5,interlayer,i-ZnO,50,nm,RF sputtering,,,,
+D019,L33,D5,6,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,
+D019,L34,D5,7,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D019,L35,D6,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L36,D6,2,interlayer,MoSe2,100,nm,selenization in tube furnace,430,10 min,Se atmosphere,
+D019,L37,D6,3,absorber,Sb2Se3,500,nm,co-evaporation,270,,,
+D019,L38,D6,4,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,
+D019,L39,D6,5,interlayer,i-ZnO,50,nm,RF sputtering,,,,
+D019,L40,D6,6,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,
+D019,L41,D6,7,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D019,L42,D7,1,back_contact,Mo,600,nm,DC magnetron sputtering,,,,
+D019,L43,D7,2,absorber,Sb2Se3,500,nm,co-evaporation,315,,,
+D019,L44,D7,3,ETL,CdS,50,nm,chemical bath deposition (CBD),,,,
+D019,L45,D7,4,interlayer,i-ZnO,50,nm,RF sputtering,,,,
+D019,L46,D7,5,front_contact,Al-doped ZnO (AZO),300,nm,RF sputtering,,,,
+D019,L47,D7,6,front_contact,Al,1000,nm,thermal evaporation,,,,collection grid
+D020,L1,D1,1,front_contact,FTO,,,,,,,fluorine-doped tin oxide glass
+D020,L2,D1,2,ETL,SnO2,,,spin-coating,,,ambient air,SnO2 blocking layer; 3000 rpm 30 s
+D020,L3,D1,3,ETL,CdS,,,chemical bath deposition,400,10 min,ambient air,CBD at 65 C 15 min; CdCl2 spin-coat then anneal
+D020,L4,D1,4,absorber,Sb2S3,400,nm,hydrothermal,350,15 min,N2 glove box,135 C 10 h hydrothermal
+D020,L5,D1,5,back_contact,Carbon,,,painting,120,30 min,dry air,commercial carbon paste; thickness tens of micrometers
+D020,L6,D2,1,front_contact,FTO,,,,,,,fluorine-doped tin oxide glass
+D020,L7,D2,2,ETL,SnO2,,,spin-coating,,,ambient air,SnO2 blocking layer
+D020,L8,D2,3,ETL,CdS,,,chemical bath deposition,400,10 min,ambient air,CBD at 65 C 15 min
+D020,L9,D2,4,absorber,"Sb2(S, Se)3",400,nm,hydrothermal,350,15 min,N2 glove box,135 C 3 h hydrothermal
+D020,L10,D2,5,back_contact,Carbon,,,painting,120,30 min,dry air,commercial carbon paste
+D020,L11,D3,1,front_contact,FTO,,,,,,,fluorine-doped tin oxide glass
+D020,L12,D3,2,ETL,SnO2,,,spin-coating,,,ambient air,SnO2 blocking layer
+D020,L13,D3,3,ETL,CdS,,,chemical bath deposition,400,10 min,ambient air,CBD at 65 C 15 min
+D020,L14,D3,4,absorber,Sb2S3,,,hydrothermal,350,15 min,N2 glove box,first step; deposition duration 1-4 h
+D020,L15,D3,5,absorber,"Sb2(S, Se)3",,,hydrothermal,350,15 min,N2 glove box,second step; 2 h reaction; total stack ~400 nm
+D020,L16,D3,6,back_contact,Carbon,,,painting,120,30 min,dry air,commercial carbon paste
+D020,L17,D4,1,front_contact,FTO,,,,,,,fluorine-doped tin oxide glass
+D020,L18,D4,2,ETL,SnO2,,,spin-coating,,,ambient air,SnO2 blocking layer
+D020,L19,D4,3,ETL,CdS,,,chemical bath deposition,400,10 min,ambient air,CBD at 65 C 15 min
+D020,L20,D4,4,absorber,Sb2S3,,,hydrothermal,350,15 min,N2 glove box,first step
+D020,L21,D4,5,absorber,"Sb2(S, Se)3",,,hydrothermal,350,15 min,N2 glove box,second step; 2 h reaction
+D020,L22,D4,6,HTL,P3HT,,,spin-coating,120,10 min,N2 glove box,10 mg/mL in chlorobenzene; 3000 rpm 30 s
+D020,L23,D4,7,back_contact,Carbon,,,painting,120,30 min,dry air,commercial carbon paste
+D021,L1,D1,1,front_contact,FTO,,,,,,,Fluorine-doped tin oxide on glass
+D021,L2,D1,2,interlayer,NaF,10,nm,PED,,,,NaF back-interface doping layer
+D021,L3,D1,3,absorber,Sb2Se3,1200,nm,RF magnetron sputtering,300,,Ar,Substrate temperature 300 C during RFMS
+D021,L4,D1,4,ETL,CdS,,,,,,,Buffer layer
+D021,L5,D1,5,ETL,UZO,,,RF magnetron sputtering,,,Ar,"Undoped ZnO, room temperature, 120 W"
+D021,L6,D1,6,front_contact,AZO,,,RF magnetron sputtering,,,Ar,"Al-doped ZnO, room temperature, 120 W"
+D021,L7,D2,1,front_contact,FTO,,,,,,,Fluorine-doped tin oxide on glass
+D021,L8,D2,2,interlayer,NaF,10,nm,PED,,,,NaF back-interface doping layer
+D021,L9,D2,3,absorber,Cu:Sb2Se3,1200,nm,PED,280,,Ar,"5%Cu:Sb2Se3, substrate temperature 280 C"
+D021,L10,D2,4,ETL,CdS,,,,,,,Buffer layer
+D021,L11,D2,5,ETL,UZO,,,RF magnetron sputtering,,,Ar,Undoped ZnO
+D021,L12,D2,6,front_contact,AZO,,,RF magnetron sputtering,,,Ar,Al-doped ZnO
+D021,L13,D3,1,front_contact,FTO,,,,,,,
+D021,L14,D3,2,interlayer,NaF,10,nm,PED,,,,
+D021,L15,D3,3,absorber,Sb2Se3,1100,nm,RF magnetron sputtering,300,,Ar,First absorber layer (RFMS)
+D021,L16,D3,4,absorber,Cu:Sb2Se3,100,nm,PED,280,,Ar,Second absorber layer (PED)
+D021,L17,D3,5,ETL,CdS,,,,,,,
+D021,L18,D3,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L19,D3,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L20,D4,1,front_contact,FTO,,,,,,,
+D021,L21,D4,2,interlayer,NaF,10,nm,PED,,,,
+D021,L22,D4,3,absorber,Sb2Se3,950,nm,RF magnetron sputtering,300,,Ar,
+D021,L23,D4,4,absorber,Cu:Sb2Se3,250,nm,PED,280,,Ar,
+D021,L24,D4,5,ETL,CdS,,,,,,,
+D021,L25,D4,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L26,D4,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L27,D5,1,front_contact,FTO,,,,,,,
+D021,L28,D5,2,interlayer,NaF,10,nm,PED,,,,
+D021,L29,D5,3,absorber,Sb2Se3,800,nm,RF magnetron sputtering,300,,Ar,
+D021,L30,D5,4,absorber,Cu:Sb2Se3,400,nm,PED,280,,Ar,
+D021,L31,D5,5,ETL,CdS,,,,,,,
+D021,L32,D5,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L33,D5,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L34,D6,1,front_contact,FTO,,,,,,,
+D021,L35,D6,2,interlayer,NaF,10,nm,PED,,,,
+D021,L36,D6,3,absorber,Sb2Se3,400,nm,RF magnetron sputtering,300,,Ar,
+D021,L37,D6,4,absorber,Cu:Sb2Se3,800,nm,PED,280,,Ar,
+D021,L38,D6,5,ETL,CdS,,,,,,,
+D021,L39,D6,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L40,D6,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L41,D7,1,front_contact,FTO,,,,,,,
+D021,L42,D7,2,interlayer,NaF,10,nm,PED,,,,
+D021,L43,D7,3,absorber,Sb2Se3,200,nm,RF magnetron sputtering,300,,Ar,
+D021,L44,D7,4,absorber,Cu:Sb2Se3,1000,nm,PED,280,,Ar,
+D021,L45,D7,5,ETL,CdS,,,,,,,
+D021,L46,D7,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L47,D7,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L48,D8,1,front_contact,FTO,,,,,,,
+D021,L49,D8,2,interlayer,NaF,10,nm,PED,,,,
+D021,L50,D8,3,absorber,Cu:Sb2Se3,1000,nm,PED,280,,Ar,First absorber layer (PED)
+D021,L51,D8,4,absorber,Sb2Se3,200,nm,RF magnetron sputtering,300,,Ar,Second absorber layer (RFMS)
+D021,L52,D8,5,ETL,CdS,,,,,,,
+D021,L53,D8,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L54,D8,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L55,D9,1,front_contact,FTO,,,,,,,
+D021,L56,D9,2,interlayer,NaF,10,nm,PED,,,,
+D021,L57,D9,3,absorber,Cu:Sb2Se3,200,nm,PED,280,,Ar,
+D021,L58,D9,4,absorber,Sb2Se3,1000,nm,RF magnetron sputtering,300,,Ar,
+D021,L59,D9,5,ETL,CdS,,,,,,,
+D021,L60,D9,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L61,D9,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L62,D10,1,front_contact,FTO,,,,,,,
+D021,L63,D10,2,interlayer,NaF,10,nm,PED,,,,
+D021,L64,D10,3,absorber,Cu:Sb2Se3,100,nm,PED,280,,Ar,Thin Cu-doped PED layer on NaF
+D021,L65,D10,4,absorber,Sb2Se3,1100,nm,RF magnetron sputtering,300,,Ar,Sputtered Sb2Se3 on top of PED layer
+D021,L66,D10,5,ETL,CdS,,,,,,,
+D021,L67,D10,6,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L68,D10,7,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L69,D11,1,front_contact,FTO,,,,,,,
+D021,L70,D11,2,absorber,Sb2Se3,,,RF magnetron sputtering,300,,Ar,No NaF interlayer
+D021,L71,D11,3,ETL,CdS,,,,,,,
+D021,L72,D11,4,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L73,D11,5,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L74,D12,1,front_contact,FTO,,,,,,,
+D021,L75,D12,2,interlayer,NaF,10,nm,PED,,,,
+D021,L76,D12,3,absorber,Sb2Se3,,,RF magnetron sputtering,300,,Ar,
+D021,L77,D12,4,ETL,CdS,,,,,,,
+D021,L78,D12,5,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L79,D12,6,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L80,D13,1,front_contact,FTO,,,,,,,
+D021,L81,D13,2,absorber,Cu:Sb2Se3,,,PED,280,,Ar,No NaF interlayer
+D021,L82,D13,3,ETL,CdS,,,,,,,
+D021,L83,D13,4,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L84,D13,5,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D021,L85,D14,1,front_contact,FTO,,,,,,,
+D021,L86,D14,2,interlayer,NaF,10,nm,PED,,,,
+D021,L87,D14,3,absorber,Cu:Sb2Se3,,,PED,280,,Ar,
+D021,L88,D14,4,ETL,CdS,,,,,,,
+D021,L89,D14,5,ETL,UZO,,,RF magnetron sputtering,,,Ar,
+D021,L90,D14,6,front_contact,AZO,,,RF magnetron sputtering,,,Ar,
+D022,L1,D1,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L2,D1,2,ETL,ZnO,0,nm,,,,,No ZnO layer in this device
+D022,L3,D1,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L4,D1,4,HTL,MoO3,20,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L5,D1,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L6,D2,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L7,D2,2,ETL,ZnO,50,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L8,D2,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L9,D2,4,HTL,MoO3,20,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L10,D2,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L11,D3,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L12,D3,2,ETL,ZnO,400,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L13,D3,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L14,D3,4,HTL,MoO3,20,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L15,D3,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L16,D4,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L17,D4,2,ETL,ZnO,50,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L18,D4,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L19,D4,4,HTL,MoO3,0,nm,,,,,No MoO3 layer in this device
+D022,L20,D4,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L21,D5,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L22,D5,2,ETL,ZnO,50,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L23,D5,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L24,D5,4,HTL,MoO3,10,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L25,D5,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L26,D6,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L27,D6,2,ETL,ZnO,50,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L28,D6,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L29,D6,4,HTL,MoO3,20,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L30,D6,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L31,D7,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L32,D7,2,ETL,ZnO,50,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L33,D7,3,absorber,a-Si:H,30,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 4 min
+D022,L34,D7,4,HTL,MoO3,10,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L35,D7,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L36,D8,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L37,D8,2,ETL,ZnO,50,nm,DC-pulsed magnetron sputtering,,,Ar,"Room temperature, 3e-3 mbar, 1.8 W/cm2"
+D022,L38,D8,3,absorber,a-Si:H,30,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 4 min
+D022,L39,D8,4,HTL,MoO3,20,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L40,D8,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C
+D022,L41,D9,1,front_contact,FTO,250,nm,commercial glass/FTO substrate (Merck),,,,"Rsh 13 ohm/sq, AVT 83%"
+D022,L42,D9,2,ETL,Al-doped ZnO (AZO),75,nm,atomic layer deposition (ALD),135,,N2 purge; DEZ/H2O/TMA,"21 supercycles, DEZ:TMA 19:1"
+D022,L43,D9,3,absorber,a-Si:H,15,nm,PE-CVD,400,,SiH4/CH4,Substrate temperature measured around 200 C; deposition time 2 min
+D022,L44,D9,4,HTL,MoO3,10,nm,thermal evaporation,,,air-exposed,"Deposited at room temperature, 0.5 A/s"
+D022,L45,D9,5,back_contact,ITO,190,nm,DC-pulsed magnetron sputtering,200,,Ar/O2,Substrate heated to 200 C

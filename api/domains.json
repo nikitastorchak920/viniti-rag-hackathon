@@ -1,0 +1,1 @@
+{"solar": {"available": true, "tables": ["publications", "materials", "devices", "layers", "measurements", "results", "issues"], "label": "solar-dev", "validation": true}, "rag": {"available": true, "tables": ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"], "label": "rag-dev", "validation": true}}

@@ -1,0 +1,118 @@
+publication_id,device_id,absorber_material_id,device_label,device_role,device_type,architecture,substrate_type,active_area,area_unit,area_definition,encapsulation,note
+D001,D1,M1,Pristine,control,cell,n-i-p,rigid,0.0625,cm2,aperture,,Planar n-i-p FTO/c-TiO2/CsPbI2Br/P3HT/Au; Table 1 values
+D001,D2,M2,0.001 M SrCl2,target,cell,n-i-p,rigid,0.0625,cm2,aperture,,Planar n-i-p
+D001,D3,M3,0.005 M SrCl2,target,cell,n-i-p,rigid,0.0625,cm2,aperture,,Planar n-i-p
+D001,D4,M4,0.01 M SrCl2,target,cell,n-i-p,rigid,0.0625,cm2,aperture,,Planar n-i-p; Table 1 values
+D001,D5,M5,0.05 M SrCl2,target,cell,n-i-p,rigid,0.0625,cm2,aperture,,Planar n-i-p
+D001,D6,M4,0.01 M SrCl2,record,cell,n-i-p,rigid,0.0625,cm2,aperture,,"Champion device, reverse scan; PCE 16.07%, Voc 1322 mV"
+D001,D7,M4,0.01 M SrCl2,record,cell,n-i-p,rigid,0.0625,cm2,aperture,,"Champion device, forward scan; PCE 15.73%"
+D001,D8,M1,pristine,control,cell,n-i-p,rigid,0.0625,cm2,aperture,,Best pristine sample; values in Supplementary Figure S1 and Supplementary Table S1
+D001,D9,M6,0.01 M NiCl2,target,cell,n-i-p,rigid,0.0625,cm2,aperture,,"Voc 1245 mV, PCE 13.83%; values in Supplementary Table S2"
+D002,D1,M1,NiO,control,cell,p-i-n,rigid,1,cm2,total,,FTO/NiO/Perovskite/ZnO/Ag; single hole transport layer; inverted planar structure
+D002,D2,M1,NiO/GO,target,cell,p-i-n,rigid,1,cm2,total,,FTO/NiO/GO/Perovskite/ZnO/Ag; double hole transport layer; inverted planar structure
+D003,D1,M1,Sn3O4 ETL (undoped control,control,cell,n-i-p,rigid,0.04,cm2,designated illumination,,"glass/ITO/Sn3O4/perovskite/Spiro-OMeTAD/Ag; planar; ETL ~35 nm, perovskite ~530 nm; active area 2 mm x 2 mm by superposing ITO and Ag"
+D003,D2,M1,5% Y-Sn3O4 ETL,target,cell,n-i-p,rigid,0.04,cm2,designated illumination,,glass/ITO/Y-Sn3O4/perovskite/Spiro-OMeTAD/Ag; planar; optimized Y doping 5% (Y:Sn ratio); champion PCE 23.05%
+D003,D3,M1,1% Y-Sn3O4 ETL,,cell,n-i-p,rigid,,,,,Efficiency distribution shown in Figure 5B; only average/maximum stated qualitatively
+D003,D4,M1,10% Y-Sn3O4 ETL,,cell,n-i-p,rigid,,,,,Excess Y causes SnO phase segregation; efficiency distribution in Figure 5B
+D004,D1,M1,ED,control,cell,n-i-p,rigid,,,,,FTO/MoS2(ED-treated)/perovskite/spiro-OMeTAD/Ag; planar
+D004,D2,M1,BCC-ED,target,cell,n-i-p,rigid,,,,,FTO/MoS2(BCC-ED-treated)/perovskite/spiro-OMeTAD/Ag; planar
+D004,D3,M1,C-ED-1,target,cell,n-i-p,rigid,,,,,"FTO/MoS2(C-ED, one-time DMF washing)/perovskite/spiro-OMeTAD/Ag; planar"
+D004,D4,M1,C-ED-2,record,cell,n-i-p,rigid,,,,,"FTO/MoS2(C-ED, multiple DMF washing)/perovskite/spiro-OMeTAD/Ag; planar; MoS2 thickness 63-68 nm"
+D005,D1,M1,Spiro-OMeTAD,control,cell,n-i-p,rigid,,,,unencapsulated,"FTO/TiO2/PVK/PEAI/Spiro-OMeTAD/Au; Spiro-OMeTAD 73 mg in 1 ml CB with t-BP, Li-TFSI, FK-209"
+D005,D2,M1,SF-MPA-MCz,target,cell,n-i-p,rigid,,,,unencapsulated,"FTO/TiO2/PVK/PEAI/SF-MPA-MCz/Au; SF-MPA-MCz 30 mg/ml in CB with t-BP, Li-TFSI, FK-209; thinner HTL than control"
+D007,D1,M1,V1553,target,cell,n-i-p,rigid,,,,,FTO/SnO2/perovskite/V1553/Au; planar
+D007,D2,M1,spiro-OMeTAD,control,cell,n-i-p,rigid,,,,,FTO/SnO2/perovskite/spiro-OMeTAD/Au; planar
+D007,D3,M1,V1565,target,cell,n-i-p,rigid,,,,,Lower PCE; poor HTM coverage; data in Figure S3
+D007,D4,M1,V1553,target,minimodule,n-i-p,rigid,30.24,cm2,designated illumination,,Module dimensions 6.5 x 7 cm2
+D007,D5,M1,spiro-OMeTAD,control,minimodule,n-i-p,rigid,30.24,cm2,designated illumination,,Module dimensions 6.5 x 7 cm2
+D008,D1,M1,"w/o PbCl2, 150 °C, 0.09 cm2",control,cell,p-i-n,rigid,0.09,cm2,designated illumination,,ITO/PTAA/PVK/C60/BCP/Ag; annealed 150 °C
+D008,D2,M2,"w/ PbCl2, 150 °C, 0.09 cm2",target,cell,p-i-n,rigid,0.09,cm2,designated illumination,,ITO/PTAA/PVK/C60/BCP/Ag; champion PCE 18.5% forward scan
+D008,D3,M2,"w/ PbCl2, 150 °C, 0.36 cm2",target,cell,p-i-n,rigid,0.36,cm2,designated illumination,,Scaled-up area; champion PCE 17.06%
+D008,D4,M1,"w/o PbCl2, 130 °C",control,cell,p-i-n,rigid,0.09,cm2,designated illumination,,Annealing temperature series
+D008,D5,M1,"w/o PbCl2, 170 °C",control,cell,p-i-n,rigid,0.09,cm2,designated illumination,,Annealing temperature series; PCE below 10% due to PTAA degradation
+D008,D6,M2,"w/ PbCl2, 130 °C",target,cell,p-i-n,rigid,0.09,cm2,designated illumination,,Annealing temperature series
+D008,D7,M2,"w/ PbCl2, 170 °C",target,cell,p-i-n,rigid,0.09,cm2,designated illumination,,Annealing temperature series
+D008,D8,M2,"w/ PbCl2, 130 °C, 0.36 cm2",target,cell,p-i-n,rigid,0.36,cm2,designated illumination,,Area/annealing series
+D008,D9,M2,"w/ PbCl2, 170 °C, 0.36 cm2",target,cell,p-i-n,rigid,0.36,cm2,designated illumination,,Area/annealing series
+D009,D1,M1,Cs0,control,cell,p-i-n,rigid,0.0576,cm2,aperture,,ITO/PEDOT:PSS/THP/ICBA/BCP/Ag; inverted planar
+D009,D2,M2,Cs5,target,cell,p-i-n,rigid,0.0576,cm2,aperture,,ITO/PEDOT:PSS/THP/ICBA/BCP/Ag; inverted planar
+D009,D3,M3,Cs1,,cell,p-i-n,rigid,0.0576,cm2,aperture,,statistical series
+D009,D4,M4,Cs3,,cell,p-i-n,rigid,0.0576,cm2,aperture,,statistical series
+D009,D5,M5,Cs7,,cell,p-i-n,rigid,0.0576,cm2,aperture,,statistical series
+D009,D6,M6,Cs10,,cell,p-i-n,rigid,0.0576,cm2,aperture,,statistical series
+D010,D1,M1,CZTSSe,control,cell,substrate,rigid,0.19,cm2,total,,SLG/Mo/CZTSSe/CdS/ZnO/ITO/Al; undoped reference device
+D010,D2,M2,"Na0.1Cu0.9)2ZnSn(S,Se)4",target,cell,substrate,rigid,0.19,cm2,total,,"SLG/Mo/(Na0.1Cu0.9)2ZnSn(S,Se)4/CdS/ZnO/ITO/Al; absorber selenized at 540 °C"
+D012,D1,M1,DIO-5 mg/mL,control,cell,substrate,rigid,,,,,SLG/Mo/CZTS/CdS/i-ZnO/AZO/Ag structure
+D012,D2,M2,DIO-10 mg/mL,target,cell,substrate,rigid,,,,,SLG/Mo/CZTS/CdS/i-ZnO/AZO/Ag structure
+D012,D3,M3,DIO-15 mg/mL,target,cell,substrate,rigid,,,,,SLG/Mo/CZTS/CdS/i-ZnO/AZO/Ag structure
+D012,D4,M4,DIO-20 mg/mL,record,cell,substrate,rigid,,,,,Best-performing device; SLG/Mo/CZTS/CdS/i-ZnO/AZO/Ag structure
+D013,D1,M1,0Ge,control,cell,substrate,rigid,0.23,cm2,total,,SLG/Mo substrate; no ARC; champion device of 0Ge batch
+D013,D2,M2,40Ge,record,cell,substrate,rigid,0.23,cm2,total,,SLG/Mo substrate; no ARC; champion device of 40Ge batch; 12.1 % record for 1.2 eV Ge-alloyed kesterite
+D013,D3,M3,60Ge,target,cell,substrate,rigid,0.23,cm2,total,,SLG/Mo substrate; no ARC; champion device of 60Ge batch
+D013,D4,M4,80Ge,target,cell,substrate,rigid,0.23,cm2,total,,SLG/Mo substrate; no ARC; champion device of 80Ge batch
+D013,D5,M5,100Ge,target,cell,substrate,rigid,0.23,cm2,total,,SLG/Mo substrate; no ARC; champion device of 100Ge batch
+D014,D1,M1,spin-coating,control,cell,substrate,rigid,0.0594,cm2,aperture,,ITO/CdTe/ZnO:In/Al; CdCl2 bath + hot plate annealing; best device after current/light soaking
+D014,D2,M1,doctor-blading,target,cell,substrate,rigid,0.0594,cm2,aperture,,ITO/CdTe/ZnO:In/Al; CdCl2 bath + hot plate annealing; best device after current/light soaking
+D014,D3,M1,spray-coating,target,cell,substrate,rigid,0.0594,cm2,aperture,,ITO/CdTe/ZnO:In/Al; CdCl2 bath + hot plate annealing; best device after current/light soaking
+D014,D4,M2,0 wt% pyr-CdCl3,control,cell,substrate,rigid,0.0594,cm2,aperture,,"Bath-free, annealed 350 C 20 s in air; negligible PCE, large series resistance ~500 ohm cm2"
+D014,D5,M3,2 wt% pyr-CdCl3,target,cell,substrate,rigid,0.0594,cm2,aperture,,"Bath-free, annealed 350 C 20 s in air; max PCE 11.4% after current/light soaking"
+D014,D6,M4,4 wt% pyr-CdCl3,target,cell,substrate,rigid,0.0594,cm2,aperture,,"Bath-free, annealed 350 C 20 s in air; pinholes cause catastrophic shorting, low shunt resistance"
+D014,D7,M3,R2R-friendly integrated (doctor-blading + IR lamp,record,cell,substrate,rigid,0.0594,cm2,aperture,,"pyr-CdCl3-capped CdTe with 2 wt% extra pyr-CdCl3, doctor-bladed, IR-lamp annealed; best PCE 10.4% after current/light soaking"
+D014,D8,M1,standard non-R2R-friendly (spin-coating + CdCl2 bath + hot plate,control,cell,substrate,rigid,0.0594,cm2,aperture,,"Side-by-side comparison device from same NC batch; spin-coated pyridine-capped CdTe, CdCl2 bath, hot plate annealing"
+D015,D1,M1,Reference device (Cu-doped and Au-contacted,control,cell,superstrate,rigid,0.08,cm2,,,"Monofacial reference: glass/FTO/CdS/CdTe/Au, Cu-doped with 0.1 mM CuCl2, annealed in air at 200 C for 20 min"
+D015,D2,M1,"CuxCryOz/Au, 0 min",target,cell,superstrate,rigid,0.08,cm2,,,"Monofacial device with CuxCryOz buffer (30% Cu compound in precursor) and Au back contact, no intentional Cu doping, no buffer annealing"
+D015,D3,M1,"CuxCryOz/Au, buffer layer annealed at 200 C, 6 min",target,cell,superstrate,rigid,0.08,cm2,,,Monofacial device with CuxCryOz buffer annealed at 200 C for 6 min
+D015,D4,M1,"CuxCryOz/Au, buffer layer annealed at 200 C, 8 min",target,cell,superstrate,rigid,0.08,cm2,,,Monofacial device with CuxCryOz buffer annealed at 200 C for 8 min; best monofacial result
+D015,D5,M1,"CuxCryOz/Au, buffer layer annealed at 200 C, 10 min",target,cell,superstrate,rigid,0.08,cm2,,,Monofacial device with CuxCryOz buffer annealed at 200 C for 10 min
+D015,D6,M1,"CuxCryOz/Au, buffer layer annealed at 200 C, 12 min",target,cell,superstrate,rigid,0.08,cm2,,,Monofacial device with CuxCryOz buffer annealed at 200 C for 12 min; J-V rollover for longer anneals
+D015,D7,M1,Reference (Cu-doped and ITO contact,control,cell,superstrate,rigid,0.08,cm2,,,Bifacial reference: Cu-doped CdTe with ITO back contact; parameters adopted from previous publication (ref 26)
+D015,D8,M1,CuxCryOz/ITO,target,cell,superstrate,rigid,0.08,cm2,,,"Bifacial device with CuxCryOz buffer annealed at 200 C for 8 min and ITO (~250 nm, RF sputtered) back contact; best bifacial device"
+D017,D1,M1,R1,control,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.20; PCE 18.8%; VOC deficit 0.458 V
+D017,D2,M2,R2,control,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.20; PCE 19.1%; VOC deficit 0.463 V
+D017,D3,M3,G1,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.21; PCE 18.7%; VOC deficit 0.451 V
+D017,D4,M4,G2,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.23; PCE 19.0%; VOC deficit 0.445 V
+D017,D5,M5,I1,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.26; PCE 19.0%; VOC deficit 0.444 V
+D017,D6,M6,I2,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.25; PCE 19.0%; VOC deficit 0.444 V
+D017,D7,M7,I3,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.32; PCE 19.1%; VOC deficit 0.429 V
+D017,D8,M8,I4,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.29; PCE 19.5%; VOC deficit 0.436 V
+D017,D9,M9,O1,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.41; PCE 19.6%; VOC deficit 0.425 V
+D017,D10,M10,O2,record,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.43; PCE 19.7% (champion cell of study); VOC deficit 0.427 V
+D017,D11,M11,O3,target,cell,substrate,rigid,0.57,cm2,total,,ΔGGI 0.50; PCE 19.3%; VOC deficit 0.419 V
+D018,D1,M1,Untreated CIGS,control,cell,substrate,rigid,0.25,cm2,total,,Glass/Mo/CIGS/CdS/i-ZnO/ZnO:Al; manually scribed to ~0.25 cm2; measured without front grid
+D018,D2,M2,Cs-ST CIGS,target,cell,substrate,rigid,0.25,cm2,total,,Glass/Mo/Cs-ST CIGS/CdS/i-ZnO/ZnO:Al; manually scribed to ~0.25 cm2; measured without front grid
+D018,D3,M1,Untreated CIGS (NICE Solar Energy industrial absorber,control,cell,,,,,,,Industrial-scale CIGS absorber from NICE Solar Energy GmbH; statistical analysis in Figure 6B-E; device architecture not described
+D018,D4,M2,Cs-ST CIGS (NICE Solar Energy industrial absorber,target,cell,,,,,,,Industrial-scale CIGS absorber from NICE Solar Energy GmbH with Cs-ST; statistical analysis in Figure 6B-E; device architecture not described
+D019,D1,M1,"Mo substrate, 200 Å s-1, 290 C",control,cell,substrate,rigid,,,,,Planar structure SLG/Mo/Sb2Se3/CdS/i-ZnO/AZO/Al; no MoSe2 interlayer
+D019,D2,M1,"MoSe2/Mo substrate, 200 Å s-1, 290 C",target,cell,substrate,rigid,,,,,SLG/Mo/MoSe2/Sb2Se3/CdS/i-ZnO/AZO/Al; irregular agglomerated nanorod structure
+D019,D3,M1,"MoSe2/Mo substrate, 100 Å s-1, 290 C",target,cell,substrate,rigid,,,,,SLG/Mo/MoSe2/Sb2Se3/CdS/i-ZnO/AZO/Al; ordered regular nanorod array
+D019,D4,M1,"MoSe2/Mo substrate, 100 Å s-1, 250 C",target,cell,substrate,rigid,,,,,Substrate temperature series
+D019,D5,M1,"MoSe2/Mo substrate, 100 Å s-1, 260 C",record,cell,substrate,rigid,,,,,"Best device; (hk1) preferentially oriented nanorod array; PCE 5.637% (lab), 5.484% certified"
+D019,D6,M1,"MoSe2/Mo substrate, 100 Å s-1, 270 C",target,cell,substrate,rigid,,,,,Substrate temperature series
+D019,D7,M1,"Mo substrate, 100 Å s-1, 315 C",control,cell,substrate,rigid,,,,,Bare Mo substrate required higher temperature for nanorod array formation
+D020,D1,M1,Sb2S3,control,cell,n-i-p,rigid,0.0625,cm2,aperture,,FTO/SnO2/CdS/Sb2S3/Carbon; HTM-free carbon-based device; average PCE 0.65%
+D020,D2,M2,"Sb2(S, Se)3",control,cell,n-i-p,rigid,0.0625,cm2,aperture,,"FTO/SnO2/CdS/Sb2(S, Se)3/Carbon; HTM-free carbon-based device; average PCE 1.63%"
+D020,D3,M3,"Sb2S3/Sb2(S, Se)3",control,cell,n-i-p,rigid,0.0625,cm2,aperture,,"FTO/SnO2/CdS/Sb2S3/Sb2(S, Se)3/Carbon; HTM-free carbon-based device; average PCE 2.61%; champion PCE 2.76%"
+D020,D4,M3,"Sb2S3/Sb2(S, Se)3/P3HT",target,cell,n-i-p,rigid,0.0625,cm2,aperture,,"FTO/SnO2/CdS/Sb2S3/Sb2(S, Se)3/P3HT/Carbon; champion PCE 4.15%"
+D021,D1,M1,A1,control,cell,substrate,rigid,0.06,cm2,,,Fully RFMS-grown Sb2Se3 single layer (1200 nm); structure AZO/UZO/CdS/Sb2Se3/NaF/FTO/glass; reference for maximum JSC
+D021,D2,M2,B1,control,cell,substrate,rigid,0.06,cm2,,,Fully PED-grown Cu:Sb2Se3 single layer (1200 nm); structure AZO/UZO/CdS/Cu:Sb2Se3/NaF/FTO/glass; reference for highest VOC and FF of a single layer
+D021,D3,M2,A2,target,cell,substrate,rigid,0.06,cm2,,,PED-on-RFMS bilayer: RFMS 1100 nm + PED 100 nm
+D021,D4,M2,A3,target,cell,substrate,rigid,0.06,cm2,,,PED-on-RFMS bilayer: RFMS 950 nm + PED 250 nm
+D021,D5,M2,A4,target,cell,substrate,rigid,0.06,cm2,,,PED-on-RFMS bilayer: RFMS 800 nm + PED 400 nm
+D021,D6,M2,A5,target,cell,substrate,rigid,0.06,cm2,,,PED-on-RFMS bilayer: RFMS 400 nm + PED 800 nm
+D021,D7,M2,A6,target,cell,substrate,rigid,0.06,cm2,,,PED-on-RFMS bilayer: RFMS 200 nm + PED 1000 nm
+D021,D8,M2,B2,target,cell,substrate,rigid,0.06,cm2,,,RFMS-on-PED bilayer: PED 1000 nm + RFMS 200 nm
+D021,D9,M2,B3,target,cell,substrate,rigid,0.06,cm2,,,RFMS-on-PED bilayer: PED 200 nm + RFMS 1000 nm
+D021,D10,M2,B4,record,cell,substrate,rigid,0.06,cm2,,,RFMS-on-PED bilayer: PED 100 nm Cu:Sb2Se3 + RFMS 1100 nm Sb2Se3; highest efficiency device (PCE 5.25% after Ag paste/wire bonding contact enhancement)
+D021,D11,M1,RFMS Sb2Se3 without NaF,control,cell,substrate,rigid,,,,,Sputtered Sb2Se3 solar cell without NaF interlayer; efficiency 1.28%
+D021,D12,M1,RFMS Sb2Se3 with NaF,target,cell,substrate,rigid,,,,,Sputtered Sb2Se3 solar cell with 10 nm NaF interlayer; efficiency 3.2%
+D021,D13,M2,PED Cu:Sb2Se3 without NaF,control,cell,substrate,rigid,,,,,PED-grown 5%Cu:Sb2Se3 cell without NaF interlayer; very low JSC ~0.3 mA/cm2
+D021,D14,M2,PED Cu:Sb2Se3 with NaF,target,cell,substrate,rigid,,,,,"PED-grown 5%Cu:Sb2Se3 cell with NaF interlayer; tenfold JSC increase, PCE 0.36%"
+D022,D1,M1,FTO/ZnO (0 nm)/a-Si:H (15 nm)/MoO3 (20 nm)/ITO,control,cell,superstrate,rigid,,,,,No ZnO ETL; 20 nm MoO3 HTL; J-V shown in Figure 2a
+D022,D2,M1,FTO/ZnO (50 nm)/a-Si:H (15 nm)/MoO3 (20 nm)/ITO,target,cell,superstrate,rigid,,,,,50 nm ZnO ETL; 20 nm MoO3 HTL; J-V shown in Figure 2a
+D022,D3,M1,FTO/ZnO (400 nm)/a-Si:H (15 nm)/MoO3 (20 nm)/ITO,control,cell,superstrate,rigid,,,,,400 nm ZnO ETL; 20 nm MoO3 HTL; J-V shown in Figure 2a
+D022,D4,M1,FTO/ZnO (50 nm)/a-Si:H (15 nm)/MoO3 (0 nm)/ITO,control,cell,superstrate,rigid,,,,,No MoO3 HTL; 50 nm ZnO ETL; J-V shown in Figure 2b
+D022,D5,M1,FTO/ZnO (50 nm)/a-Si:H (15 nm)/MoO3 (10 nm)/ITO,target,cell,superstrate,rigid,,,,,50 nm ZnO ETL; 10 nm MoO3 HTL; parameters in Table 1 and Table 2
+D022,D6,M1,FTO/ZnO (50 nm)/a-Si:H (15 nm)/MoO3 (20 nm)/ITO,target,cell,superstrate,rigid,,,,,50 nm ZnO ETL; 20 nm MoO3 HTL; parameters in Table 1; s-shaped J-V
+D022,D7,M2,FTO/ZnO (50 nm)/a-Si:H (30 nm)/MoO3 (10 nm)/ITO,target,cell,superstrate,rigid,,,,,50 nm ZnO ETL; 10 nm MoO3 HTL; parameters in Table 1 and Table 2
+D022,D8,M2,FTO/ZnO (50 nm)/a-Si:H (30 nm)/MoO3 (20 nm)/ITO,target,cell,superstrate,rigid,,,,,50 nm ZnO ETL; 20 nm MoO3 HTL; parameters in Table 1; s-shaped J-V
+D022,D9,M1,FTO/AZO (75 nm)/a-Si:H (15 nm)/MoO3 (10 nm)/ITO,target,cell,superstrate,rigid,,,,,75 nm Al-doped ZnO ETL deposited by ALD; 10 nm MoO3 HTL; parameters in Table 2

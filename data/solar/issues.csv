@@ -1,0 +1,177 @@
+publication_id,issue_id,record_ids,check_name,description,source_page,source_fragment
+D001,I1,,conflicting_back_contact,"Text states 100 nm-thick Ag was thermally evaporated as metal electrode, but the device architecture sentence and Figure 5A describe FTO/c-TiO2/CsPbI2Br/P3HT/Au.",3,planar n-i-p configuration of FTO/compact-TiO2 (c-TiO2)/CsPbI2Br/P3HT/Au
+D001,I2,,conflicting_ff_units,FF is reported as 0.71% in text (with percent sign) while Table 1 lists 0.71; unit inconsistency.,3,"a fill factor (FF) of 0.71%, and a PCE of 12.89%"
+D001,I3,,conflicting_mean_pce,"Text states mean PCEs of pristine and SrCl2-doped devices are 14.66 and 12.96%, respectively, which contradicts the champion values (doped higher than pristine) and appears reversed.",5,"the mean PCEs of pristine and SrCl2-doped devices are 14.66 and 12.96%, respectively"
+D001,I4,,derived_value,"Relative improvement of ~18% over pristine is a derived value, not an extracted result.",1,which is about 18% higher than that of the pristine device
+D001,I5,,si_only_values,Best pristine device metrics and NiCl2 device metrics are reported only in Supplementary Figure S1/Table S1 and Supplementary Table S2.,5,Supplementary Figure S1 and Supplementary Table S1
+D001,I6,,inconsistent_dopant_concentration_list,"Text lists SrCl2 concentrations as 0.001, 0.005, 0.01, and 0.05 M for J-V, while the experimental section states 0.005, 0.01, and 0.05 M were included.",3,"the VOC are 1,266, 1,278, 1,278, and 1,163 mV, by using 0.001, 0.005, 0.01, and 0.05 M SrCl2 additives"
+D001,I7,R6,unit_inconsistency,FF printed as '0.71 %' (fraction with '%' sign); normalized to 71%.,3,a fill factor (FF) of 0.71%
+D002,I1,,derived_values,"Text states NiO/GO improves Voc by 0.127 V, Jsc by 3.1 mA/cm2, FF by 25.4%, and PCE by 7.5% relative to NiO; these are derived deltas, not independent results",5,"improves Voc of 0.127 V, Jsc of 3.1 mAcm−2, fill factor of 25.4%, and PCE of 7.5%"
+D002,I2,,non_standard_illumination,J-V measured under a halogen lamp solar simulator at 1000 W/m2 rather than a certified AM1.5G spectrum; no certification reported,3,includes a halogen lamp with an intensity of 1000 W/m2
+D002,I3,,statistics_ambiguity,Text states data statistics obtained from 100 different cells but Table 1 values appear to be single representative values; aggregation not clearly stated,5,data statistics obtained from 100 different cells
+D002,I4,,architecture_inconsistency,"Paper describes the structure as p-i-n planar/inverted but the described stack FTO/NiO/GO/perovskite/ZnO/Ag places the HTL at the front contact, which is consistent with inverted p-i-n; text also calls NiO a 'cathode'",5,insertion of a NiO/GO bilayer can effectively improve the performance of p-i-n planar-structure PSCs
+D002,I5,,missing_bandgap,No absorber bandgap value reported; only work function values of NiO (-5.05 eV) and NiO/GO (-5.00 eV) are given,4,"The WF value of NiO is −5.05 eV, while the WF of NiO/GO is −5.00 eV"
+D002,I6,,comparability,"Non-standard J-V illumination on MS1: spectrum='halogen lamp (solar simulator)', intensity='1000 W/m2'.",,
+D003,I1,,derived_values,"Reported gains such as VOC enhancement (1.11 to 1.14 V), JSC (24.23 to 24.89 mA cm-2), FF (0.795 to 0.812), PCE (21.39% to 23.05%), Rs reduction (3.15 to 2.66 ohm cm2), hysteresis index reduction (0.089 to 0.034), Vbi (0.96 to 1.08 V) are deltas/derived comparisons, not separate device results",6,the control device based on the undoped Sn3O4 ETL shows a PCE of 21.39% with a VOC of 1.11 V
+D003,I2,,scan_direction_not_reported,J-V scan direction (reverse/forward) is not explicitly stated for the champion J-V curves; hysteresis data only in Figure S14,9,a scan rate of 100 mV/s in the range of 1.2 to
+D003,I3,,SI_only_data,"Several key characterizations (Tauc plots/bandgap of ETL, energy level table, hysteresis J-V, batch statistics, TRPL fitting) are reported only in Supporting Information Figures S6, S8, S13, S14 and Tables S2, S3",4,Figure S6 shows Tauc plots of Sn3O4 and Y-Sn3O4
+D003,I4,,area_inconsistency,Active area stated as 2 mm x 2 mm (0.04 cm2) in experimental section while effective area 4 mm2 confirmed by metallographic microscopy; consistent numerically but described differently,9,The effective area 4 mm2 was confirmed by metallographic microscopy
+D004,I1,,derived_values,"Text states FF improved from 56 to 58% and Voc from 0.94 to 1.05 V, while Table 1 lists C-ED-1 FF 56.07% and C-ED-2 FF 58.66%; abstract/conclusion quote Jsc 18.65 mA/cm2 and Voc 1.05 V for the champion but conclusion also states Jsc increased from 9.3 to 18.6 mA/cm2",10,"improved the fill factor (FF) from 56 to 58%, as well as the open circuit voltage (Voc) from 0.94 to 1.05"
+D004,I2,,contradiction,"Table 1 reports PCE as mean +/- std with a parenthetical value (e.g., 4.39 +/- 0.81 (5.23)); the meaning of the parenthetical (likely champion) is not defined in the text",11,4.39 ± 0.81 (5.23)
+D004,I3,,contradiction,Text describes coexistence of CH3NH3PbI3 and PbI2 phases although the absorber is stated as CsFAMAPbI3-xBrx,7,The coexistence of the two CH3NH3PbI3 and PbI2 phases was observed in the perovskite layers (CsFAMAPbI3 − xBrx)
+D004,I4,,non_standard_conditions,Perovskite spin-coating performed in a chamber with approximately 70% RH; J-V measurements described as under [模型名称已隐藏]r conditions at 70 +/- 10% relative humidity,3,spin-coated onto the MoS2 substrates at 3000 rpm for 35 s in a chamber with approximately 70% RH
+D004,I5,,missing_metadata,"No active area, light intensity/spectrum, scan direction, scan rate, or masking/certification details are reported for the J-V measurements",10,"The J-V curves of the perovskite solar cell with MoS2 as an electron transport material, prepared in different ways, are shown in Figure 8 and Table 1"
+D004,I6,,contradiction,Cross-sectional SEM thickness of the C-ED-2 device is given as 659 nm while the MoS2 layer thickness is stated as 63 to 68 nm; the 659 nm value's assignment is ambiguous,10,"The cross-sectional SEM image of the C-ED-2-treated MoS2-based device is given in Figure 7f, which showed a thickness of 659 nm"
+D004,I7,R24; R1; R5,contradiction,"Conflicting primary values for PCE on D4 (MS1, champion): 12.13, 11.46, 11.46.",11,11.46 ± 0.66 (12.13)
+D004,I8,R8; R6,contradiction,"Conflicting primary values for PCE on D1 (MS1, champion): 5.23, 4.39.",11,4.39 ± 0.81 (5.23)
+D004,I9,R9; R38,contradiction,"Conflicting primary values for Voc on D1 (MS1, unspecified agg): 0.818, 1.05.",11,ED 0.818 9.344 57.49
+D004,I10,R11; R39; R40,contradiction,"Conflicting primary values for FF on D1 (MS1, unspecified agg): 57.49, 57.4, 58.6.",11,ED 0.818 9.344 57.49
+D004,I11,R25; R30,contradiction,"Conflicting primary values for Voc on D4 (MS1, unspecified agg): 1.05, 0.8.",11,C-ED-2 1.05 18.65 58.66
+D004,I12,R26; R29,contradiction,"Conflicting primary values for Jsc on D4 (MS1, unspecified agg): 18.65, 18.6.",11,C-ED-2 1.05 18.65 58.66
+D004,I13,,missing_conditions,J-V measurement MS1 omits spectrum or light_intensity.,,
+D005,I1,,derived_values,"Text reports relative gains (e.g., PCE 24.53% vs 22.95%, Voc 1.18 vs 1.15 V) that are derived comparisons, not separately extracted results.",3,"remarkably high PCE of 24.53% [open voltage (VOC) of 1.18 V, shortcircuit current density (JSC) of 26.24 mA cm−2, fill factor (FF) of 79.22%], outperforming the control device based on SpiroOMeTAD (22.95%)"
+D005,I2,,missing_active_area,Active area of the devices is not reported in the main text.,9,The photocurrent density–voltage (J–V) curves of devices were measured with a Keithley 2400 source meter
+D005,I3,,SI_only_data,"Several device-relevant data (cross-sectional SEM thickness, SCLC, EIS parameters, GIWAXS) are reported only in Supporting Information figures/tables.",6,"the thickness of the SF-MPA-MCz layer is much reduced, as seen in cross-sectional scanning electron microscopy (SEM) (Fig. S18)"
+D005,I4,,stability_protocol_unnamed,Stability tests are described without explicit ISOS protocol labels; light-soaking and 85 C thermal tests mapped to 'other' and ISOS-T respectively.,8,the SF-MPA-MCz-based unencapsulated perovskite device can maintain more than 90% PCE after 500 h of lasting test
+D007,I1,,derived_values,V1553 PCE 22.97% vs spiro-OMeTAD 22.8%; module 19.99% vs 19.1%; stability >90% vs >20% decline,6,The V1553-based device achieved a PCE of 22.97%
+D007,I2,,si_only,V1565 device PCEs and hysteresis data reported only in SI (Figures S2-S4),6,"PSCs utilizing V1565 as HTM exhibited relatively lower PCEs, as detailed in Figure S3"
+D007,I3,,missing_absorber_composition,Perovskite absorber composition not specified in main text,5,FTO/SnO2/perovskite/HTM/Au
+D007,I4,,missing_conditions,J-V measurement MS1 omits spectrum or light_intensity.,,
+D007,I5,,missing_conditions,J-V measurement MS2 omits spectrum or light_intensity.,,
+D008,I1,,derived_values,"Text states PbCl2 improved Voc by comparing 1.001 V vs 0.85 V and FF 78.5% vs 76.3%; these deltas are derived, not directly reported as results",5,compared to 15.8% for the sample w/o PbCl2 (Voc = 0.85; Jsc = 23.88 mA cm2; FF = 76.3%)
+D008,I2,,non_standard_illumination,J-V measured at 1 sun corrected by calculating the 1.2-1.28 sun shown on the run screen of the system,3,corrected by calculating the 1.2–1.28 sun shown on the run screen of the system
+D008,I3,,si_only_data,"Detailed deposition parameters, lattice constants, grain size statistics, hysteresis values and literature comparison tables are in ESI (Tables S1-S5)",2,The detailed parameters for the deposition of each precursor are reported in Table S1
+D008,I4,,contradiction,Abstract/text report champion PCE 18.5% in forward bias scan while Fig. 3a shows forward and reverse scans; scan direction of the reported champion value is stated as forward,5,achieved a PCE of 18.5% in the forward bias scan
+D008,I5,,missing_conditions,J-V measurement MS1 omits spectrum or light_intensity.,,
+D008,I6,,missing_conditions,J-V measurement MS2 omits spectrum or light_intensity.,,
+D008,I7,,missing_conditions,J-V measurement MS4 omits spectrum or light_intensity.,,
+D008,I8,,missing_conditions,J-V measurement MS5 omits spectrum or light_intensity.,,
+D008,I9,,missing_conditions,J-V measurement MS7 omits spectrum or light_intensity.,,
+D009,I1,,derived_values,"Reported relative improvements (e.g. Cs5 retains 93.3%/92.0% of initial PCE; average hysteresis index 2.95%) are derived values, not extracted as results.",5,"retaining 93.3% of the initial PCE after being stored in N2 under dark conditions for 6,000 h"
+D009,I2,,si_only_data,"Absorber bandgaps (1.435 and 1.415 eV) and several device metrics (certified J-V/EQE, hysteresis statistics) are reported only in Supporting Information figures.",5,narrowed energy bandgap of the THPs from 1.435 to 1.415 eV (Supplementary Fig. 17)
+D009,I3,,text_figure_inconsistency,"Text states J-V measured from 1.0 to -0.1 V (reverse) and -0.1 to 1.0 V (forward), while the Reporting Summary states scans within -0.10 to 1.05 V.",9,The _J_ – _V_ curves were measured in reverse (from 1.0 to −0.1 V) and forward (from −0.1 to 1.0 V) scans with a 50 ms delay
+D009,I4,,area_definition,Active area 0.0576 cm2 is defined by a metal shadow mask/aperture; described as active area rather than designated illumination area.,9,The active area of the solar cells was defined using a metal shadow mask of 0.0576
+D009,I5,R26; R1; R3,contradiction,"Conflicting primary values for PCE on D2 (MS3, champion): 16.65, 17.13, 17.13.",5,This work: 16.65%
+D009,I6,R27; R22,contradiction,"Conflicting primary values for retained_PCE on D2 (MS6, unspecified agg): 93, 93.3.",5,93%
+D010,I1,,contradiction,"Device fabrication text states the precursor was spun onto a Mo-coated Na-free substrate, while the film preparation section states Molybdenum-coated soda lime glasses (SLGs); substrate Na content is inconsistent.",2,spun onto the Molybdenum-coated soda lime glasses (SLGs)
+D010,I2,,contradiction,"Device structure sketch lists an Al electrode (SLG/Mo/(Na0.1Cu0.9)2ZnSn(S,Se)4/CdS/ZnO/ITO/Al), but the fabrication text states an Ag gate electrode was evaporated.",2,The Ag gate electrode (9 devices per substrate) was then evaporated
+D010,I3,,contradiction,"Text states mobility decreased from 4.63 × 100 to 4.63 × 10−1 cm2/Vs when increasing selenization temperature from 520 to 600 °C, but the studied range is 520–560 °C and Table 2 lists 2.57 × 100 for T560.",8,"By increasing the selenization temperature from 520 to 600 ◦C, the mobility decreased"
+D010,I4,,derived_value,"Reported PCE increase from ~2.75% to ~4.82% and Voc/Jsc/FF enhancements are relative gains derived from the two devices, not independent measurements.",9,the increase in PCE from ~2.75% to ~4.82%
+D010,I5,,missing_detail,"J–V scan direction (reverse/forward), scan rate, and masking/certification details are not reported.",2,"The current density–voltage characteristics (J–V) of Na-doped Cu2ZnSn(S,Se)4 solar cells were measured using a 94043A I-V Station"
+D012,I1,,conflicting_layer_thickness,"Text on page 3 states ~300 nm AZO, while page 11 states a 120-nm-thick AZO layer",11,"a 120-nm-thick metallic layer of aluminum-doped zinc oxide, ZnO: Al(AZO)"
+D012,I2,,conflicting_absorber_thickness,"Text on page 3 states CZTS thin film ~1 μm thickness, while page 11 states the CZTS thin film had an average size of 1 μm in cross-section",11,the CZTS thin film had an average size of 1 μm
+D012,I3,,conflicting_architecture_name,Page 11 refers to the structure as SLG/Mo/CIGS/CdS/i-ZnO/AZO/Ag (CIGS instead of CZTS),11,In the realization of the SLG/Mo/CIGS/CdS/i-ZnO/AZO/Ag structure
+D012,I4,,conflicting_composition_description,"Abstract states zinc-rich and copper-poor composition, while page 6 states the material was copper-rich",6,which indicates that the material was copper-rich but close to the Cu:Zn:Sn:S = 2:1:1:4 ratio
+D012,I5,,derived_values,Voc increase from 432 mV to 456 mV and Rs drop from 23.37 to 14.27 Ω cm2 are described as derived gains rather than independent measurements,11,The increase in Voc from 432 mV to 456 mV may be attributable to the absence of defect states
+D012,I6,,missing_scan_direction,J-V scan direction (reverse/forward) not reported,11,current density-voltage (J–V) characteristics were measured under standard AM 1.5 G illumination
+D012,I7,,missing_active_area,Active area of the photovoltaic devices not reported,3,The photovoltaic cells’ parameters were measured using a Keithley 2400 source meter
+D012,I8,R27; R34,contradiction,"Conflicting primary values for Voc on D4 (MS1, unspecified agg): 0.456, 0.465.",12,DIO-20 mg/mL 456
+D012,I9,R9; R10; R11; R12,jv_consistency,J-V consistency mismatch on D1: Voc*Jsc*FF/Pin = 3.11% (Pin=100.0 mW/cm2) vs reported PCE=2.36% (rel diff 31.7% > 3%).,12,2.36 23.37
+D013,I1,,derived_values,"Voc deficit values (e.g. ~340 mV for 40Ge, 62 % of SQ limit) are derived from SQ-limit comparison and reported in Table S1/SI, not extracted as results",6,promisingly low values of Voc deficit around 350 mV from 0Ge to 60Ge
+D013,I2,,text_table_mismatch,"Text states 60Ge approaches the 10 % barrier and reports 9.7 % in the main outcome, while Table 3 lists 9.47 % for 60Ge",6,60Ge approaches the 10 % efficiency barrier
+D013,I3,,text_table_mismatch,"Text states 80Ge and 100Ge drop to 6.5 and 5.5 %, while Table 3 lists 6.48 % and 5.43 %",6,suffer from rather large performance diminution down to 6.5 and 5.5 % respectively
+D013,I4,,si_only,SQ deficit values for champion cells provided in Table S1 (Supporting Information),6,Those SQ deficits are provided in Table S1 for the champion cells
+D013,I5,,text_table_mismatch,Text reports 40Ge champion efficiency of 12.1 % while Table 3 lists 12.13 %,2,the champion device containing 40 % Ge reaches a remarkable 12.1 % efficiency
+D013,I6,,text_table_mismatch,Text states 60Ge record efficiency of 9.7 % whereas Table 3 gives 9.47 %,8,maintains highly promising PCEs of 12.1 % and 9.7 % for 40Ge and 60Ge respectively
+D013,I7,,derived_values,Voc deficit minimum around 340 mV and 62 % of detailed balance limit are derived quantities,8,"showcasing a remarkably low Voc deficit around 340 mV, corresponding to around 62 % of the detailed balance limit"
+D013,I8,R1; R19,contradiction,"Conflicting primary values for PCE on D2 (MS1, champion): 12.1, 12.13.",1,champion efficiency of 12.1 % obtained with 40 % Ge
+D013,I9,R20; R30,contradiction,"Conflicting primary values for PCE on D3 (MS1, champion): 9.47, 9.7.",6,9.47
+D013,I10,,missing_conditions,J-V measurement MS1 omits spectrum or light_intensity.,,
+D014,I1,,derived_values,"Text states current/light soaking improves performance and reduces energetic misalignment at CdTe/ITO interface, but no numeric delta is extracted as a result.",4,current/light soaking step (which reduces the energetic misalignment at the CdTe/ITO interface)
+D014,I2,,SI_only_metrics,Device statistics before current/light soaking are reported only in Figure S10 (Supporting Information).,4,we tested nine devices (on a single substrate) and obtained their device statistics (Figure S10)
+D014,I3,,conflicting_values,"Abstract reports 10.4% PCE with Voc 697 mV, Jsc 22.2 mA/cm2, FF 67% for the integrated R2R-friendly device, while Table 1 lists spray-coating at 10.4% with Voc 0.686 V, Jsc 23.0 mA/cm2, FF 65.9%; these are different devices but share the same PCE value.",1,"with a Voc, Jsc, and FF of 697 mV, 22.2 mA/ cm2 , and 67%"
+D014,I4,,non_standard_illumination,Illumination area controlled by a self-aligning stainless-steel aperture mask with nominal 6 mm2 circular holes (5.94 mm2 measured); not a certified measurement.,3,"The illumination area was controlled by a self-aligning stainless-steel aperture mask with evenly distributed, nominal 6 mm2 circular holes (5.94 mm2 measured)"
+D014,I5,,derived_values,"Material efficiency percentages (~1% spin-coating, ~2% spray-coating, ~95% doctor-blading) are derived from ink mass and deposited CdTe mass, not directly measured device metrics.",4,The result is only ∼1% of material remains on the substrate during spin-coating
+D014,I6,,missing_conditions,J-V measurement MS1 omits spectrum or light_intensity.,,
+D014,I7,,missing_conditions,J-V measurement MS2 omits spectrum or light_intensity.,,
+D014,I8,,missing_conditions,J-V measurement MS3 omits spectrum or light_intensity.,,
+D014,I9,,missing_conditions,J-V measurement MS6 omits spectrum or light_intensity.,,
+D015,I1,,derived_values,"Relative gains reported in text/conclusions (e.g., 100% increase in JSC under back illumination, 153% PCE increase, bifaciality factor 0.60 vs 0.34) are derived, not extracted as results",5,"The percentage increase in VOC, JSC, FF, and PCE are, respectively, 5.5% (ΔVOC"
+D015,I2,,cited_values,"Reference bifacial device (Cu-doped, ITO contact) parameters in Table 2 were adopted from a previous publication (ref 26), not measured in this work",4,The parameters of the reference device were adopted from our recent publication
+D015,I3,,si_only_data,"Buffer material characterization (XRD, EDXS, SEM), statistical distributions, band diagram, and IQE data are reported only in Supporting Information",2,Since the material characterization of the buffer layer on CdTe surface was unsuccessful
+D015,I4,,contradiction,"Abstract states carrier lifetimes 31.2 and 3.1 ns with increases of ~38% and 138%, while text states backside lifetime increase from 1.3 to 3.1 ns (>130%) and front from 22.5 to 31.2 ns (38%)",5,"shows over 130% increase (1.3 to 3.1 ns), while that estimated for the front interface region is higher by 38% (22.5 to 31.2 ns)"
+D015,I5,,non_standard_condition,Devices measured without antireflective coating; backside reflection loss ~15% noted,3,Given the fact that these devices are without antireflective coating
+D015,I6,R33; R35,contradiction,"Conflicting primary values for PCE on D7 (MS2, unspecified agg): 3, 8.6.",3,ITO-only device has a PCE of 3%
+D015,I7,R34; R36,contradiction,"Conflicting primary values for Jsc on D7 (MS2, unspecified agg): 7.9, 21.8.",3,JSC of 7.9 mA
+D015,I8,R37; R39,contradiction,"Conflicting primary values for PCE on D8 (MS2, unspecified agg): 7.6, 12.5.",3,PCE of 7.6% and JSC of 15.8 mA
+D015,I9,R38; R40,contradiction,"Conflicting primary values for Jsc on D8 (MS2, unspecified agg): 15.8, 22.2.",3,PCE of 7.6% and JSC of 15.8 mA
+D015,I10,R41; R42; R44; R60,contradiction,"Conflicting primary values for PCE on D8 (MS2, champion): 7.6, 12.5, 12.5, 12.5.",1,best bifacial device has efficiencies 7.6% and 12.5%
+D015,I11,R45; R51,contradiction,"Conflicting primary values for Voc on D7 (MS2, champion): 0.79, 0.754.",4,Cu-doped and ITO electrode Front 790
+D015,I12,R46; R52,contradiction,"Conflicting primary values for Jsc on D7 (MS2, champion): 21.8, 7.9.",4,21.8
+D015,I13,R47; R53,contradiction,"Conflicting primary values for FF on D7 (MS2, champion): 50.1, 51.4.",4,50.1
+D015,I14,R48; R54,contradiction,"Conflicting primary values for PCE on D7 (MS2, champion): 8.6, 3.",4,8.6
+D015,I15,R49; R55,contradiction,"Conflicting primary values for Rs on D7 (MS2, champion): 13.6, 28.6.",4,13.6
+D015,I16,R50; R56,contradiction,"Conflicting primary values for Rsh on D7 (MS2, champion): 3878, 747.",4,3878
+D015,I17,R58; R64,contradiction,"Conflicting primary values for Jsc on D8 (MS2, champion): 22.2, 15.8.",4,22.2
+D015,I18,R59; R65,contradiction,"Conflicting primary values for FF on D8 (MS2, champion): 70.8, 60.9.",4,70.8
+D015,I19,R61; R67,contradiction,"Conflicting primary values for Rs on D8 (MS2, champion): 3.6, 5.",4,3.6
+D015,I20,R62; R68,contradiction,"Conflicting primary values for Rsh on D8 (MS2, champion): 5428.2, 457.",4,5428.2
+D015,I21,R45; R34; R47; R33,jv_consistency,J-V consistency mismatch on D7: Voc*Jsc*FF/Pin = 3.13% (Pin=100.0 mW/cm2) vs reported PCE=3.00% (rel diff 4.2% > 3%).,3,ITO-only device has a PCE of 3%
+D015,I22,R57; R38; R59; R37,jv_consistency,J-V consistency mismatch on D8: Voc*Jsc*FF/Pin = 8.90% (Pin=100.0 mW/cm2) vs reported PCE=7.60% (rel diff 17.2% > 3%).,3,PCE of 7.6% and JSC of 15.8 mA
+D015,I23,,missing_conditions,J-V measurement MS4 omits spectrum or light_intensity.,,
+D017,I1,,derived_values,"VOC,def improved by about 35 mV when ΔGGI increased from 0.20 to 0.32, and an additional 10 mV gain from 0.32 to 0.50; these are derived deltas, not extracted as results.",5,"The VOC,def values improved by about 35 mV when ΔGGI is increased from 0.20 to 0.32."
+D017,I2,,derived_values,"Simulations quantify a voltage gain around 91 ± 28 mV between ΔGGI=0 and ΔGGI=0.3; derived from simulation, not a measured device result.",7,We quantify a substantial voltage gain around 91 ± 28 mV between ΔGGI=0 and ΔGGI=0.3
+D017,I3,,champion_vs_table,"Text states PCE of the champion cell is about 19.7%, matching O2 in Table 1; champion status not explicitly labeled in the table.",5,PCE of the champion cell in this study is about 19.7%.
+D017,I4,,SI_only,Detailed process sequences per sample and C-V doping profiles (Figure S2) and simulated GGI profiles (Figure S1) are in Supporting Information.,3,Detailed process sequences for each sample can be found in Table S1.
+D017,I5,,scan_direction,J-V scan direction (reverse/forward) is not specified in the experimental section.,2,Current–voltage (J–V) parameters were measured using a fourterminal Keithley 2400 source meter under standard test conditions
+D018,I1,,derived_value,"Text states Cs-ST increases VOC by ~80 mV and improves performance by more than 30%; these are derived deltas, not extracted as results",7,�80 mV and improves the performance by more than 30%
+D018,I2,,derived_value,VBM lowering by ~0.25 eV and work function reduction of ~170 meV are derived/relative values,5,the VBM of the CIGS thin films lowers by around 0.25 eV upon the Cs-ST treatment
+D018,I3,,inconsistency,CsCO3 is printed in the title/abstract while the correct formula Cs2CO3 appears in the experimental section,1,using cesium carbonate (CsCO3) as a new route
+D018,I4,,inconsistency,Grain boundary depth reported as ~300 nm in text but figure caption states ~350 nm,6,HAADF images showing the GB at (B)
+D018,I5,,missing_info,No absorber bandgap value reported for either CIGS material,6,A solar cell with an efficiency (ɳ) of 10.4% was obtained after the Cs-ST treatment
+D018,I6,,missing_info,Device architecture and active area for the NICE Solar Energy industrial-absorber devices are not described,7,We additionally crosschecked the effect of the Cs-ST treatment using CIGS absorbers from an industry-scale fabrication (NICE Solar Energy GmbH)
+D018,I7,R1; R8,contradiction,"Conflicting primary values for PCE on D2 (MS1, unspecified agg): 10.4, 7.8.",6,A solar cell with an efficiency (ɳ) of 10.4% was obtained after the Cs-ST treatment
+D018,I8,R2; R5,contradiction,"Conflicting primary values for Jsc on D2 (MS1, unspecified agg): 31, 31.3.",6,"The short-circuit current density (JSC), open-circuit voltage (VOC), fill factor (FF) were 31.0 mA/cm2"
+D018,I9,R3; R6,contradiction,"Conflicting primary values for Voc on D2 (MS1, unspecified agg): 0.493, 0.41.",6,"31.0 mA/cm2 , 0.493 V, and 66%"
+D018,I10,R4; R7,contradiction,"Conflicting primary values for FF on D2 (MS1, unspecified agg): 66, 59.",6,"0.493 V, and 66%, respectively"
+D018,I11,R3; R2; R4; R1,jv_consistency,J-V consistency mismatch on D2: Voc*Jsc*FF/Pin = 10.09% (Pin=100.0 mW/cm2) vs reported PCE=10.40% (rel diff 3.0% > 3%).,6,A solar cell with an efficiency (ɳ) of 10.4% was obtained after the Cs-ST treatment
+D018,I12,,comparability,"Non-standard J-V illumination on MS1: spectrum='AM1.5', intensity='100 mW/cm2'.",,
+D018,I13,,comparability,"Non-standard J-V illumination on MS3: spectrum='AM1.5', intensity='100 mW/cm2'.",,
+D019,I1,,derived_values,"Text states the MoSe2/Mo device showed a 1.225% higher PCE than the bare Mo device (5.637% vs 4.412%), a derived delta not extracted as a result",7,showed a 1.225% higher PCE than the one using a bare Mo substrate
+D019,I2,,certified_vs_lab_discrepancy,"Certified PCE (5.484%) and certified JSC (26.05 mA cm-2) differ from lab J-V values (5.637%, 27.430 mA cm-2) for the same 260 C device",8,showed similar results (PCE of 5.484%) to our labscale photovoltaic measurements
+D019,I3,,missing_metadata,"Active area, scan direction, scan rate, and mask usage are not reported for J-V measurements",3,"characterized using a source meter (Keithley, 2400) unit and a solar simulator (Newport, 94022A)"
+D019,I4,,si_only_data,SEM images of Sb2Se3 on ITO substrates and HAADF-STEM interface data are only in ESI (Fig. S1-S3),5,"(Fig. S3, ESI†)"
+D019,I5,R28; R55,eqe_consistency,Jsc (27.43 mA/cm2) vs Jsc_EQE (25.89 mA/cm2) on D5 differs by 5.6% (> 5%).,8,JSC from integrated EQE (25.89 mA
+D020,I1,,derived_values,"PCE improvement from 2.76% to 4.15% and Voc increase from 0.467 V to 0.536 V are stated as gains, not separately extracted as results",6,the solar cell with P3HT showed a champion PCE of 4.15%
+D020,I2,,SI_only,Steady-state power output (MPP) data reported only in Supporting Information Figure S4,9,"Figure S4: Steady-state power output of Sb2S3/Sb2(S, Se)3 based solar cells with P3HT"
+D020,I3,,inconsistency,"Text states Sb2S3/Sb2(S, Se)3 films have similar thickness ~400 nm, but individual Sb2S3 and Sb2(S, Se)3 layers also ~400 nm each; stacked thickness not explicitly reconciled",2,"the thicknesses of the three films were similar, around 400 nm"
+D021,I1,,derived_values,"Text states efficiency improvement from 1.28% to 3.2% with NaF interlayer and a tenfold JSC increase for PED cells; these are relative gains, not extracted as results",5,leading to an efficiency improvement from 1.28% to 3.2%
+D021,I2,,derived_values,B4 cell reported to show absolute efficiency increase of ~1.5% (relative 50% improvement) after Ag paste/wire bonding; derived value,11,"The B4 cell demonstrates an absolute increase in efficiency of approximately 1.5%, representing a significant relative 50% improvement"
+D021,I3,,inconsistency,"Table 4 lists B4 record PCE 3.85% while text reports the best B4 cell PCE = 5.25% (VOC 343 mV, JSC 31.4 mA/cm2, FF 0.49) after contact enhancement; different measurement conditions",13,"exhibited PCE = 5.25%, VOC = 343 mV, JSC = 31.4 mA/cm2 and FF = 0.49"
+D021,I4,,inconsistency,"Text states PED-grown Cu:Sb2Se3 cells exhibit VOC 0.35-0.51 V (cited) vs 0.26 V for undoped PED Sb2Se3 (cited), while Table 4 reports B1 average VOC 385 mV and record 355 mV",5,present higher VOC than undoped PEDgrown Sb2Se3 (0.35 V–0.51 V as reported also by [25] vs. 0.26 V as reported by [32])
+D021,I5,,inconsistency,"Table 4 average VOC for A6 (395 mV) exceeds its record value (381 mV), and B1 average (385 mV) exceeds record (355 mV); average/record labeling appears inconsistent",12,A6 395 ± 13 (381)
+D021,I6,,inconsistency,Text describes A-series as AZO/UZO/CdS/Cu:Sb2Se3(PED)/Sb2Se3(RFMS)/NaF/FTO/glass but Figure 3 caption and Table 1 describe PED-on-RFMS with RFMS first; layer order ambiguity,6,The A samples have the following structure: AZO/UZO/CdS/Cu:Sb2Se3 (PED)/Sb2Se3 (RFMS)/NaF/FTO/glass
+D021,I7,,inconsistency,JCPDS reference card cited as 15-0861 in introduction but 15-0681 in structural analysis section,7,using the Sb2Se3 orthorhombic phase as the reference (Ref. JCPDS 15–0681)
+D021,I8,,SI_only,"Annealing study of PED-grown Cu:Sb2Se3 cells (VOC increase, JSC reduction at 175 C in air) is presented only in Figure S2 of Supporting Information",5,"As shown in Figure S2, the VOC of the PED-grown Cu:Sb2Se3 cell increases after different annealing cycles at 175 C in air"
+D021,I9,,non_standard,Active area of 6 mm2 per cell stated in text; area definition (designated illumination vs aperture) not specified,10,20 solar cells with an area of 6 mm2 each were made and measured for each sample
+D021,I10,R119; R120,contradiction,"Conflicting primary values for Voc on D14 (MS2, unspecified agg): 0.35, 0.51.",5,0.35 V–0.51 V as reported also by [25]
+D021,I11,R15; R17; R19; R21,jv_consistency,J-V consistency mismatch on D3: Voc*Jsc*FF/Pin = 1.01% (Pin=100.0 mW/cm2) vs reported PCE=0.90% (rel diff 11.9% > 3%).,12,0.9 ± 0.6 (2.04)
+D021,I12,R25; R27; R29; R31,jv_consistency,J-V consistency mismatch on D4: Voc*Jsc*FF/Pin = 1.09% (Pin=100.0 mW/cm2) vs reported PCE=0.93% (rel diff 16.9% > 3%).,12,0.93 ± 0.52 (1.91)
+D021,I13,R20; R19,champion_vs_mean,Mean (37.2) exceeds champion (30.4) for FF on D3.,12,37.2 ± 8 (30.4)
+D021,I14,R26; R25,champion_vs_mean,Mean (0.343) exceeds champion (0.321) for Voc on D4.,12,A3 343 ± 43 (321)
+D021,I15,R30; R29,champion_vs_mean,Mean (33.9) exceeds champion (26.5) for FF on D4.,12,33.9 ± 4.5 (26.5)
+D021,I16,R56; R55,champion_vs_mean,Mean (0.395) exceeds champion (0.381) for Voc on D7.,12,A6 395 ± 13 (381)
+D021,I17,R60; R59,champion_vs_mean,Mean (35.3) exceeds champion (34.0) for FF on D7.,12,35.3 ± 1.1 (34.0)
+D021,I18,R66; R65,champion_vs_mean,Mean (0.385) exceeds champion (0.355) for Voc on D2.,12,B1 385 ± 19 (355)
+D021,I19,R70; R69,champion_vs_mean,Mean (42.6) exceeds champion (40.6) for FF on D2.,12,42.6 ± 3.7 (40.6)
+D021,I20,R78; R77,champion_vs_mean,Mean (9.07) exceeds champion (9.05) for Jsc on D8.,12,9.07 ± 0.47 (9.05)
+D021,I21,R90; R89,champion_vs_mean,Mean (0.358) exceeds champion (0.349) for Voc on D9.,13,B3 358 ± 7 (349)
+D021,I22,R94; R93,champion_vs_mean,Mean (45.0) exceeds champion (44.5) for FF on D9.,13,45.0 ± 2.5 (44.5)
+D021,I23,R100; R99,champion_vs_mean,Mean (0.347) exceeds champion (0.344) for Voc on D10.,13,B4 347 ± 7 (344)
+D021,I24,R104; R103,champion_vs_mean,Mean (48.8) exceeds champion (42.2) for FF on D10.,13,48.8 ± 3.5 (42.2)
+D022,I1,,derived_values,"Relative gains stated in text (FF +20%, JSC +55%, VOC +48% when switching ZnO to AZO) are derived, not extracted as results",6,"FF increases from 31 to 41.4% when switching the ZnO film by an AZO film, a relative increase of 20%"
+D022,I2,,contradiction,"Text states FF increases from 31 to 41.4% when switching ZnO to AZO, but Table 2 lists FF 37.0% for the AZO device",6,FF increases from 31 to 41.4% when switching the ZnO film by an AZO film
+D022,I3,,contradiction,"Text states VOC goes from 0.29 to 0.43 V (relative increase 48%) for AZO device, while Table 2 lists 0.43 V and Table 1 lists 0.41 V for the 30 nm ZnO device",6,"a relative increase of 48% is observed, going from 0.29 to 0.43 V"
+D022,I4,,non_standard_illumination,J-V measured with a mask and sample placed on dark opaque matt to avoid back-reflections; active area not reported,7,the sample was measured with a mask and has been placed in a dark opaque matt
+D022,I5,,device_metrics,Active area of devices not reported anywhere in the paper,6,"The solar cells fabricated in this work present the structure Glass/FTO/ZnO/a-Si:H (15, 30 nm)/MoO3/ITO"
+D022,I6,,contradiction,"Abstract/intro states PCE up to 0.5% and LUE 0.25%, while conclusion mentions expected efficiency values higher than 1% for optimized architectures (estimation, not measured)",6,expected efficiency values higher than 1%
+D022,I7,R31; R36,contradiction,"Conflicting primary values for FF on D9 (MS4, unspecified agg): 37, 41.4.",5,37.0
+D022,I8,R5; R6; R7; R8,jv_consistency,J-V consistency mismatch on D5: Voc*Jsc*FF/Pin = 0.17% (Pin=100.0 mW/cm2) vs reported PCE=0.21% (rel diff 20.8% > 3%).,4,0.21
+D022,I9,R13; R14; R15; R16,jv_consistency,J-V consistency mismatch on D6: Voc*Jsc*FF/Pin = 0.19% (Pin=100.0 mW/cm2) vs reported PCE=0.22% (rel diff 14.1% > 3%).,4,0.22
+D022,I10,R17; R18; R19; R20,jv_consistency,J-V consistency mismatch on D8: Voc*Jsc*FF/Pin = 0.54% (Pin=100.0 mW/cm2) vs reported PCE=0.52% (rel diff 3.4% > 3%).,4,0.52
+D022,I11,R21; R22; R23; R24,jv_consistency,J-V consistency mismatch on D5: Voc*Jsc*FF/Pin = 0.17% (Pin=100.0 mW/cm2) vs reported PCE=0.21% (rel diff 20.8% > 3%).,5,0.21
+D022,I12,R29; R30; R31; R32,jv_consistency,J-V consistency mismatch on D9: Voc*Jsc*FF/Pin = 0.46% (Pin=100.0 mW/cm2) vs reported PCE=0.41% (rel diff 11.0% > 3%).,5,0.41
+D022,I13,,missing_conditions,J-V measurement MS1 omits spectrum or light_intensity.,,
+D022,I14,,missing_conditions,J-V measurement MS2 omits spectrum or light_intensity.,,
+D022,I15,,missing_conditions,J-V measurement MS3 omits spectrum or light_intensity.,,
+D022,I16,,missing_conditions,J-V measurement MS4 omits spectrum or light_intensity.,,

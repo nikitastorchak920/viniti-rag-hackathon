@@ -1,0 +1,83 @@
+publication_id,measurement_id,device_id,measurement_type,spectrum,light_intensity,intensity_unit,scan_direction,scan_rate,mask_used,certified,certification_lab,temperature,stability_protocol,stress_conditions,note
+D001,MS1,D1; D2; D3; D4; D5,J-V,AM 1.5G,100,mW/cm2,reverse,0.15 V/s,true,false,,,,,Table 1 photovoltaic parameters for SrCl2 concentration series
+D001,MS2,D6,J-V,AM 1.5G,100,mW/cm2,reverse,0.15 V/s,true,false,,,,,FB-SC scan of champion 0.01 M SrCl2 device; Table 2
+D001,MS3,D7,J-V,AM 1.5G,100,mW/cm2,forward,0.15 V/s,true,false,,,,,SC-FB scan of champion 0.01 M SrCl2 device; Table 2
+D001,MS4,D8,J-V,AM 1.5G,100,mW/cm2,reverse,0.15 V/s,true,false,,,,,Best pristine sample; Supplementary Figure S1 and Supplementary Table S1
+D001,MS5,D9,J-V,AM 1.5G,100,mW/cm2,,,,false,,,,,NiCl2-doped device; Supplementary Table S2
+D001,MS6,D6,MPP tracking,AM 1.5G,100,mW/cm2,,,,false,,,,,"Stabilized power output at MPP; 14.39 mA/cm2 at 1100 mV, efficiency 15.83%"
+D001,MS7,D1,MPP tracking,AM 1.5G,100,mW/cm2,,,,false,,,,,"Pristine MPP; 13.47 mA/cm2 at 960 mV, efficiency 12.93%; Supplementary Figure S2"
+D001,MS8,D4; D1,EQE,,,,,,,false,,,,,Integrated photocurrent 15.37 mA/cm2 (0.01 M SrCl2) and 15.24 mA/cm2 (pristine); Supplementary Figure S3
+D002,MS1,D1; D2,J-V,halogen lamp (solar simulator),1000,W/m2,,,,,,,,,"J-V curves measured with data logger, digital multimeter MS8250C and solar simulator; scan direction not stated"
+D002,MS2,D1; D2,stability,,,,,,,,,,other,air storage / environmental conditions over time,Stability evaluated as function of time duration under environmental conditions; no ISOS protocol named; no numeric data reported
+D003,MS1,D1; D2,J-V,AM 1.5G,100,mW cm-2,,100 mV/s,,,,,,,"Keithley 2400; step voltage 10 mV, stay time 100 ms, range 1.2 to -0.2 V, square mask 0.04 cm2, ambient condition; champion J-V in Figure 5C; scan direction not specified"
+D003,MS2,D1; D2,EQE,,,,,,,,,,,,EQE and integrated current densities 24.0 and 23.5 mA cm-2 (Figure 5D)
+D003,MS3,D2,MPP tracking,AM 1.5G,100,mW cm-2,,,,,,,,,Steady-state output at maximum power point; average efficiency 23.0% (Figure 5E)
+D003,MS4,D1; D2,stability,,,,,,,,,,other,"storage in dry air, RH = 10%, 1000 h",Both retained 93% of initial efficiency for 1000 h (Figure 5F)
+D004,MS1,D1; D2; D3; D4,J-V,,,,,,,,,,,,"Photocurrent-voltage curves (Figure 8) and Table 1; scan direction, scan rate, light intensity, and masking not reported"
+D005,MS1,D1; D2,J-V,AM 1.5G,100,mW cm-2,reverse,,,,,,,,"Keithley 2400, solar simulator Amazing Light SS-F5-3A, calibrated Si reference cell; reverse scan values in Table 2"
+D005,MS2,D1; D2,J-V,AM 1.5G,100,mW cm-2,forward,,,,,,,,forward scan values in Table 2
+D005,MS3,D1; D2,EQE,,,,,,,,,,,,integrated photocurrent densities 25.41 and 25.73 mA cm-2 for Spiro-OMeTAD and SF-MPA-MCz
+D005,MS4,D1; D2,MPP tracking,,100,mW cm-2,,,,,,,,,200 s MPP tracking under continuous illumination; stabilized efficiencies 24.37% (SF-MPA-MCz) and 22.36% (Spiro-OMeTAD)
+D005,MS5,D1; D2,stability,full sunlight,100,mW cm-2,,,,,,,other,"continuous 1 sun illumination at MPP, unencapsulated, 500 h",SF-MPA-MCz retains >90% PCE after 500 h; Spiro-OMeTAD drops to ~50%
+D005,MS6,D1; D2,stability,,,,,,,,,85,ISOS-T,"heating at 85 C in N2 glove box, unencapsulated, 1000 h",SF-MPA-MCz retains >85% PCE after 1000 h; Spiro-OMeTAD fails after 300 h
+D007,MS1,D1; D2,J-V,,,,,,,,,,,,Typical J-V curves; hysteresis in Figure S2
+D007,MS2,D4; D5,J-V,,,,,,,,,,,,Mini-module J-V
+D007,MS3,D1; D2,EQE,,,,,,,,,,,,Integrated current consistent with J-V
+D007,MS4,D1; D2,stability,,,,,,,,,,other,"tested every 12 h, 15%-20% RH, RT, 1000 h",Long-term stability
+D008,MS1,D1; D2,J-V,,1,sun,forward,20 mV step,,,,,,,"Forward scan -0.2 to 1.2 V; champion D2 PCE 18.5% (Voc 1.001 V, Jsc 23.75 mA/cm2, FF 78.5%); D1 15.8%"
+D008,MS2,D1; D2,J-V,,1,sun,reverse,20 mV step,,,,,,,Reverse scan 1.2 to -0.2 V
+D008,MS3,D1; D2,J-V,,,,,,,,,,,,Dark J-V
+D008,MS4,D3,J-V,,1,sun,forward,20 mV step,,,,,,,"0.36 cm2 champion, PCE 17.06%"
+D008,MS5,D3,J-V,,1,sun,reverse,20 mV step,,,,,,,0.36 cm2 reverse scan
+D008,MS6,D1; D2,stability,,,,,,,,,,other,Stored in N2-filled glovebox ~30 days between measurements,Retained 77% (w/o) and 88% (w/ PbCl2) of initial PCE
+D008,MS7,D4; D5; D6; D7; D8; D9,J-V,,1,sun,,,,,,,,,Annealing temperature and area series statistics (Fig. 4d-f)
+D009,MS1,D1; D2,J-V,AM1.5G,100,mW cm-2,reverse,50 ms delay,true,false,,room temperature,,,solid line in Fig. 3b; reverse scan 1.0 to -0.1 V
+D009,MS2,D1; D2,J-V,AM1.5G,100,mW cm-2,forward,50 ms delay,true,false,,room temperature,,,dotted line in Fig. 3b; forward scan -0.1 to 1.0 V
+D009,MS3,D2,J-V,AM1.5G,100,mW cm-2,,,true,true,Shanghai Institute of Microsystem and Information Technology (SIMIT),,,,certified PCE 16.65%; Supplementary Figs. 14 and 15
+D009,MS4,D1; D2,MPP tracking,,100,mW cm-2,,,,,,,,,stabilized PCE 13.31% (Cs0 at 0.73 V) and 17.04% (Cs5 at 0.85 V)
+D009,MS5,D1; D2,EQE,,,,,,,,,,,,integrated Jsc 22.34 mA cm-2 for Cs5; Fig. 3c
+D009,MS6,D1; D2,stability,,,,,,,,,35 ± 5 °C,other,"dark storage in N2 for 6,000 h; unencapsulated",shelf stability; Cs5 retains 93.3%
+D009,MS7,D1; D2,stability,LED white light,100,mW cm-2,,,,,,60 ± 5 °C,other,"continuous one-sun illumination at open-circuit in N2 for 1,500 h; unencapsulated",operational stability; Cs5 retains 92.0%
+D009,MS8,D3; D4; D5; D6,J-V,AM1.5G,100,mW cm-2,,,true,false,,,,,"statistical PCE distributions, 20 devices per condition; Fig. 3d"
+D010,MS1,D1; D2,J-V,AM 1.5G,100,mW/cm2,,,,,,,,,J–V characteristics measured with 94043A I-V Station; scan direction not specified
+D010,MS2,D1; D2,EQE,,,,,,,,,,,,"EQE measured with SPIQE200-5324 (QEX10, Newport) in air"
+D012,MS1,D1; D2; D3; D4,J-V,AM1.5G,100,mW/cm2,,,,,,,,,J-V characteristics measured under standard AM1.5G illumination; scan direction not specified
+D013,MS1,D1; D2; D3; D4; D5,J-V,,1,sun,,,,,,,,,1 sun IV curves of champion devices per Ge concentration (Fig. 6a); scan direction not specified
+D013,MS2,D1; D2; D3; D4; D5,EQE,,,,,,,,,,,,"EQE spectra (Fig. 5b) used for Eg,EQE and Urbach energy extraction"
+D013,MS3,D1; D2; D3; D4; D5,J-V,,,,,,,,,,,,"dark J-V characteristics (Fig. 7a) for ideality factor, J0 and Rsh"
+D013,MS4,D1; D2; D3; D4; D5,stability,,,,,,,,,,other,"capacitance-voltage-frequency (CVf) admittance spectroscopy in dark, -0.75 V to 0.25 V at 10 kHz","apparent doping profiles and loss maps (Fig. 8, Fig. S5); not a stability test but dark admittance measurement"
+D014,MS1,D1; D2; D3,J-V,AM 1.5G,,,,,true,false,,,,,"Best device from each deposition method after current/light soaking; Xe lamp with AM 1.5G filter, calibrated with Si photodiode + KG5 filter; 5.94 mm2 aperture mask"
+D014,MS2,D4; D5; D6,J-V,AM 1.5G,,,,,true,false,,,,,Bath-free ink devices with 0/2/4 wt% pyr-CdCl3; after current/light soaking
+D014,MS3,D7; D8,J-V,AM 1.5G,,,,,true,false,,,,,R2R-friendly vs standard side-by-side comparison after current-light soaking
+D014,MS4,D7; D8,J-V,,,,,,,false,,,,,Dark J-V curves (Figure 5d)
+D014,MS5,D7; D8,EQE,,,,,,,false,,,,,"EQE comparison; Oriel IQE-200, 20 nm wavelength step"
+D014,MS6,D1; D2; D3; D4; D5; D6; D7; D8,J-V,AM 1.5G,,,,,true,false,,,,,"Device statistics before current/light soaking (Figure S10, SI only)"
+D014,MS7,D1; D2; D3; D4; D5; D6; D7; D8,stability,AM 1.5G,,,,,,false,,,other,"current/light soaking: 2-3 V forward bias under illumination, ~2.5 A cm-2, kept below 3 A cm-2",Current/light soaking step to reduce energetic misalignment at CdTe/ITO interface
+D015,MS1,D1; D2; D3; D4; D5; D6,J-V,AM1.5G,100,mW/cm2,,,,,,,,,Monofacial devices with Au back contact; dark and illuminated J-V; scan direction not specified
+D015,MS2,D7; D8,J-V,AM1.5G,100,mW/cm2,,,,,,,,,Bifacial devices with ITO back contact; front and back illumination; scan direction not specified
+D015,MS3,D7; D8,EQE,,,,,,,,,,,,EQE measured with PV Instruments IVQE8-C; front and back illumination
+D015,MS4,D7; D8,J-V,,,,,,,,,,,,Light-intensity-dependent JSC and VOC for back-illuminated devices (Figure 4)
+D015,MS5,D1; D4,stability,,,,,,,,,,other,Light soaking; Cu migration study referenced,Light soaking of CdTe devices discussed; no ISOS protocol named
+D017,MS1,D1; D2; D3; D4; D5; D6; D7; D8; D9; D10; D11,J-V,AM1.5G,1000,W/m2,,,,,,25,,,four-terminal Keithley 2400; ABA-class sun simulator; scan direction not specified
+D017,MS2,D1; D2; D3; D4; D5; D6; D7; D8; D9; D10; D11,EQE,,,,,,,,,,,,chopped halogen illumination with double-grating monochromator; ~0.2 sun halogen bias; calibrated with certified Si solar cell; used for Eg and Urbach energy extraction
+D017,MS3,D1; D2; D3; D4; D5; D6; D7; D8; D9; D10; D11,J-V,,,,,,,,,,,,"dark J-V not reported; C-V profiles measured with Agilent E4980A at 1 kHz, 300 K (doping extraction)"
+D018,MS1,D1; D2,J-V,AM1.5,100,mW/cm2,,,false,false,,,,,"Light J-V under Oriel Sol3A class AAA solar simulator; devices manually scribed to ~0.25 cm2, measured without front grid; scan direction not stated"
+D018,MS2,D1; D2,J-V,,,,,,,,,,,,Dark J-V curves (dashed lines in Figure 6A)
+D018,MS3,D3; D4,J-V,AM1.5,100,mW/cm2,,,false,false,,,,,Statistical analysis of best performing solar cells on industrial NICE Solar Energy CIGS absorbers (Figure 6B-E); scan direction not stated
+D019,MS1,D1; D2; D3,J-V,AM 1.5G,1,sun,,,,,,,,,Table 1 photovoltaic characteristics; lab measurement
+D019,MS2,D4; D5; D6; D7,J-V,AM 1.5G,1,sun,,,,,,,,,Table 2 photovoltaic characteristics; lab measurement
+D019,MS3,D5,J-V,AM 1.5G,1,sun,,,,true,Korea Institute of Energy Research (KIER),,,,"Certified J-V curve, PCE 5.484%"
+D019,MS4,D5,EQE,,,,,,,true,Korea Institute of Energy Research (KIER),,,,Integrated JSC 25.89 mA cm-2
+D020,MS1,D1; D2; D3,J-V,AM 1.5G,100,mW/cm2,,,true,false,,,,,statistical photovoltaic parameters; average values reported
+D020,MS2,D3; D4,J-V,AM 1.5G,100,mW/cm2,,,true,false,,,,,champion J-V curves with and without P3HT
+D020,MS3,D3; D4,J-V,AM 1.5G,100,mW/cm2,,,true,false,,,,,light intensity dependence of Voc and Jsc; ideality factor and alpha extraction
+D020,MS4,D3; D4,MPP tracking,,,,,,,,,,,,"steady-state power output (Figure S4, SI)"
+D021,MS1,D1; D2; D3; D4; D5; D6; D7; D8; D9; D10,J-V,AM 1.5G,1000,W/m2,,,,,,25,,,Illuminated J-V under standard test conditions; scan direction not specified
+D021,MS2,D11; D12; D13; D14,J-V,AM 1.5G,1000,W/m2,,,,,,25,,,Illuminated J-V curves in Figure 2a/2b; scan direction not specified
+D021,MS3,D1; D10,J-V,AM 1.5G,1000,W/m2,,,,,,25,,,Best-cell J-V comparison after Ag paste and wire bonding contact enhancement (Figure 10)
+D021,MS4,D14,stability,,,,,,,,,,other,Annealing cycles at 175 C in air,"VOC/JSC/efficiency variation after annealing treatments (Figure S2, Supporting Information)"
+D022,MS1,D1; D2; D3,J-V,AM1.5G,,,,,true,,,,,,J-V under AM1.5G illumination for different ZnO ETL thicknesses (Figure 2a); scan direction not stated
+D022,MS2,D4; D5; D6,J-V,AM1.5G,,,,,true,,,,,,J-V under AM1.5G illumination for different MoO3 HTL thicknesses (Figure 2b); scan direction not stated
+D022,MS3,D5; D6; D7; D8,J-V,AM1.5G,,,,,true,,,,,,"J-V under AM1.5G illumination for absorber thickness variation (Figure 2c, Table 1); scan direction not stated"
+D022,MS4,D5; D7; D9,J-V,AM1.5G,,,,,true,,,,,,"J-V under AM1.5G illumination of best devices (Figure 3a, Table 2); scan direction not stated"
+D022,MS5,D5; D7; D9,EQE,,,,,,,,,,,,Optical transmittance/reflectance spectrophotometry 300-800 nm used to extract AVT and CRI (Figure 3b-d); not EQE but optical spectra
