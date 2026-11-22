@@ -833,11 +833,11 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
               native_captions(table_layout or {}), row_captions, pages_norm, model_aliases)
     if table_layout and pages_norm:
-        from plugins.rag.table_context import link_aggregates, link_table_schemes
+        from plugins.rag.table_context import link_aggregates, link_table_configurations
 
         link_aggregates(rows, table_layout, pages_norm, out["datasets"])
         if layout_tokens:
-            link_table_schemes(rows, table_layout, layout_tokens, pages_norm, out["configurations"], out["datasets"])
+            link_table_configurations(rows, table_layout, layout_tokens, pages_norm, out["configurations"], out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
     _compact_named_parameters(out["configurations"], pages_norm, table_layout)
     _strip_repeated_backbone_modes(out["configurations"], pages_norm)

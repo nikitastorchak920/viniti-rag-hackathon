@@ -415,7 +415,7 @@ def _cycle_datasets(body, anchors, metric_names, dataset_ids):
 
 
 def _table_scheme_cells(lines, tokens, metric_names, dataset_ids):
-    """Index cells under explicit Scheme groups in a joint model/scheme table."""
+    """Index cells under explicit scheme and generator groups."""
     visual = _visual_rows(tokens)
     starts = [(row[0].baseline, match[1].casefold()) for row in _visual_rows(lines)
               if (match := CAPTION.match(row[0].text.strip()))]
@@ -450,20 +450,26 @@ def _table_scheme_cells(lines, tokens, metric_names, dataset_ids):
                 data = column[1:]
                 if metric not in metric_names or len(data) != len(names):
                     continue
-                scheme = bool("scheme" in roles and not roles & {"llm", "model", "generator"})
+                role = ""
+                if "scheme" in roles and not roles & {"llm", "model", "generator"}:
+                    role = "scheme"
+                elif "generator" in roles and not roles & {"scheme", "judge", "evaluator"}:
+                    role = "generator"
                 for token, name in zip(data, names):
                     raw = token.text
                     if not NUMBER.fullmatch(raw):
                         continue
                     # Marker and heading centers must share the same physical column.
                     same_column = abs((token.left + token.right - name.left - name.right) / 2) <= 10
-                    candidate = name.text if scheme and same_column else ""
-                    indexed[table, metric, number(raw)].add((candidate, datasets.get(body[0].baseline, "")))
+                    kind = role if same_column else ""
+                    indexed[table, metric, number(raw)].add(
+                        (kind, name.text if kind else "", datasets.get(body[0].baseline, ""))
+                    )
     return indexed
 
 
-def link_table_schemes(rows, layout, tokens, pages_norm, configurations, datasets) -> None:
-    """Attach a scheme-only configuration when the metric is in a separate scheme block."""
+def link_table_configurations(rows, layout, tokens, pages_norm, configurations, datasets) -> None:
+    """Use the configuration identity stated by the owning table block."""
     by_page = defaultdict(set)
     for row in rows:
         if key := _source_key(row):
@@ -487,15 +493,17 @@ def link_table_schemes(rows, layout, tokens, pages_norm, configurations, dataset
         if not (key := _verified_table_value(row, pages_norm)):
             continue
         candidates = cells.get(key, set())
-        compatible = {(variant, dataset) for variant, dataset in candidates if dataset == row["dataset_id"]}
+        compatible = {item for item in candidates if item[2] == row["dataset_id"]}
         choices = compatible if compatible else candidates
-        variants = {variant for variant, _ in choices}
-        if len(variants) != 1 or "" in variants:
+        headings = {(role, printed) for role, printed, _ in choices}
+        if len(headings) != 1:
             continue
-        printed = next(iter(variants))
-        matching_datasets = {dataset for _, dataset in choices}
+        role, printed = next(iter(headings))
+        if not role:
+            continue
+        matching_datasets = {dataset for _, _, dataset in choices}
         dataset_id = next(iter(matching_datasets)) if len(matching_datasets) == 1 else ""
-        slot = (*key, printed, dataset_id or row["dataset_id"])
+        slot = (*key, role, printed, dataset_id or row["dataset_id"])
         proposals.append((row, slot))
     claims = Counter(slot for _, slot in proposals)
     scoped = {}
@@ -503,9 +511,16 @@ def link_table_schemes(rows, layout, tokens, pages_norm, configurations, dataset
     for row, slot in proposals:
         if claims[slot] != 1:
             continue
-        page, table, _, _, printed, dataset_id = slot
-        row["dataset_id"] = dataset_id
+        page, table, _, _, role, printed, dataset_id = slot
         existing = configs.get(row["config_id"], {})
+        if role == "generator":
+            if row["dataset_id"] and dataset_id != row["dataset_id"]:
+                continue
+            match = _configuration_with_generator(existing, printed, configs.values())
+            if match:
+                row["config_id"] = match
+            continue
+        row["dataset_id"] = dataset_id
         if _compact_name(existing.get("rag_variant", "")) == _compact_name(printed) and not existing.get("generator_model"):
             continue
         scope = (page, table, printed)
@@ -522,6 +537,20 @@ def link_table_schemes(rows, layout, tokens, pages_norm, configurations, dataset
             scoped[scope] = config_id
             configurations.append(config)
         row["config_id"] = scoped[scope]
+
+
+def _configuration_with_generator(existing, printed, configurations):
+    """Preserve method and all other configuration settings when changing a model."""
+    if not existing.get("rag_variant") or not _compact_name(printed):
+        return ""
+    if _compact_name(existing.get("generator_model", "")) == _compact_name(printed):
+        return existing["config_id"]
+    ignored = {"config_id", "generator_model", "generator_version", "note"}
+    fields = {key: value for key, value in existing.items() if key not in ignored}
+    matches = [row["config_id"] for row in configurations
+               if _compact_name(row.get("generator_model", "")) == _compact_name(printed)
+               and {key: value for key, value in row.items() if key not in ignored} == fields]
+    return matches[0] if len(matches) == 1 else ""
 
 
 RECOVERY_FIELDS = ("experiment_id", "task_id", "metric_name", "metric_group", "metric_variant", "metric_k",

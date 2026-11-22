@@ -41,7 +41,7 @@ Use this protocol for explicitly authorized handoffs. Architecture notes belong 
 ## Token economy and data safety
 
 - Always test parser, exporter, and UI changes using `main.py --rebuild-csv-only` against the existing `cache/` before asking for live extraction. This spends zero API tokens. Run `python -m pytest tests/test_core.py` for code changes.
-- Live dev retries must target identified failing or low-F1 papers using `--only`. Use `--force` only for affected IDs whose completed cache must be replaced. Resume partial extractions before forcing a restart. The first full 111-paper test run requires Phase 1 sign-off and operator approval. Resume test failures by ID.
+- Live dev retries must target identified failing or low-F1 papers using `--only`. Use `--force` only for affected IDs whose completed cache must be replaced. Resume partial extractions before forcing a restart. The first full extraction on the 90-paper `test/` split requires Phase 1 sign-off and operator approval. Resume test failures by ID.
 - Preserve raw per-document cache version 2 and offline rebuild compatibility. Keep the seven CSVs conformant to `submission_template/schema.json`. Use an empty string for missing source evidence. Never guess.
 - Generalize from document structure. Never hardcode dev paper IDs, dataset names, model names, or ablation strings from `dev_gold/` in extraction logic. IDs are allowed in targeted verification commands and their reports.
 - Check `.gitignore` and the staged file list before committing. Never commit `.env`, keys, raw PDFs, `dev/`, `test/`, `cache/`, `out_dev/`, `out_test/`, or raw logs with sensitive material. Use `.env.example` for placeholders.
