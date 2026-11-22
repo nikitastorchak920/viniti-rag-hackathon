@@ -15,7 +15,7 @@ TABLES = {
     "solar": ("publications", "materials", "devices", "layers", "measurements", "results", "issues"),
     "rag": ("publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"),
 }
-DEFAULTS = {"solar": "out_solar_dev", "rag": "out_jury_deepseek_v1/csv"}
+DEFAULTS = {"solar": "results/solar-dev", "rag": "results/rag-dev"}
 DATA_FILES = {domain: {f"{table}.csv" for table in tables} | {"validation.json"} for domain, tables in TABLES.items()}
 
 

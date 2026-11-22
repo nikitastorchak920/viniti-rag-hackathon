@@ -7,10 +7,10 @@
 На ноутбуке с репозиторием из его корня подайте отдельную папку для каждой доступной области:
 
 ```powershell
-python scripts/serve_ui.py --rag out_jury_deepseek_v1/csv --solar out_solar_dev
+python scripts/serve_ui.py
 ```
 
-Откройте [обозреватель на порту 8000](http://127.0.0.1:8000/). Если имеется только RAG-выгрузка, опустите `--solar out_solar_dev`. Для автономного показа версии с тегом `jury-demo-deepseek-v1` распакуйте одноимённый ZIP и запустите `python scripts/serve_ui.py csv` из папки пакета.
+Откройте [обозреватель на порту 8000](http://127.0.0.1:8000/). Для просмотра частичной RAG-выгрузки на закрытой выборке запустите `python scripts/serve_ui.py --rag results/rag-test-partial`.
 
 ## Сценарий на три минуты
 

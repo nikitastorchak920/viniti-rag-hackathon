@@ -1,0 +1,204 @@
+publication_id,dataset_id,dataset_name,dataset_version,language,data_split,scientific_domain,note
+P001,DS1,ORD-QA,,English,,EDA (OpenROAD documentation),90 question-document-answer triplets; 290 chunks
+P001,DS2,Commercial EDA tool documentation QA dataset,,English,,EDA (timing ECO platform),60 question-document-answer triplets; internal dataset
+P002,DS1,PapersWithCodeQA,,,,"Computer Vision, Natural Language Processing, Medical, Graphs","12,171 papers; 924 questions (420 True/False, 420 multiple-choice, 84 generative)"
+P002,DS2,PubMedQA-1k,,,,PubMed / biomedical,"1,000 QA pairs; citation graph of 7,849 papers"
+P003,DS1,TED,,English,,Thyroid eye disease ophthalmology guidelines,"101 questions, 35 keypoint-passage pairs (Table S1, p.14)"
+P003,DS2,GD,,English,,Graves' disease ophthalmology guidelines,"97 questions, 22 keypoint-passage pairs (Table S1, p.14)"
+P003,DS3,Pooled-57,,English,,TED+GD pooled gallery,"TED questions with 35 TED + 22 GD keypoints (Table S8, p.16)"
+P004,DS1,HotpotQA,,,,,multi-hop reasoning benchmark (p.5)
+P004,DS2,ASQA,,,,,long-form ambiguity benchmark (p.5)
+P004,DS3,MuSiQue,,,,,compositional multi-hop benchmark (p.5)
+P004,DS4,TriviaQA,,,,,open-domain factual QA under noisy retrieval (p.5)
+P004,DS5,CoQA,,,,,"used only for router statistics, Table 6 (p.12)"
+P005,DS1,Dragonball,,English and Chinese,,"finance, legal, and medical",multi-domain multilingual RAG benchmark from RAGEval
+P005,DS2,SCI-DOCS,,,,scientific,scientific document representation benchmark introduced with SPECTER
+P005,DS3,LegalBench-RAG,,,,legal,"6,858 query-answer pairs over legal documents"
+P005,DS4,MS MARCO,,,,open-domain,large-scale open-domain passage retrieval benchmark
+P005,DS5,HotpotQA,,,,open-domain,multi-hop QA benchmark built from Wikipedia
+P005,DS6,WebQuestions,,,,open-domain,short-form factual QA benchmark from web search logs
+P006,DS1,Natural Questions (NQ),,en,test (100 randomly drawn questions),open-domain question answering (Wikipedia),Sec. 5.1; external corpus Wikipedia ~21M passages.
+P006,DS2,TriviaQA,,en,test (100 randomly drawn questions),open-domain question answering (Wikipedia),"Sec. 5.1; Wikipedia-only setting, ~21M passages."
+P006,DS3,ChatDoctor,,en,test (100 patient questions); remaining ~115K dialogues as private corpus,medical dialogue / healthcare,"Sec. 5.1, Appendix B.2."
+P007,DS1,SIGHAN13,,Chinese,test,,sentences written by Chinese students aged 13 to 14
+P007,DS2,SIGHAN14,,Chinese,test,,articles written by foreigners learning Chinese
+P007,DS3,SIGHAN15,,Chinese,test,,most commonly used CSC benchmark
+P007,DS4,CSCD-IME(500),,Chinese,test,,"500 samples randomly extracted from CSCD-IME; Sina Weibo posts, multi-domain"
+P007,DS5,OAD,,Chinese,test,,OCR and ASR recognition results; 300 audio + 200 handwritten image results
+P008,DS1,STARK-MAG,,,testing set,academic knowledge graph,2665 testing questions
+P008,DS2,STARK-PRIME,,,testing set,precision medicine knowledge graph,2801 testing questions
+P008,DS3,CRAG,,,testing set,"finance, sports, music, movie, encyclopedia",1335 textual and relation questions
+P009,DS1,RealPersonaChat (RPC),,Japanese,,,"approx. 14,000 Japanese real-world conversations with real speaker persona data (Yamashita et al., 2023)"
+P009,DS2,JPersonaChat (JPC),,Japanese,,,"5,000 Japanese fictional conversations with fictional speaker persona data (Sugiyama et al., 2023)"
+P010,DS1,BDD-X,,English,"test split (2,123 video QA pairs); training split (16,803 pairs) used as memory database",driving,"Tab. I upper, Tab. II, Tab. III, Tab. IV, Tab. V"
+P010,DS2,Spoken-SAX,,English,"test (58 QA pairs), London UK",driving,"Tab. I lower, Tab. V; zero-shot generalisation"
+P011,DS1,"Capital Group fund data (mutual funds, ETFs, PPS) as key-value JSON",,English,,finance,1104 records; nested up to 3-4 levels
+P011,DS2,Evaluation question set (200 questions across four intents),,English,,finance,"100 search/listing, 45 detail, 45 compare, 10 other"
+P012,DS1,Natural Questions (NQ),KILT,English,dev/test (KILT),open-domain factoid QA,2837 queries in SpecUBench (Table 5)
+P012,DS2,TriviaQA (TQ),KILT Wikipedia portion,English,,open-domain factoid QA,5359 queries in SpecUBench (Table 5)
+P012,DS3,MS MARCO-FQA (MQ),"MS MARCO QA dev, entity answers extracted by Qwen3-32B",English,dev,factoid QA,3199 queries; 8.8M passage corpus
+P012,DS4,HotpotQA (HQA),full wiki,English,,multi-hop QA,5600 queries
+P012,DS5,2WikiQA (2QA),,English,,multi-hop QA,12576 queries
+P012,DS6,FEVER,,English,,fact verification,10245 queries
+P013,DS1,NQ-10,"NQ-10 (Liu et al., 2023)",English,test,Wikipedia open-domain QA,10 candidate documents per question
+P013,DS2,NQ-30,,English,test,Wikipedia open-domain QA,30 candidate documents; Appendix B.1
+P013,DS3,HotpotQA,,English,test,Wikipedia multi-hop QA,10 candidate documents
+P013,DS4,2Wiki,2WikiMultiHopQA,English,test,Wikipedia multi-hop QA,10 candidate documents
+P013,DS5,MuSiQue,,English,test,Wikipedia multi-hop QA,20 candidate documents
+P014,DS1,NQ (RAG-Bench test set),,English,test,open-domain QA,"1,000 samples"
+P014,DS2,TriviaQA (RAG-Bench test set),,English,test,open-domain QA,"1,000 samples"
+P014,DS3,WebQ (RAG-Bench test set),,English,test,open-domain QA,"1,000 samples"
+P014,DS4,"NQ (RAG-Bench, Wikipedia retrieval)",,English,test,open-domain QA,"Table 3, DPR retrieval"
+P014,DS5,"TriviaQA (RAG-Bench, Wikipedia retrieval)",,English,test,open-domain QA,"Table 3, DPR retrieval"
+P014,DS6,"WebQ (RAG-Bench, Wikipedia retrieval)",,English,test,open-domain QA,"Table 3, DPR retrieval"
+P014,DS7,HotpotQA,,English,dev,multi-hop QA,7k samples; Table 5
+P015,DS1,NoteRel,,,test,user-generated content platform (Xiaohongshu),internal industrial dataset; 3 relevance classes
+P015,DS2,T2Ranking,,Chinese,test,web passages,public benchmark; sampled 3k records from test set; 4-level labels aligned to 3 classes
+P016,DS1,MKQA,,"English, Spanish, German, Italian, Portuguese, Russian, Chinese, Korean, Thai, Japanese, Finnish, Arabic",,open-domain question answering,"12 languages used (Table 11); 1.2k questions per language, 8.4k total (Table 8)"
+P016,DS2,MLQA,,"English, Chinese, Arabic, German, Spanish, Vietnamese, Hindi",,open-domain question answering,"7 languages used (Table 11); 0.8k questions per language, 9.6k total (Table 8)"
+P016,DS3,XOR-TyDi QA,,"English, Chinese, Arabic, Korean, Finnish, Telugu, Bengali",,open-domain question answering,"8 languages used (Table 11); 0.4k questions per language, 2.4k total (Table 8)"
+P018,DS1,DRQA,,,,enterprise deep-research,derived from DRBench; 568 examples
+P018,DS2,NQ,,,,open-domain,"Natural Questions, Izacard and Grave (2021) preprocessing"
+P018,DS3,TriviaQA,,,,open-domain,TQA; Izacard and Grave (2021) preprocessing
+P018,DS4,RetrievalQA,,,,open-domain,follows Zhang et al. (2024)
+P018,DS5,PopQA,,,,open-domain,original release from Mallen et al. (2023)
+P019,DS1,2WikiMultihopQA,,en,"test (extended to 1,000 questions)",,Ho et al. [11]; extended per Trivedi et al. [33]
+P019,DS2,HotpotQA,,en,"test (extended to 1,000 questions)",,Yang et al. [45]; extended per Trivedi et al. [33]
+P019,DS3,MuSiQue,,en,"test (extended to 1,000 questions)",,Trivedi et al. [32]; extended per Trivedi et al. [33]
+P020,DS1,Adobe Experience Platform (AEP) uni-domain,,,,Adobe product documentation (Experience League),SME and SLA query-doc pairs; Table 1
+P020,DS2,Adobe Customer Journey Analytics (CJA) uni-domain,,,,Adobe product documentation (Experience League),SME and SLA query-doc pairs; Table 1
+P020,DS3,Adobe Target uni-domain,,,,Adobe product documentation (Experience League),SME and SLA query-doc pairs; Table 1
+P020,DS4,AEP + CJA cross-domain,,,,Adobe product documentation (Experience League),SLA cross-domain; Table 1
+P020,DS5,AEP + Target cross-domain,,,,Adobe product documentation (Experience League),SLA cross-domain; Table 1
+P020,DS6,CJA + Target cross-domain,,,,Adobe product documentation (Experience League),SLA cross-domain; Table 1
+P021,DS1,RAGTIME,,multilingual,,,"Multilingual text report-generation task (Lawrie et al., 2026)"
+P021,DS2,WIKIVIDEO,,,,,"Audiovisual article-generation task (Martin et al., 2026a)"
+P021,DS3,WIKIVIDEO-25,,,,,"MAGMaR shared task audiovisual article generation (Martin et al., 2026b)"
+P021,DS4,UNLI,,English,,,"Text NLI claim grounding data (Chen et al., 2020)"
+P021,DS5,PeopleProfile,,English,,,"Text claim grounding data (Walden et al., 2025b)"
+P021,DS6,CLOTHO,,,,,"Audio NLI claim grounding data (Drossos et al., 2020; Deshmukh et al., 2024)"
+P022,DS1,2WikiMultihopQA,,,test,,1.0k test samples
+P022,DS2,HotpotQA,,,test,,1.0k test samples
+P022,DS3,PopQA,,,test,,1.4k test samples
+P022,DS4,ARC-Challenge,,,test,,1.2k test samples
+P023,DS1,Long VideoBench (LV-Bench),,,Val,,Table 1
+P023,DS2,MLVU,,,,,Table 1
+P023,DS3,Video-MME-Long (w/o Sub),,,,,Table 1
+P023,DS4,EgoSchema,,,test set,,Table 2
+P023,DS5,IR-600K,,,training/validation,,"intent-relevance dataset, 605,676 train / 21,791 val samples"
+P024,DS1,PaperTab,,,test/eval split,Wikipedia,sourced from UDA/QASPER
+P024,DS2,FetaTab,,,test/eval split,Scientific Papers,sourced from UDA/FeTaQA
+P024,DS3,SciGraphQA,,,sampled 500 questions,Scientific Papers,charts
+P024,DS4,SPIQA,,,eval split,Scientific Papers,tables and charts
+P024,DS5,SlideVQA,,,multi-hop subset,Presentation Decks,slides
+P024,DS6,VisDoMBench,,,combined,Combined,aggregate of five splits
+P025,DS1,HealthcareMagic-101,,,retrieval database (200k doctor-patient medical dialogues),medical,p.4; also called HealthCareMagic / Chatdoctor
+P025,DS2,Enron Email,,,"retrieval database (500,000 employee emails)",email,p.4; also called Enron Mail / Enron-Email
+P025,DS3,Enron_Mail,,,subset of [模型名称已隐藏]-Neo-1.3B pre-training data (memorization target),email,p.7; 1000 prefixes used in prefix attack
+P025,DS4,wikitext-103,,,retrieval data,general,p.7; not in [模型名称已隐藏]-Neo-1.3B pre-training data
+P025,DS5,w3c-email,,,retrieval data,email,p.7; similar distribution to part of training data
+P025,DS6,Common Crawl,,,source of random chunks for {information} component,web,p.3
+P026,DS1,M2RAG,,,test,,Image captioning / multi-modal QA / image reranking built from WebQA; fact verification from Factify
+P026,DS2,MSCOCO,,,test,,Version used in UniRAG image captioning task
+P026,DS3,WebQA,,,train/test,,"Source corpus for captioning, QA, reranking"
+P026,DS4,Factify,,,validation,,Test labels unavailable; sampled from validation set
+P027,DS1,TriviaQA (unfiltered),,English,,open-domain QA,"Joshi et al., 2017"
+P027,DS2,MuSiQue,,English,,multi-hop QA,"Trivedi et al., 2022"
+P027,DS3,PopQA,,English,,open-domain QA,"Mallen et al., 2023"
+P027,DS4,PubHealth,,English,,biomedical claim verification,"Zhang et al., 2023b"
+P027,DS5,ARC-Challenge (ARC-C),,English,,science multiple-choice QA,"Clark et al., 2018"
+P027,DS6,HotpotQA,,English,validation (500 sampled),multi-hop QA,"Yang et al., 2018"
+P028,DS1,Ar_EduText (Arabic EduText Secondary School Dataset),,Arabic (MSA documents; Egyptian dialect question variant),,high school Arabic textbooks,158 questions; 19 segment embeddings
+P028,DS2,ARCD (Arabic Reading Comprehension Dataset),,Arabic,,Wikipedia articles spanning diverse domains,"1,395 questions; 460 unique paragraphs; 460 segment embeddings"
+P029,DS1,RAGPULSE,,,,university policy question answering,134K requests over 389 days from TWEN production system
+P029,DS2,BurstGPT,,,,,generic LLM inference trace baseline
+P029,DS3,MTRAG,,,,,synthetic multi-turn conversational RAG benchmark baseline
+P030,DS1,private internal documents from a production company,,,"6 documents for finetuning, 2 test documents",,8 private internal PDF documents; test set of 100 questions generated with [模型名称已隐藏]-4o (p.6)
+P030,DS2,image questions from two test documents,,,test,,50 questions asking about specific images (p.8)
+P030,DS3,table questions from two test documents,,,test,,50 questions asking about specific tables (p.8)
+P031,DS1,KILT-NQ,,,,Wikipedia open-domain QA,Faithful group; 500 samples (p.5)
+P031,DS2,TriviaQA,,,,trivia open-domain QA,Faithful group; 500 samples (p.5)
+P031,DS3,SQuAD,,,,paragraph-level reading comprehension,Faithful group; 500 samples (p.5)
+P031,DS4,ConflictBank,,,,knowledge conflict,Factual-conflict group; 500 samples (p.5)
+P031,DS5,NQ-Swap,,,,knowledge conflict,Factual-conflict group; 500 samples (p.5)
+P031,DS6,CounterFact,,,,knowledge conflict,Factual-conflict group; 500 samples (p.5)
+P032,DS1,LLM-AggreFact,,English,,,Collection of 11 human-annotated datasets; binary Grounded vs. Hallucinated
+P032,DS2,AGGREFACT-CNN,,English,,,Subset of LLM-AggreFact; Table 1 column CNN
+P032,DS3,AGGREFACT-XSum,,English,,,Subset of LLM-AggreFact; Table 1 column XSum
+P032,DS4,TofuEval-MediaS,,English,,,Subset of LLM-AggreFact; Table 1 column MediaS
+P032,DS5,TofuEval-MeetB,,English,,,Subset of LLM-AggreFact; Table 1 column MeetB
+P032,DS6,WiCE,,English,,,Subset of LLM-AggreFact; Table 1 column WiCE
+P032,DS7,REVEAL,,English,,,Subset of LLM-AggreFact; Table 1 column REVEAL
+P032,DS8,ClaimVerify,,English,,,Subset of LLM-AggreFact; Table 1 column Claim Verify
+P032,DS9,FactCheck-GPT,,English,,,Subset of LLM-AggreFact; Table 1 column Fact Check
+P032,DS10,ExpertQA,,English,,,Subset of LLM-AggreFact; Table 1 column Expert QA
+P032,DS11,LFQA,,English,,,Subset of LLM-AggreFact; Table 1 column LFQA
+P032,DS12,RAGTruth,,English,,,Subset of LLM-AggreFact; Table 1 column RAG Truth
+P033,DS1,OHR-Bench,,En,,"Academic, Administration, Finance, Law, Manual, Newspaper, Textbook","1,261 docs, 8,561 pages, 8,498 QA; Table 4, p.5"
+P033,DS2,BizMMRAG,,Ja,,"Manufacturing, Finance, Government, Medical, Consulting Sectors, Wikipedia","42 docs, 3,924 pages, 146 QA; Table 4, p.5"
+P033,DS3,Allganize,,Ja,,"Finance, Public Information Sector, Technology, Retail/Distribution","64 docs, 2,167 pages, 300 QA; Table 4, p.5"
+P034,DS1,"Plastic Bags ban collection (French marine environmental law corpus, FAOLEX)",,French,,marine environmental law,195 articles; Table 3 column 'Plastic Bags'
+P034,DS2,"Bottom Trawling ban collection (French marine environmental law corpus, FAOLEX)",,French,,marine environmental law,829 articles; Table 3 column 'Bottom Trawling'
+P034,DS3,"Coastal Construction ban collection (French marine environmental law corpus, FAOLEX)",,French,,marine environmental law,"2,730 articles; additional prohibition introduced to challenge retrieval; Table 3"
+P034,DS4,"Whaling ban collection (French marine environmental law corpus, FAOLEX)",,French,,marine environmental law,"1,646 articles; additional prohibition introduced to challenge retrieval; Table 3"
+P034,DS5,"Hydrocarbon discharge ban collection (French marine environmental law corpus, FAOLEX)",,French,,marine environmental law,"5,196 articles; additional prohibition introduced to challenge retrieval; Table 3"
+P035,DS1,NQ,,en,500 randomly selected examples,open-domain QA,"Kwiatkowski et al., 2019"
+P035,DS2,TriviaQA,,en,500 randomly selected examples,open-domain QA,"Joshi et al., 2017"
+P035,DS3,PopQA,,en,500 randomly selected examples,open-domain QA,"Mallen et al., 2023"
+P035,DS4,2WikiMultihopQA,,en,500 randomly selected examples,multi-hop QA,"Ho et al., 2020; printed as '2Wiki' in tables"
+P035,DS5,HotpotQA,,en,500 randomly selected examples,multi-hop QA,"Yang et al., 2018"
+P035,DS6,StrategyQA,,en,500 randomly selected examples,commonsense reasoning,"Geva et al., 2021; EM only"
+P036,DS1,"Broadcom Inc. earnings report, third quarter of 2023",,,evaluation,semiconductor finance,Held-out evaluation company; p.10-11
+P036,DS2,"Nvidia and AMD earnings reports, third quarter of 2023",,,training,semiconductor finance,800 training samples of financial instruction data; p.10-11
+P038,DS1,SQuAD,2.0,English,,Wikipedia,"Stanford Question Answering Dataset v2.0, ~536 articles"
+P039,DS1,UltraDomain Agriculture,,,,Agriculture,"Agri; 12 docs, 1756 chunks (Table 6)"
+P039,DS2,UltraDomain CS,,,,Computer Science,"10 docs, 1858 chunks (Table 6)"
+P039,DS3,UltraDomain Legal,,,,Legal,"94 docs, 4294 chunks (Table 6)"
+P039,DS4,UltraDomain Mix,,,,Mix of 18 fields,"61 docs, 579 chunks (Table 6)"
+P040,DS1,MuSiQue,IRCoT split,en,test,open-domain multi-hop QA,"500 test queries, 139,416 documents (Table 5, p.12)"
+P040,DS2,2WikiMultiHopQA,IRCoT split,en,test,open-domain multi-hop QA,"500 test queries, 430,225 documents (Table 5, p.12)"
+P040,DS3,HotpotQA,HippoRAG setting,en,test,open-domain multi-hop QA,"1,000 test queries, 9,221 documents (Table 5, p.12)"
+P041,DS1,HotpotQA-Dist,,en,distractor,Wikipedia,10 provided documents per query (p.5)
+P041,DS2,HotpotQA-Full,,en,fullwiki,Wikipedia,"66,581 documents (p.5)"
+P041,DS3,Shuffle-HotpotQA-Dist,,en,distractor,Wikipedia,Entity-shuffled variant of HotpotQA-Dist (p.5-6)
+P041,DS4,Shuffle-HotpotQA-Full,,en,fullwiki,Wikipedia,Entity-shuffled variant of HotpotQA-Full (p.5-6)
+P041,DS5,MuSiQue,,en,,,Appendix Table 7 (p.13)
+P041,DS6,TriviaQA,,en,,,"Long-context dataset, avg 2,895 words/doc (p.13)"
+P042,DS1,"Multilingual historical corpus (Napoleon, 1805-1819), English chunks",,English,,historical,"Table 1: 4,380 EN chunks"
+P042,DS2,"Multilingual historical corpus (Napoleon, 1805-1819), French chunks",,French,,historical,Table 1: 913 FR chunks
+P042,DS3,"Multilingual historical corpus (Napoleon, 1805-1819), Dutch chunks",,Dutch,,historical,"Table 1: 3,880 NL chunks"
+P042,DS4,"Napoleon question set (10 questions, EN/FR/NL)",,English; French; Dutch,,historical,Appendix A; 5 neutral + 5 primed-to-bias questions
+P043,DS1,CRUD,,,,news,Long-answer generation news QA benchmark [16]
+P043,DS2,OmniEval,,,,financial,Financial domain RAG benchmark [27]
+P043,DS3,MultiFieldQA_zh,,,,multiple domains,Derived from LongBench [1]
+P044,DS1,Medical-Dialog-Dataset,,,,medical dialogue,huggingface.co/datasets/medical_dialog; page 8
+P044,DS2,Mohammed-Altaf-Medical-Instruction-Dataset,,,,medical instruction,huggingface.co/datasets/Mohammed-Altaf/medical-instruction-120k; page 8
+P044,DS3,Diagnoise-Me-Dataset,,,,medical diagnosis,kaggle.com/datasets/dsxavier/diagnoise-me; page 8
+P045,DS1,Enc-VQA,,,"test (single-hop, two-hop excluded)",encyclopedic knowledge VQA,4.7K test triplets; 2M Wiki KB
+P045,DS2,InfoSeek,,,"validation (Unseen-Q, Unseen-E, All)",encyclopedic knowledge VQA,100K Wiki KB
+P045,DS3,InfoSeek,,,validation Unseen-Q,encyclopedic knowledge VQA,unseen questions split
+P045,DS4,InfoSeek,,,validation Unseen-E,encyclopedic knowledge VQA,unseen entities split
+P046,DS1,HotPotQA-Derived,,en,bridge-easy,,"Derived from HotPotQA; 14,282 examples; p.5 §3.6, Table 14"
+P046,DS2,HotPotQA-Derived,,en,bridge-medium,,"45,863 examples; Table 14"
+P046,DS3,HotPotQA-Derived,,en,bridge-hard,,"12,246 examples; Table 14"
+P046,DS4,RAGTruth,,en,QA,,989 test samples; Table 14
+P046,DS5,RAGTruth,,en,Data-to-Text,,"1,033 test samples; Table 14"
+P046,DS6,RAGTruth,,en,Summarization,,943 test samples; Table 14
+P046,DS7,HaluBench,,en,,,"13,867 samples; Table 14, Table 16"
+P047,DS1,MMLongBench,,,,,Text-centric long multi-page document QA; no anchor figures
+P047,DS2,M3SciQA,,,,scientific,Cross-document scientific QA with anchor figures
+P047,DS3,AutoQA,,,,automotive,"Model-curated automotive cross-document QA; 885 pairs, 405 web-sourced images"
+P048,DS1,Novel,,,,,"GraphRAG-bench dataset; Table II, Table IV, Table V, Table VI, Table VII"
+P048,DS2,Medical,,,,,"GraphRAG-bench dataset; Table II, Table IV, Table V, Table VI, Table VII"
+P048,DS3,WOS,,,,,"text classification dataset; Table II, Table III, Table VII"
+P048,DS4,IFS-REL,,,,,"text classification dataset; Table II, Table VII (printed IFS-Rel)"
+P049,DS1,RAGTruth,,,Llama-7B part: 510 hallucination samples and 479 normal samples,,p.6; Table 1 RAGTruthLlama-7B
+P049,DS2,RAGTruth,,,Llama-13B part: 399 hallucination samples and 590 normal samples,,p.6; Table 1 RAGTruthLlama-13B
+P049,DS3,Dolly-15k,,,"closed question-answering scenarios, empty contexts filtered",,p.6; Table 2 DollyQwen2.5-3B / DollyQwen2.5-7B
+P050,DS1,2WikiMultihopQA (2WQA),,,test,general multi-hop QA,
+P050,DS2,HotpotQA (HPQA),,,test,general multi-hop QA,
+P050,DS3,PopQA,,,test,general QA,
+P050,DS4,ComplexWebQuestions (CWQ),,,test,general multi-hop QA,
+P050,DS5,MedQA,,,test,biomedical/medical exam QA,
+P050,DS6,MedMCQA,,,test,biomedical/medical exam QA,
+P050,DS7,PubMedQA,,,test,biomedical research QA,

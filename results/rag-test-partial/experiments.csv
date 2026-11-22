@@ -1,0 +1,244 @@
+publication_id,experiment_id,evaluation_protocol,baseline_name,hardware,latency_ms,tokens_per_query,sample_size,note
+P001,E1,recall@k on ORD-QA semantic search,text-embedding-ada-002; bge-large-en-v1.5,16xA100 40G,,,90,Table 1
+P001,E2,recall@k on ORD-QA reranker filtering,RRF; bge-reranker-large,16xA100 40G,,,90,Table 2
+P001,E3,BLEU/ROUGE-L/UniEval on ORD-QA with golden documents,[模型名称已隐藏]-4; Qwen1.5-14B-Chat; llama-2-13B-chat; Baichuan2-13B-Chat,16xA100 40G,,,90,Table 3
+P001,E4,BLEU/ROUGE-L/UniEval on ORD-QA full RAG flows,Vanilla-RAG; RAG-fusion; HyDE; llmlingua; ITER-RETGEN; RAG-EDA+[模型名称已隐藏]-4,16xA100 40G,,,90,Table 4
+P001,E5,BLEU/ROUGE-L/UniEval on commercial EDA tool QA dataset,Vanilla-RAG; RAG-fusion; HyDE; llmlingua; ITER-RETGEN; RAG-EDA+[模型名称已隐藏]-4,16xA100 40G,,,60,Table 5
+P001,E6,average runtime per question on ORD-QA,Vanilla-RAG; RAG-fusion; HyDE; llmlingua; ITER-RETGEN; RAG-EDA+[模型名称已隐藏]-4,16xA100 40G,,,90,Figure 9
+P002,E1,RAG evaluation with [模型名称已隐藏]-4 generation; retrieval Hit@1/Hit@3; MRR; Acc; F1; UniEval Coherence/Consistency/Relevance,BM25; Doc2Query; MiniLM; LaBSE; mContriever; E5; SPAR; Score Fusion; ColBERT; CLEAR,two DeepSeek A10 GPUs,,,,Table 2
+P002,E2,Retrieval-only evaluation on PubMed citation graph,BM25; Doc2Query; BGE-M3; MiniLM; LaBSE; mContriever; E5; SPAR; Score Fusion; ColBERT; CLEAR,,,,,Table 3
+P002,E3,"Efficiency evaluation (memory, indexing and query latency)",Score Fusion; ColBERT; CLEAR,,,,,Table 4
+P002,E4,Ablation study on PubMedQA,GAT; GCN; Graph Transformer; Top-n 2/8; TF-IDF; BM25; Doc2Query; BGE-M3; E5; mContriever; MiniLM,,,,,Table 5
+P003,E1,"Accuracy, OC@0.8, ECE; single run per model-dataset block",Vanilla LLM; Fixed-1 RAG; Fixed-5 RAG; URGen,DeepSeek 4090 GPU (24 GB memory),,,,Table 1 cross-backbone comparison (p.6) | sample_size: 101 (TED); 97 (GD)
+P003,E2,"Component-wise ablation on TED, Llama-3.1",URGen (full); w/o uncertainty calibration; w/o adaptive retrieval; w/o retrieval temperature diversity; w/o generation temperature diversity; w/o multi retrieval; Vanilla LLM,DeepSeek 4090 GPU (24 GB memory),,,101,Table 2 (p.7)
+P003,E3,"Five seeds {0,1,2,3,4}, mean ± std; 10,000 paired question-level bootstrap",Fixed-1 RAG; Fixed-2 RAG; Fixed-5 RAG; URGen,DeepSeek 4090 GPU (24 GB memory),,,101,Table 3 (p.7); Table S5 (p.16)
+P003,E4,"Joint temperature-count sensitivity, five seeds","URGen with (M1,M2) = (3,3); (5,5); (7,7)",DeepSeek 4090 GPU (24 GB memory),,,101,Table S6 (p.16)
+P003,E5,"Linear vs exponential depth mapping, five seeds",Linear; Exponential,DeepSeek 4090 GPU (24 GB memory),,,101,Table S7 (p.16)
+P003,E6,TED-35 vs pooled-57 gallery accuracy,Fixed-1; Fixed-5; URGen,DeepSeek 4090 GPU (24 GB memory),,,101,Table S8 (p.16)
+P003,E7,"Dense retriever baselines, top-1 keypoint",CLIP fixed-1; BioMedCLIP fixed-1; URGen,DeepSeek 4090 GPU (24 GB memory),,,101,Table S11 (p.17)
+P003,E8,LLM ranking and RQ-RAG baselines,Single-pass Llama ranker; RQ-RAG; URGen,DeepSeek 4090 GPU (24 GB memory),,,101,Table S12 (p.17)
+P004,E1,average of 5 runs; F1/ROUGE-L plus RAGAS Faithfulness and Answer Relevance,Standard RAG; ReAct; IRCoT; Self-RAG; SeaKR; R3-RAG; RAG-RL,DeepSeek A100 GPUs,,,,"Table 1, Qwen3-8B backbone (p.7)"
+P004,E2,"cross-model generalization, same metrics",ReAct; IRCoT; Self-RAG; SeaKR; R3-RAG; RAG-RL,,,,,"Table 7, five backbones (p.15)"
+P004,E3,parameter scaling comparison 8B vs 32B,LCR-RAG (8B),,,,,Table 8 (p.16)
+P004,E4,long-tail test set of problems rule-based optimizer fails,Rule-Based Optimizer,,,,,Table 2 (p.7)
+P004,E5,router statistics on three datasets,,,,,,Table 6 (p.12)
+P005,E1,"retrieval metrics averaged over @1, @3, @5, mean of three independent runs",Dense X Retrieval; Meta-Chunking-PPL; Meta-Chunking-MSP; RAPTOR; LightRAG; PropRAG; MoC; SAKI-RAG,8 DeepSeek A100 80GB GPUs,,,,Table 1
+P005,E2,"end-to-end answer quality plus online cost (Tok/Q, latency), excluding offline training/indexing",GraphRAG; ReflectiveRAG; REFRAG; PageIndex,8 DeepSeek A100 80GB GPUs,193,4382,,Table 2; latency and Tok/Q are SPROUTRAG values
+P005,E3,"ablation and hyperparameter sensitivity, retrieval metrics averaged over @1, @3, @5","SPROUTRAG default (b=5, lambda=0.1)",8 DeepSeek A100 80GB GPUs,,,,Table 3
+P005,E4,retrieval performance at depth k=1,Dense X Retrieval; Meta-Chunking-PPL; Meta-Chunking-MSP; RAPTOR; LightRAG; PropRAG; MoC; SAKI-RAG,,,,,Table 4
+P005,E5,retrieval performance at depth k=3,Dense X Retrieval; Meta-Chunking-PPL; Meta-Chunking-MSP; RAPTOR; LightRAG; PropRAG; MoC; SAKI-RAG,,,,,Table 5
+P005,E6,retrieval performance at depth k=5,Dense X Retrieval; Meta-Chunking-PPL; Meta-Chunking-MSP; RAPTOR; LightRAG; PropRAG; MoC; SAKI-RAG,,,,,Table 6
+P006,E1,"Match Accuracy on NQ/TriviaQA and BERTScore F1 on ChatDoctor, under privacy budgets epsilon in {1,5,10,100}, 100 test queries per dataset",Non-RAG; Non-Private-RAG; DPVoteRAG; DPSparseVoteRAG; MuRAG,,,,100,"Table 1, page 7."
+P006,E2,"Ablation with OPT-1.3B at epsilon in {1,10} on three datasets",SparsePay-RAG; -TGC; -AT; -CD,,,,100,"Table 2, page 8."
+P006,E3,"Interrogation Attack (MIA) TPR-FPR AUC on ChatDoctor with Llama-3.1-8B, m=30 questions per candidate",Non-Private-RAG; SparsePay-RAG,,,,,"Figure 2, page 8; AUC values reported in text."
+P006,E4,Paired t-tests vs MuRAG at epsilon=5 across models and datasets,MuRAG,,,,100,"Table 7, page 16."
+P006,E5,Budget allocation ratio sensitivity on OPT-1.3B at epsilon=1,"SparsePay-RAG (ratios 1:9, 1:4, 1:1, 4:1)",,,,100,"Table 9, page 17."
+P006,E6,"Larger-scale evaluation with 1,000 queries on OPT-1.3B at epsilon=100",MuRAG,,,,1000,"Table 10, page 17."
+P006,E7,Fallback-enhanced baselines with OPT-1.3B at epsilon=10,Non-RAG; DPVoteRAG (original); DPVoteRAG (+ fallback); DPSparseVoteRAG (original); DPSparseVoteRAG (+ fallback); SparsePay-RAG,,,,100,"Table 11, page 18."
+P006,E8,Average online latency per query on a single DeepSeek A100 80GB GPU,SparsePay-RAG,single DeepSeek A100 80GB GPU,,,,"Table 8, page 17; latencies printed in seconds."
+P007,E1,"sentence-level detection/correction accuracy, precision, recall, F1; LLM results averaged over 3 runs",BERT+FixedFew-Shot; ReaLiSe+FixedFew-Shot; CRASpell+FixedFew-Shot; SCOPE+FixedFew-Shot; GLM4+RAGFew-Shot+IDS; [模型名称已隐藏]3.5+RAGFew-Shot+IDS,"Intel-12600k CPU, 64GB memory, RTX-4090 GPU",,,,Table 2 main results
+P007,E2,ablation on SIGHAN15 test set with [模型名称已隐藏]3.5,FixedFew-Shot; RAGFew-Shot; FixedFew-Shot+IDS; RAGFew-Shot+IDS,"Intel-12600k CPU, 64GB memory, RTX-4090 GPU",,,,Table 3 ablation
+P008,E1,"retrieval evaluation with Hit@1, Hit@5, Recall@20, MRR",QAGNN; Think-on-Graph; Dense Retriever; VSS (Text Retrieval Module); Multi-VSS; VSS w/ LLM Reranker; ReAct; Reflexion; AVATAR; Hybrid Retrieval Module,AWS EC2 P4 instance with DeepSeek A100 GPUs,,,,Table 5 | sample_size: 2665 (STARK-MAG) / 2801 (STARK-PRIME)
+P008,E2,ablation with validator/commenter variants,HYBGRAG w/o Context ICL; HYBGRAG w/ Context 5-Shot,AWS EC2 P4 instance with DeepSeek A100 GPUs,,,,Table 10
+P008,E3,"end-to-end RAG evaluation with LLM evaluator (Accuracy, Hallucination, Missing, Scorea)",CoT LLM; Text-Only RAG; Graph-Only RAG; Text & Graph RAG; ReAct; Corrective RAG,AWS EC2 P4 instance with DeepSeek A100 GPUs,,,1335,Table 8
+P008,E4,cost analysis: API calls and tokens per iteration,,,,,,Tables 9 and 14
+P009,E1,"LLM-as-a-judge scoring ([模型名称已隐藏]-4o) of Interest, Novelty, IN-F1 with human correlation validation",Vanilla-RAG; PersonaRAG; PT-RAG; PT-RAG-KO,,,,,"Table 3, Table 4; 12 evaluators, 20 stratified samples for correlation"
+P009,E2,A/B test of initial utterances over 5 repeated rounds of seven-turn conversations,Topic-Initiator; Proactive (no new info.); Passive,,,,124,Figure 6; participants aged 18 and above
+P010,E1,"in-distribution evaluation on BDD-X test split, BDD-X training split as memory database",S2VT; S2VT++; SAA; WAA; ADAPT; Drive[模型名称已隐藏]4,single A100 GPU (inference),4000,,2123,Tab. I upper; inference ~4 seconds per round
+P010,E2,"zero-shot generalisation on Spoken-SAX, memory database from BDD-X training split",ADAPT; Base w/o ICL,single A100 GPU (inference),4000,,58,Tab. I lower
+P010,E3,control signal prediction on BDD-X test split,ADAPT; Drive[模型名称已隐藏]4,single A100 GPU (inference),4000,,2123,Tab. II
+P010,E4,ablation on retrieval strategy and ICL phase on BDD-X,,,,,,Tab. III
+P010,E5,ablation on number of ICL examples on BDD-X,,,,,,Tab. IV
+P010,E6,retrieval engine finetuning with target domain data (BDD-X and Spoken-SAX),,,,,,Tab. V
+P011,E1,"response correctness and completeness scored 1 / 0.5 / 0 per question, summed out of 200 points",RAG2 (Agentic RAG); RAGRDF; RAGLPG,,,,200,Table 1 and Table 2; 200 sampled questions
+P012,E1,RAG accuracy (substring match after normalization) with different evidence types; paired t-test p<0.05,Without retrieval; RP; MCP; HGP; Gold Utilitarian Passages (RP/HGP/MCP),,,,,"Table 2, NQ/TriviaQA/MS MARCO-FQA"
+P012,E2,LLM-specific utility judgment F1 (%),PVS (w/o PA); PVS (with PA); LVS (w/o PA); LVS (with PA),,,,,"Table 3, six datasets"
+P012,E3,Ranking NDCG@5 (%),Initial Retrieval; AttR; Likelihood; LVR (w/o Pseudo answer); LVR (w/ Pseudo answer),,,,,"Table 4, six datasets"
+P012,E4,"RAG accuracy (%) with selected/ranked evidence, unknown vs known queries",Initial Retrieval (Top-20); PVS (w/ A); LVS (w/ A); Retrieval (Top-5); AttR (Top-5); Likelihood (Top-5); LVR (w/ A) (Top-5),,,,,"Table 6, six datasets"
+P013,E1,Acc. and token-level F1 on test sets; Table 1,[模型名称已隐藏]-4o; [模型名称已隐藏]-V3; [模型名称已隐藏]-R1; Mistral7B; LongLLMLingua; Adaptive RAG; BGM; LLMLingua-2; ThoT; SelfElicit; MetaRAG; Prompt Tuning; SPRING; Prefix Tuning; R2AG; BubbleRAG,,,,,Mistral7B backbone for all enhanced methods
+P013,E2,Ablation on HotpotQA/2Wiki/MuSiQue; Table 2,BubbleRAG; w/o. thought bubble; w/o. interactive reading,,,,,Mistral7B
+P013,E3,Attention-based retrieval metrics; Table 3,Contriever; Mistral7B; R2AG; BubbleRAG,,,,,HotpotQA and 2Wiki
+P013,E4,Prompt template variant (question only after documents); Table 4,Mistral7B; Adaptive RAG; LLMLingua-2; BGM; Prompt Tuning; SPRING; Prefix Tuning; R2AG; BubbleRAG,,,,,Mistral7B
+P013,E5,Extended main results; Table 5,LLaMA27B; Qwen38B with all enhanced baselines,,,,,greedy decoding
+P013,E6,Extended ablation; Table 6,BubbleRAG; w/o. thought bubble; w/o. interactive reading,,,,,LLaMA27B and Qwen38B
+P013,E7,Budget-aligned textual bookmark ablation; Table 7,Mistral7B; Textual Bookmarks; Textual Bookmarks (Qwen3); BubbleRAG,,,,,NQ-10 and HotpotQA
+P013,E8,Candidate-size generalization; Figure 7,RAG; BubbleRAG,,,,,"trained with k=10, evaluated on varying document counts"
+P014,E1,"EM and F1 on RAG-Bench test set with k in {1,2,5,10} documents",Direct Inference; COIECD; SC; MADAM-RAG; Standard CoT; Joint CoT; Prior-Guided CoT; RAAT; RALM; KnowPO; GRPO-RAG,8 A100 GPUs,,,,Table 2 | sample_size: 1000 per subset
+P014,E2,"EM and F1 on Wikipedia-retrieved NQ/TriviaQA/WebQ, Oracle and Normal, Top 5/20/50",CARE-RAG; RAAT; RALM; KnowPO; GRPO-RAG,8 A100 GPUs,,,,Table 3
+P014,E3,No-document and all-incorrect-document settings on BGE-reranked NQ,GRPO-RAG-7B; BrPr-7B,8 A100 GPUs,,,,Table 4
+P014,E4,"Multi-hop QA on HotpotQA and 2WikiMultihopQA dev sets, Doc 10",Para. Answer; RAAT; RALM; KnowPO; GRPO-RAG,8 A100 GPUs,,,,Table 5 | sample_size: 7k HotpotQA; 12k 2Wiki
+P014,E5,"Ablation on lambda, Oracle NQ, Top 5/20/50",GRPO-RAG; BrPr-7B,8 A100 GPUs,,,,Table 6
+P015,E1,"offline evaluation on NoteRel test set; macro F1, Accuracy, one-vs-rest AUC",UMbrela; SFT; R1-Zero; R1; R³A-Zero; R³A,8 A100 GPUs,,,,Table 2
+P015,E2,offline evaluation on T²Ranking test set,UMbrela; SFT; R1-Zero; R1; R³A-Zero; R³A,8 A100 GPUs,,,,Table 2
+P015,E3,"inference latency over 1/10/100/1,000/10,000 evaluated documents",R³A-7B; R³A-Distill-1.5B,8 A100 GPU,,,,Table 3
+P015,E4,ablation study on NoteRel test set,R³A-7B (λ = 0); format variants; input variants; reward variants; single stage,8 A100 GPUs,,,,Table 4
+P015,E5,"online A/B test, 10% live traffic, one week; human GSB on 100 sampled query-answer pairs","existing online model (Fitte-Rey et al., 2025)",,150,,100,Section 3.5; latency ~150ms average response time
+P016,E1,flexible exact-match accuracy (ground-truth answer contained in generated answer),no RAG; tRAG; monoRAG; MultiRAG; CrossRAG,,,,,sample_size: 8.4k MKQA / 9.6k MLQA / 2.4k XOR-TyDi QA questions (Table 8)
+P016,E2,character 3-gram recall with SQuAD evaluation script,no RAG; tRAG; monoRAG; MultiRAG; CrossRAG,,,,,sample_size: Table 14
+P016,E3,accuracy after translating responses into English with [模型名称已隐藏]-4o,no RAG; tRAG; monoRAG; MultiRAG; CrossRAG,,,,,sample_size: Table 18
+P016,E4,accuracy with [模型名称已隐藏]-4o as translation tool for tRAG and CrossRAG,tRAG; CrossRAG,,,,,sample_size: Table 3
+P016,E5,accuracy with Translation-following tuning,MultiRAG; CrossRAG; CrossRAG ([模型名称已隐藏]-4o); TF,"four Nvidia RTX A6000 48VRAM, ~14 GPU/h",,,,"sample_size: Table 4, Table 10"
+P016,E6,accuracy with BGE-m3 retriever on MKQA subset,Cohere retrieval; BGE-m3 retrieval,,,,,sample_size: Figure 6
+P016,E7,"accuracy with documents translated to nearest typological language (MKQA, [模型名称已隐藏]-4o)",MultiRAG; CrossRAG (original); CrossRAG (translation by TL),,,,,sample_size: Table 20
+P018,E1,"str-em accuracy for NQ, TriviaQA, RetrievalQA, PopQA and LLM-as-a-judge accuracy for DRQA at @5 and @10",zero-shot; full; CAD; ADACAD; DVD; COCOA,single DeepSeek H100 80GB GPU,,,,"Table 1, page 7"
+P018,E2,"ablation with Qwen3.5-2B at @5 and @10, differences relative to DCCD",DCCD; Fixed Gate; Token-Only; Doc-Only; Random,,,,,"Table 2, page 8"
+P018,E3,wall-clock runtime per dataset and retrieval depth,Full-Context; CAD; ADACAD; COCOA; DVD; DCCD,single DeepSeek H100 80GB GPU,,,,"Table 8, page 20; runtime in rounded minutes"
+P019,E1,"Main evaluation on three MHQA benchmarks, EM/F1/P/R, max 5 iterations",CoT; RAG w/ CoT; SelfAsk; Iter-RetGen; GenGround; DualRAG,DeepSeek A6000 GPU (training),,,,Table 1 (p.7) | sample_size: 1000 questions per dataset
+P019,E2,Ablation of framework modules,STRIDE,,,,,Table 2 (p.7)
+P019,E3,Ablation of modular fine-tuning components,STRIDE-FT,,,,,Table 3 (p.8)
+P019,E4,Rewrite effectiveness (proportion of rewrite attempts leading to improvement),STRIDE; STRIDE-FT,,,,,Table 4 (p.8)
+P019,E5,Efficiency: token consumption and inference time per question,GenGround; DualRAG; STRIDE,,,,,Table 5 (p.9)
+P019,E6,Error attribution on failed predictions,Direct-Plan; Meta-Plan,,,,,Table 6 (p.9)
+P019,E7,"Robustness with expanded retrieval corpus of 50,000 documents per dataset",RAG; Iter-RetGen; GenGround; DualRAG; STRIDE,,,,,Figure 4 (p.9)
+P019,E8,Performance across reasoning depths (hops) on MuSiQue and top-k sensitivity on 2WikiMultihopQA,RAG; GenGround; DualRAG; STRIDE,,,,,Figures 5 and 7 (p.9-10)
+P020,E1,Acc@Top1 retrieval accuracy on uni-domain and cross-domain datasets (Fig. 2),Unified Index and Search (UIS); Router Filter and Search (RFS); LLM Filter and Search (LFS),,,,,[模型名称已隐藏]-3.5-turbo-1106 and [模型名称已隐藏]-4-0314 from Azure [模型名称已隐藏]
+P020,E2,Response quality: [模型名称已隐藏]-4 Relevancy and RAGAS Faithfulness (Fig. 3),Unified Index and Search (UIS); Router Filter and Search (RFS); LLM Filter and Search (LFS),,,,,[模型名称已隐藏]-4 judge for relevancy; RAGAS with [模型名称已隐藏]-4 for faithfulness
+P021,E1,Kendall's Tau system-level agreement with human judgments,ROUGE-L; BERTScore; ARGUE; MIRAGE,,,,,RAGTIME (Table 3)
+P021,E2,Kendall's Tau with EQJ/ICJ/GJ human judgments,MIRAGE; ALCE; ARGUE; RAGAS; ROUGE-L; BERTScore,,,,,"WIKIVIDEO (Tables 4, 5)"
+P021,E3,Kendall's Tau with EQJ human judgments,MIRAGE; ROUGE-L; BERTScore,,,,,WIKIVIDEO-25 (Table 6)
+P021,E4,Kendall's Tau between human-annotated MIRAGE and EQJs,,,,,,"Human MIRAGE (Tables 2, 11)"
+P021,E5,claim grounding accuracy,Audio Flamingo 3; Qwen2-Audio; Qwen2.5-VL; Qwen3.5; Qwen2.5-Omni; CLUE,,,,,Table 1
+P021,E6,"Kendall's Tau with RAGTIME human judgments, CLUE and Qwen3.5",MIRAGE; Auto-ARGUE,,,,,Table 8
+P021,E7,"Kendall's Tau with WIKIVIDEO human judgments, CLUE and Qwen3.5",MIRAGE,,,,,Table 9
+P021,E8,"Kendall's Tau with MAGMaR human judgments, CLUE",MIRAGE,,,,,Table 10
+P022,E1,EM and F1 on Multi-hop QA; Accuracy on Single-hop QA,wo-RAG; SR-RAG; FL-RAG; FS-RAG; FLARE; DRAGIN; LLaMA27B; Alpaca7B; LLaMA213B; Alpaca13B; Self-RAG; CRAG,1 DeepSeek A800 GPU,,,1000,"Table 1, p.6"
+P022,E2,Accuracy on PopQA,CRAG; Standard prompting; Disentangled prompting,,,,,"Table 2, p.7"
+P022,E3,Accuracy on PopQA,CRAG (with document-level knowledge); CRAG (with fine-grained knowledge alone); CRAG (with comparative decoding strategy),,,,,"Table 3, p.7"
+P022,E4,EM and F1 on 2WikiMultihopQA,DRAGIN(7B); DRAGIN(7B)+FKE; DRAGIN(13B); DRAGIN(13B)+FKE,,,,,"Table 4, p.7"
+P022,E5,"Human evaluation, correctness and relevance scores 1-5",DRAGIN; DRAGIN+FKE; CRAG; CRAG+FKE,,,,200,"Table 6, p.14; 200 outputs per dataset"
+P022,E6,Fleiss' Kappa inter-annotator agreement,DRAGIN; DRAGIN+FKE; CRAG; CRAG+FKE,,,,200,"Table 7, p.14"
+P023,E1,"accuracy on LV-Bench (Val), MLVU, Video-MME-Long (w/o Sub); median of three trials",LLaVA-Video (7B); mPLUG-Owl3 (8B); Aria (25B); InternVL-1.5 (26B); LLaVA-Video (72B); Video-RAG; TV-RAG,8×A100 GPUs,,,,Table 1
+P023,E2,accuracy on EgoSchema test set,DrVideo; LLoVi; VideoAgent; VideoTree; VidAgent; Vgent; IG-VLM,,,,,Table 2
+P023,E3,component ablations on LV-Bench with LLaVA-Video (7B),w/o Intent-relevance Scorer; w/o Weighted Expectation; w/o Event-Boundary Detector; w/o Spatio-Temporal Graph; w/o Spatial Edges; w/o Temporal Edges; Full,single A100 GPU,,,,Table 3
+P023,E4,embedding backbone ablation with N = 1000,Video-CLIP; X-CLIP; PE,,,,,Table 4
+P023,E5,"scorer training strategy ablation (IR-600K CE, LV-Bench CE, LV-Bench Overall, Retrieval Acc.)",Zero-Shot; LoRA; Full Params,,,,,Table 5
+P023,E6,hyperparameter ablation on graph-based clip retrieval,N; L; eta variants,,,,,Table 6
+P024,E1,"end-to-end QA, Word Overlap F1",Long Context; Text RAG; Visual RAG; VisDoMRAG,"RTXA600, 1 GPU",,,,Table 3; single run
+P024,E2,source document identification at k=5,BM25; MiniLM; MPNet; BGE1.5; ColPali; ColQwen2,"RTXA600, 1 GPU",,,,Table 4
+P024,E3,"ablation, Word Overlap F1",Text Ours; Text Prompt Ablation; Vision Ours; Vision Prompt Ablation; VisDoMRAG Ours; VisDoMRAG Prompt Ablation; Early Fusion,"RTXA600, 1 GPU",,,,Table 5; [模型名称已隐藏]4o
+P024,E4,"retrieval ANLCS across k in [1,5,10,20]",BM25; MiniLM; MPNet; BGE1.5; ColPali; ColQwen,,,,,Figure 3
+P024,E5,refusal rate with/without oracle document,Default; Without Oracle,,,,,Table 6; [模型名称已隐藏]4o
+P025,E1,"untargeted attack, 250 prompts; counts of retrieval contexts, repeat prompts/contexts, ROUGE prompts/contexts",,,,,250,Table 1; p.5
+P025,E2,"targeted attack, 250 prompts; counts of retrieval contexts, repeat prompts/contexts, targeted information",,,,,250,Table 2; p.5
+P025,E3,"targeted attack on training data, 5000 prompts; PII counts",None; Random Noise+prompt; System Prompt+prompt,,,,5000,Table 3; p.8
+P025,E4,"prefix attack, 1000 prompts, ROUGE-L>0.5 success criterion",None; Random Noise+prompt; System Prompt+prompt,,,,1000,Table 3; p.8
+P025,E5,"prefix attack with shared prefix, 1000 prefixes, ROUGE-L>0.5",Only use LLM,,,,1000,Table 9; p.15
+P025,E6,"RAG performance evaluation: 99:1 train/test split, 1000 test instances; ROUGE-L (HealthcareMagic) and perplexity (Enron Mail)",no-RAG; No; Yes; Yes-edit,,,,1000,"Tables 14-16; p.14, p.17"
+P025,E7,"ablation on k, embedding models, temperature, command/question, re-ranking, summarization, threshold",,,,,,"Tables 4-7, 10-11, 18-25"
+P026,E1,"zero-shot and RAG with top1/top3/top5 retrieved documents; BERTScore, ROUGE-L, CIDEr, ACC, F1, FID",Qwen2.5-VL (7B); InternVL 3 (8B); LLaVA-NeXT (7B); [模型名称已隐藏]-4o-mini; MiniCPM-V 2.6 (8B); Qwen2-VL (7B),,,,,Table 4 and Table 6
+P026,E2,ablation over retrieved modalities (Only Text / Only Image / Multi) and document counts,MiniCPM-V 2.6 (8B); Qwen2-VL (7B),,,,,Table 5
+P026,E3,image reranking with FID under top3/top5/top10,Qwen2.5-VL (7B); InternVL 3 (8B); LLaVA-NeXT (7B),,,,,Table 7
+P026,E4,topK training setting ablation,MiniCPM-V 2.6 (8B); Qwen2-VL (7B),,,,,Table 8
+P026,E5,[模型名称已隐藏]-4o-mini evaluation on 300 randomly sampled instances per task,[模型名称已隐藏]-4o-mini,,,,300,Table 6 note
+P027,E1,"accuracy; greedy decoding (temperature=0) with vLLM; top 10 docs, m=5, k=2 (MuSiQue: top 15, m=10, k=6)",Standard RAG; Self-RAG; CRAG; Self-CRAG,16 Nvidia A100-SXM4 40GB GPUs,,,,main results Table 1
+P027,E2,"accuracy and latency; 100 randomly sampled cases per dataset, no batching",Standard RAG: Mixtral-Instruct8x7B; Standard RAG: Mistral-Instruct7B; Self-RAG: Mistral-Instruct7B,tensor parallelism 4,,,100,Table 2 and Figure 3
+P027,E3,accuracy ablation on drafting/verification stages,MVerifier-8x7B + MDrafter-7B,,,,,Table 3
+P027,E4,"accuracy with varying #drafts (1,5,10,15,20) and doc subset size (1,2,4,6,10)",MVerifier-7B + MDrafter-7B,,,,,Figure 4
+P027,E5,accuracy with drafter trained on [模型名称已隐藏]-4o vs Gemini-Ultra curated data,MVerifier-7B/8x7B + MDrafter-7B,,,,,Table 4
+P027,E6,accuracy with Gemma-22B drafter,MVerifier-8x7B + MDrafter-2B; MVerifier-8x7B + MDrafter-7B,,,,,Table 5
+P027,E7,"accuracy with m=1, k=total docs",Mistral7B; Mistral-Instruct7B; MDrafter-7B,,,,,Table 6
+P027,E8,accuracy with different self-reflection statements,MVerifier-8x7B + MDrafter-7B,,,,,Table 7
+P028,E1,Average recall@k and MRR over queries; top 5 retrieved from Chroma,,,,,,"Retrieval experiments 1-3 | sample_size: 158 questions (Ar_EduText); 1,395 questions (ARCD)"
+P028,E2,"F1, BLEU, cosine similarity between generated and gold answers; top 5 retrieved documents given to generator",[模型名称已隐藏]3.5 Turbo; Llama3 (llama_70b); Mistral (Mistral_7b); Mixtral; JAIS (jais_7b_quantized),,,,,Generator experiments on Ar_EduText and ARCD
+P029,E1,"Cache hit rate and prefill time comparison across datasets under CacheBlend, +GAD, +GAD+QCE; ~6,000 requests with ~5K input tokens",Burst[模型名称已隐藏]; MTRAG,single DeepSeek A100 GPU with 80GB VRAM (prototype); eight DeepSeek A100 GPUs (validation),,,6000,"Figures 9 and 10, page 7"
+P029,E2,Scalability sensitivity: Qwen3-8B/32B x 6K/15K requests x 150x/350x replay speed,CacheBlend,eight DeepSeek A100 GPUs,,,,"Figure 11, page 8"
+P030,E1,similarity and accuracy@0.85/0.9/0.95 on 100 test questions,Baseline ([模型名称已隐藏]-3.5-turbo); Baseline ([模型名称已隐藏]-4o),single A100 80GB (used for finetuning),,,100,Table 1 comparison
+P030,E2,similarity and accuracy@0.85/0.9/0.95 on 100 questions,,,,,100,Table 2 LLM agent comparison
+P030,E3,image/table ID detection accuracy,,,,,,Table 3 image and table retrieval | sample_size: 50 per task
+P031,E1,TRUTH mode accuracy with normalized alias matching; IA macro-average over six benchmarks,Closed-book Q-only; Direct RAG; ExplicitSCR; RCR-InternalEval; RCR-ContextEval; RCR-InternalConf; MADAM-RAG,DeepSeek RTX A6000 GPU and two DeepSeek GeForce RTX 5090 GPUs,,,500,Table I (p.6)
+P031,E2,STRICT mode context accuracy,Direct RAG,DeepSeek RTX A6000 GPU and two DeepSeek GeForce RTX 5090 GPUs,,,500,Table II (p.8)
+P031,E3,Macro-averaged ablation over three faithful and three factual-conflict benchmarks,IGD full; w/o Answer Filter; w/o Token Correction; w/o Activation Gate; w/o Mode Prior; w/o Reliability Gate; Single Memory View,,,,500,"Table III (p.8), Qwen2.5-14B"
+P031,E4,Parametric recovery rate (PRR) on factual-conflict benchmarks,Direct RAG; Closed-book Q-only,,,,500,Fig. 2 (p.7)
+P031,E5,Answer distribution categorization on factual-conflict benchmarks under truth mode,Direct RAG,,,,,Fig. 4 (p.9)
+P031,E6,Snippet localization accuracy and downstream IGD performance,IDF localizer; [模型名称已隐藏]-5 localizer,,,,,Fig. 5 (p.9)
+P031,E7,Sensitivity to lambda_max and d_truth in truth mode,Direct RAG; default router,,,,,"Fig. 3 (p.9), Qwen2.5-14B"
+P032,E1,"Balanced accuracy (BAcc) on LLM-AggreFact; our prompt in think mode for HalluGuard/Qwen3 models, leaderboard results otherwise",Bespoke-Minicheck-7B; Claude-3.5 Sonnet; Qwen3-235B-A22B; Granite Guardian 3.3; Mistral-Large 2; [模型名称已隐藏]-4-turbo-preview; [模型名称已隐藏]-4o-2024-05-13; Qwen3-4B; Qwen2.5-72B-Instruct; Llama-3.3-70B-Instruct; Llama-3.1-405B-Instruct; [模型名称已隐藏]-4o-mini-2024-07-18; QwQ-32B-Preview; Mixtral-8x22B; Llama-3.1-8B-Instruct; [模型名称已隐藏]-3.5-Turbo; Qwen3-0.6B; Llama-3.2-3B-Instruct,,,,,Table 1
+P032,E2,Confusion matrix on RAGTruth subset,,,,,,Table 2
+P032,E3,"Inference throughput and peak VRAM with vLLM, batch size 1, DeepSeek A100",MiniCheck-7B; Granite Guardian 3.3,DeepSeek A100,,,100,Table 3; 100 samples
+P032,E4,G-Eval justification quality with [模型名称已隐藏]-V3.1-Terminus evaluator,Qwen3-235B-A22B; Qwen3-0.6B,,,,,Table 4
+P032,E5,Human alignment of preference tuples with two NLP expert annotators,,,,,100,"Table 5; 100 tuples, 200 judgments"
+P032,E6,Ablation on LLM-AggreFact BAcc,w/o consensus filtering; w/o reasoning (/no_think); SFT alone; DPO alone,,,,,"Table 6, Figure 4"
+P033,E1,"Textual RAG on OHR-Bench following OHR-Bench protocol; retrieval with BGE-m3 and BM25, top-2; answer models Llama-3.1-8B-Instruct and Qwen2-7B-Instruct; average over four retrieval x answer combinations",Nougat; GOT; DiT; DocLayout-YOLO; Beehive; InternVL2.5; olmOCR; Qwen2.5-VL; Ground Truth,,,,,"Table 6, p.7"
+P033,E2,"Textual RAG on BizMMRAG and Allganize; retrieval with intfloat/multilingual-e5-large, top-5; answer model [模型名称已隐藏]-4o ([模型名称已隐藏]-4o-2024-08-06); LLM-as-a-judge score >4 counted correct",Qwen2.5-VL-72B; DiT; DocLayout-YOLO; Beehive,,,,,"Table 7, p.7"
+P033,E3,"Visual RAG on OHR-Bench; image retrieval with ColQwen2-v1.0, top-5; answer model Qwen2.5-VL-7B",No chunking; DiT; DocLayout-YOLO; Beehive,,,,,"Table 8, p.8"
+P033,E4,"Visual RAG on BizMMRAG and Allganize; image retrieval with ColQwen2-v1.0, top-5; answer model Qwen2.5-VL-7B",No chunking; DiT; DocLayout-YOLO; Beehive,,,,,"Table 9, p.8"
+P033,E5,VLM text conversion cost comparison on 10 randomly sampled OHR-Bench images with Qwen2.5-VL-72B served by vLLM,No chunking; SCAN,four DeepSeek RTX PRO 6000 Blackwell GPUs,,,10,"Table 10, p.8"
+P033,E6,Chunking granularity analysis on 100 randomly sampled OHR-Bench images; textual and visual RAG scores copied from Tables 6 and 8,No chunking; DiT; DocLayout-YOLO; Beehive; SCAN_YOLO; SCAN_RT-DETR,,,,100,"Table 11, p.9"
+P034,E1,"binary classification metrics (Accuracy, Precision, Recall/Sensitivity, Specificity, F1-Score, Balanced Accuracy) over 11 indicators per ban",Retrieval-only Baseline; Pipeline without hallucination control agents,"local execution (Ollama, LangChain, LangGraph)",,,,Mistral-Nemo ablation; Table 4
+P034,E2,comparative metrics heatmap across LLM families,Baseline (without N2I-RAG architecture),"local execution (Ollama, LangChain, LangGraph)",,,,"Figure 2; Mistral-Nemo:12b, Qwen3:8b, Llama3.2:3B"
+P035,E1,"zero-shot inference, EM and token-level F1, 500 examples per dataset",Naive Gen; MAD; Naive RAG; IRCoT; Iter-RetGen; FLARE; SuRe; Self-RAG,eight DeepSeek RTX A6000 GPU devices,,,500,Table 1 main comparison
+P035,E2,"debate round sweep, EM only, 500 examples per dataset",DRAG variants RetIter=0-4 and ResIter=0-4,eight DeepSeek RTX A6000 GPU devices,,,500,Table 2 / Table 6
+P035,E3,average debate rounds and query counts in retrieval debate,DRAG,,,,,Table 3
+P035,E4,"subset analysis on questions with gold answer absent from retrieved docs, Avg EM and Avg F1",DRAG w/o fResDebate; DRAG with fResDebate,,,,,Table 4 question counts per dataset | sample_size: 139; 176; 338; 331
+P035,E5,"ablation study, EM and F1, 500 examples per dataset",Naive RAG; + fRetDebate; + fResDebate; DRAG; - Info Asymmetry,eight DeepSeek RTX A6000 GPU devices,,,500,Table 5
+P035,E6,average LLM and retriever calls on StrategyQA,IRCoT; Iter-RetGen; DRAG; Naive RAG; Self-RAG; SuRe; Naive Gen; FLARE; MAD,,,,,Figure 4; DRAG: 2.08 Retriever Calls and 10.36 LLM Calls
+P036,E1,[模型名称已隐藏]-4 judge scoring of correctness (1-10) and semantic similarity on earnings analysis QA,Llama-2-7b; [模型名称已隐藏]-3.5,four Tesla T4 GPUs (16GB each),,,,Table 3; same financial contexts and questions for all three models
+P038,E1,"Acc, F1, Recall on SQuAD 2.0",RAG; BM25-RAG; TF-IDF-RAG; ES-RAG,,,,,"Table 1, p.4"
+P039,E1,"LLM-as-a-judge pairwise winning rate, 3 judges x 2 orders = 6 evaluations averaged",NaiveRAG; GraphRAG; LightRAG; MiniRAG; Zero-shot Qwen3-4B; Qwen3-30B-A3B; Llama-3.3-70B-Instruct,DeepSeek RTX A6000 48GB,,,125,"Table 1, Qwen3-4B backbone"
+P039,E2,LLM-as-a-judge pairwise winning rate (ablation),TagRAG w/o chain; TagRAG w/o fusion,DeepSeek RTX A6000 48GB,,,125,Table 2
+P039,E3,"LLM-as-a-judge pairwise winning rate, CS only, varying retriever",NaiveRAG; GraphRAG; LightRAG; MiniRAG,DeepSeek RTX A6000 48GB,,,125,Table 3
+P039,E4,Winning rate after vs. before upserting CS document into Mix graph; Time-C/Time-I in hours,GraphRAG; LightRAG; MiniRAG,DeepSeek RTX A6000 48GB,,,,Table 4
+P039,E5,LLM-as-a-judge pairwise winning rate with glm-edge-1.5b-chat,NaiveRAG; GraphRAG; LightRAG; MiniRAG,DeepSeek RTX A6000 48GB,,,125,Table 8
+P039,E6,"LLM-as-a-judge pairwise winning rate, TagRAG Qwen3-1.7B vs GraphRAG Qwen3-4B, CS",GraphRAG,DeepSeek RTX A6000 48GB,,,125,Table 9
+P040,E1,"Recall@5/10/15 retrieval evaluation on MuSiQue, 2Wiki, HotpotQA",ColBERTv2; HippoRAG; BM25; SBERT; Hybrid; IRCoT (BM25); IRCoT (ColBERTv2); HippoRAG w/ IRCoT,,,,,"Table 2, p.6 | sample_size: 500 (MuSiQue), 500 (2Wiki), 1000 (HotpotQA)"
+P040,E2,"End-to-end QA with top-5 retrieved passages (EM, F1)",No Passages; Gold Passages; Hybrid + SyncGE; HippoRAG; IRCoT (BM25); IRCoT (ColBERTv2); HippoRAG w/ IRCoT,,,,,"Table 3, p.7"
+P040,E3,Beam search diversity ablation on Hybrid + SyncGE,w/ Diversity; w/o Diversity,,,,,"Table 4, p.7"
+P040,E4,Hyperparameter study: beam search length b and max iterations n on MuSiQue,GEAR,,,,,"Table 9, p.16"
+P040,E5,Generator comparison for GEAR (closed vs open-weight),[模型名称已隐藏]-4o mini; Llama-3.1-8B; Qwen-2.5-8B,,,,,"Table 10, p.17"
+P040,E6,Triple density robustness study on MuSiQue (R@15),Hybrid + NaiveGE; Hybrid + SyncGE; HippoRAG w/ IRCoT; GEAR,,,,,"Table 12, p.17"
+P041,E1,"Response quality: F1, precision, recall vs ground-truth answers; retrieval quality: F1, precision, recall vs referenced facts (HotpotQA script)",LLM-only; Semantic RAG; + Rerank; Hybrid RAG; LightRAG; GraphRAG,,,,,Tables 1-2 (p.6)
+P041,E2,Ablation on HotpotQA distractor setting,KG2RAG; w/o organization; w/o expansion,,,,,Tables 3-4 (p.7)
+P041,E3,Varying m-hop expansion on HotpotQA distractor,KG2RAG m=1; m=2; m=3,,,,,Table 5 (p.8)
+P041,E4,Triplet dropping robustness on HotpotQA distractor,Hybrid RAG; KG2RAG; -5%; -10%,,,,,Table 6 (p.9)
+P041,E5,Varying top-k on HotpotQA distractor,Semantic RAG; Hybrid RAG; KG2RAG,,,,,Figure 5 (p.8)
+P041,E6,Additional datasets: MuSiQue and TriviaQA,LLM-only; Semantic RAG; + Rerank; Hybrid RAG; LightRAG; GraphRAG,,,,,Tables 7-8 (p.13)
+P041,E7,Efficiency: KG construction cost and per-query retrieval/generation time,LightRAG; GraphRAG; Semantic RAG,,,,,Tables 9-10 (p.13)
+P042,E1,"BERTScore/ROUGE-L comparison of baseline vs augmented answers within language, per question, all models",Baseline (parametric knowledge),Hábrók HPC; National Supercomputer Snellius; DeepSeek DGX Spark,,,,"Table 3, Figure 3 | sample_size: 100 answers per language per model per setting; 1,800 answers total"
+P042,E2,"BERTScore between baseline and augmented answers across language pairs, per question",Baseline (parametric knowledge),,,,,"Table 4, Figure 4"
+P042,E3,"BERTScore between augmented answer and its re-ranked document chunks, per language and question",,,,,,Table 5
+P042,E4,Frame-semantic analysis (frame counts) of baseline vs augmented answers,Baseline (parametric knowledge),,,,,"Table 6, Table 7, Figure 5"
+P042,E5,"Multilingual BERTopic delta counts of topics, baseline minus augmented",Baseline (parametric knowledge),,,,,Table 8
+P042,E6,Profiling UD syntactic features + multinomial logistic regression classification of setting/language,,,,,,"Figure 6; accuracy 0.83 ± 0.024, repeated (r=3) classwise stratified 10-Fold cross validation"
+P043,E1,"BLEU-1, BLEU-AVG, ROUGE-L, METEOR on three domain QA datasets",Original; Llama_index; Semantic Chunking; LumberChunker; MoC MetaChunker; Qwen2.5-14B; Qwen3-14B; MemReader-1.5B; MemReader-3B; MemReader-7B,DeepSeek A800 80G (training/processing); MetaX C500 64G (evaluation),,,,Page 8 Table 1
+P043,E2,Pearson correlation of atomic chunks clarity with ROUGE-L under three LLMs,Original; Llama_index; Semantic Chunking; Qwen2.5-14B; Qwen2.5-72B,,,,,Page 9 Table 2
+P043,E3,Informational support score on MultiFieldQA,Original; Llama_index; Semantic Chunking; LumberChunker; MoC MetaChunker; Qwen2.5-14B; Qwen3-14B; MemReader-3B,,,,,Page 9 Table 3
+P044,E1,"average BLEU, ROUGE, BERTScore (F1, Precision, Recall) over dataset",LSTM; [模型名称已隐藏] (FT); [模型名称已隐藏] (RAG); Llama (FT); Llama (RAG),,,,,"Table 1, page 9"
+P045,E1,zero-shot evaluation on Enc-VQA Single-Hop and InfoSeek Unseen-Q/Unseen-E/All,Qwen2-VL-Param; Qwen2-VL-Oracle; Qwen2-VL-1-Stage; Qwen2-VL-2-Stage; Qwen2-VL-MMSTaR; LLaVA-1.5,8 H100 GPUs,,,,Table 3 zero-shot block
+P045,E2,fine-tuned evaluation on Enc-VQA Single-Hop and InfoSeek Unseen-Q/Unseen-E/All,Wiki-LLaVA; RoRA-VLM; EchoSight; LLaVA-mR2AG; Qwen2-VL-1-Stage; Qwen2-VL-2-Stage; Qwen2-VL-MMSTaR,8 H100 GPUs,,,,"Table 3 fine-tuned block; LoRA rank 8, 3 epochs, lr 1e-4 | sample_size: 30K training triplets per benchmark"
+P045,E3,retrieval Recall@k of Eva-CLIP-8B on InfoSeek and Enc-VQA,,,,,,Table 2
+P045,E4,ablation on number of retrieved entries (Top-1/2/5) on InfoSeek validation,Qwen2-VL-1-Stage,,,,,Table 4
+P045,E5,ablation on training objectives on InfoSeek validation,CoRe-MMRAG full model,,,,,Table 5
+P045,E6,PRKI/VTKI reconciliation analysis (zero-shot and fine-tuned),Qwen2-VL-Param; Qwen2-VL-1-Stage,,,,,Figure 3
+P046,E1,Response-level hallucination detection on RAGTruth (P/R/F1 per subset),Finetuned Llama-2-13B; RAG-HAT; Luna; Prompt; SelfCheck[模型名称已隐藏]; LMvLM; Provenance; RAGAS Faithfulness; HHEM-2.1-Open; MiniCheck-FT5; TrueTeacher; AlignScore-Base; AlignScore-Large,RTX 4060 (8 GB) for main results,,,,"Table 4, p.6"
+P046,E2,Accuracy on HotPotQA-Derived grouped by parameter size,HHEM-2.1-Open; AlignScore-Base; AlignScore-Large; RAGAS Faithfulness; Provenance; Qwen3-0.6B; Qwen3-0.6B-reason; MiniCheck-FT5; TrueTeacher; [模型名称已隐藏]-3.5-Turbo; [模型名称已隐藏]-4o,RTX 4060 (8 GB) for main results,,,,"Table 5, p.6"
+P046,E3,Inference efficiency on RTX 4090 (latency/throughput/memory),HHEM-2.1-Open; AlignScore-Large; MiniCheck-FT5; Qwen3-0.6B; [模型名称已隐藏]-4o (API); TrueTeacher 11B,RTX 4090,85,,,"Table 6, p.7; Config A latency 85±4 ms"
+P046,E4,Framework effectiveness across seven NLI discriminators on HotPotQA-Derived Hard,HHEM-2.1-Open; nli-roberta-base; DeBERTa-v3-base; ModernBERT-large-nli; AlignScore-Large; MiniCheck-FT5; TrueTeacher,RTX 4090,,,,"Table 7, p.7"
+P046,E5,Ablation on HotPotQA-Derived bridge-hard,Full (A+B+C); w/o A (LC); w/o B (SEA); w/o C (CS); w/o A+B; w/o B+C; w/o A+C,RTX 4090,85,,,"Table 8, p.8"
+P046,E6,Overall accuracy on HaluBench,LYNX (70B); [模型名称已隐藏]-4o; Llama-3-70B-Instruct; [模型名称已隐藏]-4-Turbo; LYNX (8B); Claude-3-Sonnet; Llama-3-8B-Instruct; Mistral-7B-Instruct; Claude-3-Haiku; [模型名称已隐藏]-3.5-Turbo; TrueTeacher (11B); MiniCheck-FT5; Provenance; AlignScore-Large; HHEM-2.1-Open; AlignScore-Base; RAGAS Faithfulness,,,,13867,"Table 16, p.12"
+P046,E7,Accuracy on HaluEval,Davinci002/003; [模型名称已隐藏]; Claude 2; [模型名称已隐藏]-3; TrueTeacher (11B); Provenance; AlignScore-Large; AlignScore-Base; MiniCheck-FT5; HHEM-2.1-Open; RAGAS Faithfulness,,,,,"Table 17, p.12"
+P046,E8,"Component-level timing analysis (RTX 4090, Config A, C=256)",,RTX 4090,85.0,,,"Table 12, p.11"
+P047,E1,LLM-as-judge accuracy with [模型名称已隐藏]-4o-mini,MMGraphRAG; RAG-Anything; Naive RAG + Concat,single DeepSeek H200,,,,Table 1 main results
+P047,E2,LLM-as-judge accuracy with Claude Opus 4.8,RAG-Anything,,,,885,Table 3 cross-family judge on AutoQA
+P047,E3,wall-clock total and inference time,MMGraphRAG; RAG-Anything,single H200,,,,Table 2 efficiency
+P047,E4,document-level retrieval metrics with 95% bootstrap CIs (10k resamples),,,,,452,"Tables 7-8; M3SciQA n=452, AutoQA n=885"
+P047,E5,accuracy split by gold-document retrieval success,,,,,,Table 9
+P047,E6,human validation of 50 AutoQA items,,,,,50,Table 11
+P048,E1,"RAGAS metrics (ACC., REC., ROUGE-L, COV., FS.) with Qwen2.5-14B-Instruct backbone",NaiveRAG; L.LLMLingua; RAPTOR; SiReRAG; G-Retriever; MIXRAG; GraphRAG; LightRAG; HippoRAG2; F.GraphRAG,Intel Xeon Gold 5220R CPU; single DeepSeek A100-80GB GPU,,,,"main effectiveness and efficiency evaluation; Table II, Table III"
+P048,E2,ablation on 2 datasets and 4 tasks with Qwen2.5-14B-Instruct,AGRAG w. HR Only; AGRAG w. LLM ER; AGRAG w.o. HR; AGRAG w.o. MCMI; AGRAG w.o. Cle.; AGRAG,Intel Xeon Gold 5220R CPU; single DeepSeek A100-80GB GPU,,,,Table IV
+P048,E3,low-resource evaluation with Qwen3-4B-Instruct-2507 on 2080Ti GPUs,SiReRAG-L; HippoRAG2-L; AGRAG-L,two 2080TI GPUs,,,,"Table V, Table VI"
+P048,E4,"parameter sensitivity on GraphRAG-bench (tau in {0.1,0.3,0.5,0.7}, b in {1,3,5,7})",,,,,,Figure 3; accuracy heatmaps
+P049,E1,precision/recall/F1 on RAGTruth Llama-7B and Llama-13B,Prompt; SelfCheck[模型名称已隐藏]; Fintune; EigenScore; SEP; LRP4RAG,,,,,Table 1 (p.7)
+P049,E2,precision/recall/F1 on Dolly-15k Qwen2.5-3B and Qwen2.5-7B,Prompt; SelfCheck[模型名称已隐藏]; EigenScore; SEP; LRP4RAG,,,,,Table 2 (p.7)
+P049,E3,"Topk / adaptive graph construction ablation, Llama-13B on RAGTruth","SIRG Topk=1,5,10,15,20; Ada",,,,,Table 3 (p.8)
+P049,E4,average computation latency on 100 samples,Prompt; SelfCheck[模型名称已隐藏]; LRP4RAG; SIRG,A100 graphics card,,,100,"Table 4 (p.9); Llama2-7B, SelfCheck[模型名称已隐藏] sampling frequency 5, average prompt length 636.84"
+P049,E5,"entity extraction ablation, Llama-7B on RAGTruth",Only noun; Only verb; Only adj/adv; All text; 0.33; 0.66; Original,,,,,Table 5 (p.9)
+P049,E6,"segmentation strategy ablation, Llama-7B on RAGTruth",Average segmentation; Fixed segmentation; Qwen segmentation; Original,,,,,Table 6 (p.9)
+P049,E7,perturbation tests (generation/pruning) on RAGTruth with Llama-7B,random addition or pruning,,,,100,Fig. 3 (p.8); AUC reported qualitatively only
+P049,E8,per-stage computation time of SIRG,,,,,,Fig. 10 (p.16)
+P050,E1,"In-domain adaptation: train on each dataset's training split, test on its test split",Vanilla; S-RAG; PRAG; DyPRAG,,,,,Table 1 In-Domain columns
+P050,E2,"Out-of-domain transfer: train on general instruction dataset (150,000 pairs), test on downstream test split",PRAG; DyPRAG,,,,,Table 1 Out-Of-Domain columns
+P050,E3,"Zero-shot medical QA transfer: trained on general QA data, evaluated on medical benchmarks",Vanilla; S-RAG; PRAG; DyPRAG,,,,,Table 2
+P050,E4,Ablation study on Qwen2.5-1.5B-Instruct,ReFilter; w/o gating; w/o token mask; r.w. chunk filter,,,,,Table 3
+P050,E5,Inference latency across batch sizes on CWQ with Qwen2.5-1.5B-Instruct,PRAG; DyPRAG; S-RAG,,,,,Table 4
+P050,E6,"Scaling to larger backbones, trained on target dataset training split",Vanilla; S-RAG,,,,,Table 7
+P050,E7,Effect of fusion depth (last / last three / last five layers),last layer; last three layers; last five layers,,,,,Table 8

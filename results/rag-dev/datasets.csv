@@ -1,0 +1,120 @@
+publication_id,dataset_id,dataset_name,dataset_version,language,data_split,scientific_domain,note
+D001,DS1,HotpotQA,,English,"same splits as previous works (Trivedi et al., 2023; Li and Du, 2023)",open-domain multi-hop question answering (Wikipedia),~113k questions; open-domain setting with supporting+distractor passages corpus
+D001,DS2,2WikiMultihopQA,,English,"same splits as previous works (Trivedi et al., 2023; Li and Du, 2023)",open-domain multi-hop question answering (Wikipedia/Wikidata),Referred to as 2Wiki in tables
+D001,DS3,MuSiQue,,English,"same splits as previous works (Trivedi et al., 2023; Li and Du, 2023)",open-domain multi-hop question answering (Wikipedia),2- to 4-hop questions
+D002,DS1,General Cybersecurity Questions,,,150 questions,cybersecurity,Simple one-liner cybersecurity questions (p.8)
+D002,DS2,Multi-Hop Cybersecurity Questions,,,150 questions,cybersecurity,Complex multi-hop cybersecurity questions (p.8)
+D002,DS3,CVE Questions,,,300 questions,cybersecurity,Common Vulnerability Exposure questions (p.8)
+D002,DS4,Complete Cybersecurity Questions,,,156 General + 150 Multi-Hop,cybersecurity,"Combined general and multi-hop set used for Elo (Table V, p.12)"
+D002,DS5,Retriever test questions,,,100 questions per retriever,cybersecurity,"Customized test set for retriever efficiency analysis (Table VII, p.13)"
+D003,DS1,QuaLITY,,,,Fictional stories,"265 docs, 6K avg tokens/doc, 4609 eval sets, MCQA (Table 1, page 7)."
+D003,DS2,LongHealth,,,,Medical,"400 docs, 12K avg tokens/doc, 400 eval sets, MCQA (Table 1, page 7)."
+D003,DS3,FinanceBench,,,,Finance,"1367 docs, 16K avg tokens/doc, 150 eval sets, free-form; PDFs preprocessed with olmOCR-2-7B-1025; Qwen3-14B judge (Table 1, page 7)."
+D004,DS1,E-commerce seller forums,,English,,e-commerce seller community forums,"Six months of discussions, ~8,000 unique sellers, 10K+ documents; 4 high-entropy entities, 48 questions (p.5-6)."
+D004,DS2,OpinioBank,3-property sample of the 500-entity release,English,,public hotel reviews,"Sample of Silverton Las Vegas, Ambassador Bangkok, Ala Moana Honolulu; 6,256 reviews, 15 entities, 57 questions (p.5-6)."
+D004,DS3,Silverton Las Vegas,,English,,public hotel reviews,"OpinioBank property subset, 2,297 reviews, 4 entities (Table 4, p.7)."
+D004,DS4,Ambassador Bangkok,,English,,public hotel reviews,"OpinioBank property subset, 1,230 reviews, 4 entities (Table 4, p.7)."
+D004,DS5,Ala Moana Honolulu,,English,,public hotel reviews,"OpinioBank property subset, 2,729 reviews, 4 entities (Table 4, p.7)."
+D005,DS1,CRAG,"web portion, false-premise questions filtered out",English,test,general knowledge / web,"643 samples (Section 5.1.1, page 5)."
+D005,DS2,CovidQA,RAGBench preprocessed,English,down-sampled to 100 samples,health,"Section 5.1.1, page 5."
+D005,DS3,DelucionQA,RAGBench preprocessed,English,down-sampled to 100 samples,customer support,"Section 5.1.1, page 5."
+D005,DS4,Emanual,RAGBench preprocessed,English,down-sampled to 100 samples,customer support,"Section 5.1.1, page 5."
+D005,DS5,ExpertQA,RAGBench preprocessed,English,down-sampled to 100 samples,general knowledge,"Section 5.1.1, page 5."
+D005,DS6,FinQA,RAGBench preprocessed,English,down-sampled to 100 samples,finance,"Section 5.1.1, page 5."
+D005,DS7,HAGRID,RAGBench preprocessed,English,down-sampled to 100 samples,general knowledge,"Section 5.1.1, page 5."
+D005,DS8,HotpotQA,RAGBench preprocessed,English,down-sampled to 100 samples,general knowledge,"Section 5.1.1, page 5."
+D005,DS9,MS Macro,RAGBench preprocessed,English,down-sampled to 100 samples,general knowledge,"Section 5.1.1, page 5."
+D005,DS10,PubMedQA,RAGBench preprocessed,English,down-sampled to 100 samples,health,"Section 5.1.1, page 5."
+D005,DS11,TAT-QA,RAGBench preprocessed,English,down-sampled to 100 samples,finance,"Section 5.1.1, page 5."
+D005,DS12,TechQA,RAGBench preprocessed,English,down-sampled to 100 samples,customer support,"Section 5.1.1, page 5."
+D005,DS13,Web Pages,,English,holdout set,web search / time-sensitive queries,Holdout set used in Appendix A (page 10) for CoT instruction sensitivity.
+D005,DS14,CRAGa (closed-book),web summarization split without reference documents,English,test,general knowledge / web,Table 6 (page 13); footnote a: different from main text as references are omitted.
+D005,DS15,SimpleQA (closed-book),,English,"4,326 short QA pairs",general knowledge,Table 6 (page 13); Section F.1.1 (page 12).
+D005,DS16,IMDB (closed-book),,English,200 entities sampled,general knowledge,"Table 6 (page 13); Head-to-Tail IMDb portion (Section F.1.1, page 12)."
+D005,DS17,DBpedia (closed-book),,English,200 entities sampled,general knowledge,"Table 6 (page 13); Head-to-Tail DBPedia portion (Section F.1.1, page 12)."
+D006,DS1,NaturalQuestions,,en,test,open-domain question answering (Wikipedia),BEIR dataset; abbreviated NQ.
+D006,DS2,DBpedia-Entity,,en,test,entity retrieval (DBpedia),BEIR dataset; abbreviated DBPE.
+D006,DS3,FEVER,,en,test,fact verification (Wikipedia),BEIR dataset; abbreviated FEVE.
+D006,DS4,SciDocs,,en,test,scientific paper citation prediction,BEIR dataset; abbreviated SCID.
+D006,DS5,Touché,,en,test,argument retrieval,BEIR dataset; abbreviated TOUC.
+D006,DS6,NFCorpus,,en,test,biomedical information retrieval,BEIR dataset; abbreviated NFCO.
+D006,DS7,TREC deep learning 2019,2019,en,test,passage ranking (web),TREC 2019 Deep Learning track; abbreviated DL19.
+D006,DS8,TREC deep learning 2020,2020,en,test,passage ranking (web),TREC 2020 Deep Learning track; abbreviated DL20.
+D007,DS1,SQuAD,v1.1,English,test (500 samples per dataset),,Single-hop QA; Table 2/7/8 column 'SQuAD'.
+D007,DS2,Natural Questions,,English,test (500 samples per dataset),,Single-hop QA; Table 2/7/8 column 'Natural Questions'.
+D007,DS3,TriviaQA,,English,test (500 samples per dataset),,Single-hop QA; Table 2/7/8 column 'TriviaQA'.
+D007,DS4,MuSiQue,,English,test (500 samples per dataset),,Multi-hop QA; Table 2/7/8 column 'MuSiQue'.
+D007,DS5,HotpotQA,,English,test (500 samples per dataset),,Multi-hop QA; Table 2/7/8 column 'HotpotQA'.
+D007,DS6,2WikiMultiHopQA,,English,test (500 samples per dataset),,Multi-hop QA; Table 2/7/8 column '2WikiMultiHopQA'.
+D007,DS7,"Average over all datasets (SQuAD v1.1, Natural Questions, TriviaQA, MuSiQue, HotpotQA, 2WikiMultiHopQA)",,English,test,,Table 1 'Averaged results on a collection of benchmark datasets'.
+D008,DS1,RAGTruth,,,,,Hallucination benchmark; 450 faithful samples (Table 3)
+D008,DS2,Dolly (AC),,,,,Hallucination benchmark; 100 faithful samples (Table 3)
+D008,DS3,HotpotQA,,,,,"Contextual faithfulness subset; 1,546 faithful samples | Dataset family: CoFaithfulQA"
+D008,DS4,NewsQA,,,,,Contextual faithfulness subset; 374 faithful samples | Dataset family: CoFaithfulQA
+D008,DS5,NQ,,,,,"Contextual faithfulness subset; 3,010 faithful samples | Dataset family: CoFaithfulQA"
+D008,DS6,SearchQA,,,,,"Contextual faithfulness subset; 10,692 faithful samples | Dataset family: CoFaithfulQA"
+D008,DS7,SQuAD,,,,,"Contextual faithfulness subset; 2,799 faithful samples | Dataset family: CoFaithfulQA"
+D008,DS8,TriviaQA,,,,,"Contextual faithfulness subset; 5,887 faithful samples | Dataset family: CoFaithfulQA"
+D009,DS1,PopQA,,en,test,open-domain question answering,"Single-hop QA benchmark (Mallen et al., 2023); test size 14,267 per Table 16."
+D009,DS2,HotpotQA,,en,test,open-domain question answering,"Multi-hop QA (Yang et al., 2018); test size 7,405 per Table 16."
+D009,DS3,2WikiMultiHopQA,,en,test,open-domain question answering,"Multi-hop QA (Ho et al., 2020); test size 12,576 per Table 16. Also written '2WikiMulti' in tables."
+D009,DS4,Bamboogle,,en,test,open-domain question answering,"Multi-hop QA (Press et al., 2023); 125 test instances (Limitations)."
+D009,DS5,MuSiQue,,en,test,open-domain question answering,"Multi-hop QA (Trivedi et al., 2022); test size 2,417 per Table 16."
+D009,DS6,HotpotQA,,en,train,open-domain question answering,"Training split: 2,000 instances used for trajectory generation / PRM data (Sec. 3.1, 4.1)."
+D009,DS7,MuSiQue,,en,train,open-domain question answering,"Training split: 2,000 instances used for trajectory generation / PRM data (Sec. 3.1, 4.1)."
+D009,DS8,2WikiMultiHopQA,,en,train,open-domain question answering,"Training split: 1,000 instances in the 5,000-question training mixture (Sec. 4.1)."
+D009,DSA1,Average,,,,,"Printed aggregate column, PDF page 6, Table 2."
+D009,DSA2,Average,,,,,"Printed aggregate column, PDF page 6, Table 3."
+D009,DSA3,Average,,,,,"Printed aggregate column, PDF page 9, Table 4."
+D010,DS1,MIRAGE,,English,test (30%/10%/60% train/validation/test split by question),medical question answering,"7663 questions from five medical QA datasets (PubMedQA, MedQA, BioASQ, MedMCQA, MMLU-Med); MedRAG knowledge source with four corpora (PubMed, StatPearls, Wikipedia, Textbooks)."
+D010,DS2,MMLU,,English,test (30%/10%/60% train/validation/test split by question),general knowledge / multitask,"Eight subject-specific subsets, 2803 questions; Wikipedia knowledge source clustered into 10 sources."
+D010,DS3,FeB4RAG,,English,test (30%/10%/60% train/validation/test split by question),federated search / diverse domains,"790 user queries, 13 heterogeneous data sources, 8 embedding models; derived from BEIR; no ground-truth answers."
+D011,DS1,NFCorpus,,English,,biomedical information retrieval,"3,633 expert-verified documents from PubMed (Appendix E.1)"
+D011,DS2,TREC-COVID,,English,,COVID-19 scientific literature retrieval,"Based on CORD-19; 1,713,332 texts (Appendix E.1)"
+D011,DS3,DROP,,English,,reading comprehension / discrete reasoning,"96,567 adversarially constructed questions (Appendix E.1)"
+D011,DS4,MS-MARCO,,English,,open-domain passage ranking / QA,"8,841,823 text passages (Appendix E.1)"
+D012,DS1,AeroTrustBench TEMPLATE,,,test,aerospace compliance / regulatory policy QA,"N=400; main set covering access, supersession, conflict, and combined cases (Table A1)."
+D012,DS2,AeroTrustBench FRESH STRESS,,,test,aerospace compliance / regulatory policy QA,N=400; stale-citation stress where supersession is specified only by metadata (Table A1). | Printed split code: FRESH_STRESS
+D012,DS3,AeroTrustBench SOURCE ANCHORED,,,test,aerospace compliance / regulatory policy QA,N=100; semi-realistic policy-text robustness set (Table A1). Also used for 50-document candidate pools. | Printed split code: SOURCE_ANCHORED
+D012,DS4,AeroTrustBench SF_HELDOUT (SILICONFLOW_HELDOUT),,,held-out,aerospace compliance / regulatory policy QA,N=40; small non-Qwen-generated check for generator-bias concerns (Table A1).
+D012,DS5,AeroTrustBench RECENCY TRAP,,,test,aerospace compliance / regulatory policy QA,N=400; tests timestamp recency against explicit supersession (Table A1). | Printed split code: RECENCY_TRAP
+D012,DS6,AeroTrustBench PROMPT INJECTION,,,test,aerospace compliance / regulatory policy QA,N=200; adversarial instructions inserted into inadmissible evidence (Table A1). | Printed split code: PROMPT_INJECTION
+D013,DS1,NQ,,English,train/dev/test,open-domain factoid question answering / wiki,"Train 79,168; Dev 8,757; Test/eval 3,610 (Table 6, page 18)."
+D013,DS2,TriviaQA,,English,train/dev/test,open-domain factoid question answering / wiki+web,"Train 78,785; Dev 8.837; Test/eval 11.313 as printed (Table 6, page 18)."
+D013,DS3,HotpotQA,,English,train/dev,open-domain multi-hop question answering / wiki,"Train 90.447; Dev 7,405; Test/eval 7,405 as printed; development split used for evaluation (Table 6, page 18)."
+D013,DS4,FEVER,,English,,fact verification / Wikipedia,Three-way label accuracy (SUPPORTS/REFUTES/NOT ENOUGH INFO); Table 5 (page 8).
+D014,DS1,Wizard of Wikipedia,,English,"test seen (first 100 conversations, 452 wizard utterances)",open-domain knowledge-grounded dialogue,"WoW (Dinan et al., 2019); knowledge sampling at sentence level."
+D014,DS2,HotpotQA,,English,training set (first 500 examples),open-domain multi-hop question answering,"HotpotQA (Yang et al., 2018); distractor setting with gold knowledge annotations."
+D014,DS3,Noisy HotpotQA,,English,,open-domain multi-hop question answering,Appendix A.5: HotpotQA with one gold sentence removed per example (avg gold sentences 2.4 -> 1.4).
+D015,DS1,XRAG (monolingual retrieval setting),,en; de; es; zh; ar,test,"news (News Crawl, June 1 - November 30, 2024)","1000 examples; questions in de/es/zh/ar with English supporting and distracting articles; English baseline questions also provided (Table 2, Table 4)."
+D015,DS2,XRAG (multilingual retrieval setting),,de; es; zh; ar (with en),test,"news (News Crawl, June 1 - November 30, 2024)","300 examples per language (de, es, zh, ar); supporting and distracting articles in question language and English (Table 2, Table 5)."
+D015,DS3,"XRAG English Q&A (monolingual retrieval, English questions)",,en,test,news,"English questions before human translation, used for No Retrieval / Oracle Retrieval bounds (Table 3) and as monolingual RAG baseline (Table 4 En column)."
+D015,DS4,XRAG Task 1 (non-English queries with English documents),,de; es; zh; ar,test,news,Used for the chain-of-thought comparison in Table 12 (Appendix E).
+D015,DS5,"SimilarWeb LLM traffic (Germany, Japan, Spain)",,de; ja; es; en,,real-world information-seeking LLM queries,Proprietary dataset used in Appendix A retrieval quality investigation (Table 7).
+D016,DS1,SMART-SLIC malware analysis and anomaly detection corpus (SME-curated scientific publications),,English,,Malware analysis and anomaly detection / cybersecurity,"8,790 scientific publications expanded from 30 SME core documents via citation network (Sec. IV-A); 22% with full texts (Sec. IV-C)."
+D016,DS2,Document-specific and topic-specific question set,,English,,Malware analysis and anomaly detection / cybersecurity,"200 questions total: document metadata questions (citations, references, authors, year, publisher, Scopus categories, title) and topic questions with year variations (Sec. IV-E)."
+D017,DS1,DocBench,,English,test,"multi-domain (Academia, Finance, Government, Law, News)","229 documents, 1,102 QA pairs, avg. 66 pages (~46k tokens); page 4"
+D017,DS2,MMLongBench-Doc,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","135 documents, 1,082 questions; page 4"
+D017,DSD1,MMLongBench-Doc Reports,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Reports\`, PDF page 5, Table 3."
+D017,DSD2,MMLongBench-Doc Tutorials,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Tutorials\`, PDF page 5, Table 3."
+D017,DSD3,MMLongBench-Doc Academic,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Academic\`, PDF page 5, Table 3."
+D017,DSD4,MMLongBench-Doc Guidebooks,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Guidebooks\`, PDF page 5, Table 3."
+D017,DSD5,MMLongBench-Doc Brochures,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Brochures\`, PDF page 5, Table 3."
+D017,DSD6,MMLongBench-Doc Industry,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Industry\`, PDF page 5, Table 3."
+D017,DSD7,MMLongBench-Doc Financial,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Financial\`, PDF page 5, Table 3."
+D017,DSD8,MMLongBench-Doc Overall,,English,test,"multi-domain (Reports, Tutorials, Academic, Guidebooks, Brochures, Industry, Financial)","Printed domain column \`Overall\`, PDF page 5, Table 3."
+D018,DS1,Wikipedia (Pseudo Wikipedia),,Japanese,,encyclopedia / open-domain knowledge,"50 documents, 165 QA pairs (Table 1, p.7)."
+D018,DS2,News (Pseudo News),,Japanese,,news articles / temporal event tracking,"47 documents, 173 QA pairs (Table 1, p.7)."
+D018,DS3,ProductReview (Pseudo Product Review),,Japanese,,product reviews / customer support and e-commerce,"40 documents, 48 QA pairs (Table 1, p.7)."
+D018,DS4,CompanyRules (Pseudo Company Rules),,Japanese,,internal company regulations / enterprise private data,"24 documents, 175 QA pairs (Table 1, p.7)."
+D018,DS5,Overall,,Japanese,,combined benchmark (Wikipedia + News + ProductReview + CompanyRules),"Aggregate over all four datasets, 561 QA pairs (Table 3, p.8)."
+D019,DS1,Natural Questions,,English,validation (256 sampled),general open-domain question answering,"Kwiatkowski et al., 2019; 256 data randomly sampled from NQ validation set (footnote 4)."
+D019,DS2,Huatuo-26M,,Chinese,test (128 consultation data sampled),medical open-domain question answering,"Li et al., 2023; 128 consultation data randomly sampled (footnote 4)."
+D020,DS1,RAG-Multi-Corpus,,,,"multi-domain enterprise knowledge bases (automotive, academia & education, enterprise technology, banking & finance)","236 documents, 786 query-answer pairs with ground-truth citations; five fictional organizations (Aventro Motors, Cendara University, Velvera Technologies, ZX Bank, CloudWay 24); formats PDF, Markdown, HTML, DOCX, PPTX. Table 2 lists 203 files for four enterprises (CloudWay 24 not in Table 2)."
+D021,DS1,TRUE,,,,,"Table 1, page 11; used for Grounded in Context benchmarking."
+D021,DS2,SQuAD,,,,,"Table 1, page 11; also used for end-to-end evaluation (Table 2)."
+D021,DS3,PubmedQA,,,,biomedical,"Table 1, page 11; 1000 entries sampled (page 12)."
+D021,DS4,RAG-dataset-12000,,,,,"Table 2, page 13; 100 samples with balanced binary labels."
+D021,DS5,HAGRID,,,,,"Table 2, page 13; 100 samples with balanced binary labels."
+D021,DS6,Client 1 (Tech Support),,,,,"Table 2, page 13; client dataset, 100 samples, Q&A on technical support data."
+D021,DS7,Client 2 (Job Profiles),,,,,"Table 2, page 13; client dataset, 100 samples, job candidates' work histories."

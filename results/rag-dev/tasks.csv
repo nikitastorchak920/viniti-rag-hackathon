@@ -1,0 +1,57 @@
+publication_id,task_id,task_type,note
+D001,T1,open-domain multi-hop question answering,EM and F1 metrics
+D002,T1,cybersecurity question answering,"General, multi-hop and CVE questions"
+D002,T2,retriever efficiency and failure-rate analysis,"Per-component timing, size and failure rate"
+D003,T1,long-document multiple-choice reading comprehension question answering,QuaLITY and LongHealth MCQA evaluation (Table 4 prompt).
+D003,T2,open-ended financial question answering,"FinanceBench free-form generation, judged by Qwen3-14B (Table 5 prompt)."
+D004,T1,opinion-aware retrieval and opinion-preserving generation over forum/review corpora,"Queries about entities with sentiment entropy H(e) >= 0.6; multiple question types (Detailed Overview, Experience, Business Impact, Specific Examples, Process, Emotional)."
+D005,T1,open-book retrieval-augmented question answering (factuality evaluation),"Main experiments, Tables 2, 3, 5."
+D005,T2,closed-book question answering (factuality evaluation),"Appendix F, Table 6."
+D006,T1,document/passage retrieval reranking evaluated with NDCG@5,All datasets evaluated with NDCG@5; no answer generation metric reported.
+D007,T1,open-domain single-hop question answering,"SQuAD v1.1, Natural Questions, TriviaQA."
+D007,T2,open-domain multi-hop question answering,"MuSiQue, HotpotQA, 2WikiMultiHopQA."
+D007,T3,query-complexity classification (3-way: No/One/Multi),"Classifier accuracy analysis in Table 4, Table 6, Figure 3."
+D008,T1,hallucination mitigation / contextual faithfulness evaluation,RAGTruth and Dolly (AC) hallucination benchmarks
+D008,T2,contextual faithfulness question answering,"CoFaithfulQA six subsets, ConR/MemR metrics"
+D008,T3,pairwise hallucination mitigation judgment,[模型名称已隐藏]-4o judged win/tie/loss comparisons
+D008,T4,inference efficiency / latency measurement,Latency under datasets and prompt lengths
+D009,T1,open-domain single-hop question answering,PopQA; EM and F1.
+D009,T2,open-domain multi-hop question answering,"HotpotQA, 2WikiMultiHopQA, Bamboogle, MuSiQue; EM and F1."
+D009,T3,trajectory reranking / best-of-N selection,"Sec. 4.5, Figure 3: token-level F1 of selected trajectories on PopQA, HotpotQA, 2WikiMultiHopQA."
+D009,T4,retrieval-failure recovery analysis,"Sec. 4.8, Tables 5, 19, 20, 21: final EM and token-level F1 on recovered trajectories."
+D009,T5,intermediate-flawed-but-correct (IFBC) rate analysis,"Sec. H, Table 18."
+D010,T1,medical multiple-choice question answering,MIRAGE end-to-end RAG accuracy.
+D010,T2,multiple-choice question answering (multitask),MMLU end-to-end RAG accuracy.
+D010,T3,data source relevance classification (routing),Router classification metrics on all three benchmarks.
+D010,T4,"federated retrieval efficiency (communication volume, latency, sources contacted)",System efficiency measurements across benchmarks.
+D011,T1,RAG watermark detection and extraction (watermark recovery from black-box RAG responses),"WRR, WTRR, FHR"
+D011,T2,watermarked knowledge text quality evaluation,"PPLavg, KCR, RSavg"
+D011,T3,impact on main RAG task performance,"CDPA, CIRA, WDPV"
+D011,T4,robustness evaluation under adversarial attacks,"selection/alteration/expansion attacks, RAG setting restrictions"
+D011,T5,"stealthiness evaluation (filtering attacks, human identification)","duplicate removal, PPL filtering, human identification"
+D011,T6,"parameter impact analysis (query quota, retriever, similarity metric, capacity, infusion volume)","Figures 2-5, 7"
+D012,T1,"compliance-oriented question answering with evidence governance (unauthorized leakage, stale citation, unsupported answer)",Section 3.1 failure taxonomy; binary failure-rate evaluation.
+D013,T1,open-domain factoid question answering,NQ and TriviaQA; exact match (EM) evaluation.
+D013,T2,open-domain multi-hop question answering,HotpotQA; exact match (EM) evaluation.
+D013,T3,fact verification (three-way label classification),FEVER; search-on three-way label accuracy.
+D014,T1,knowledge-grounded dialogue response generation,"WoW: last two turns as query, wizard response generated from selected knowledge."
+D014,T2,open-domain multi-hop question answering,HotpotQA: short answer generation conditioned on retrieved knowledge.
+D015,T1,cross-lingual open-domain multi-hop question answering (monolingual retrieval),Questions in de/es/zh/ar answered from English articles; accuracy judged by LLM panel including language correctness.
+D015,T2,cross-lingual open-domain multi-hop question answering (multilingual retrieval),Questions in de/es/zh/ar answered from mixed question-language and English articles.
+D015,T3,open-domain multi-hop question answering (English monolingual),English questions with English articles; used for no-retrieval/oracle bounds and monolingual RAG baseline.
+D015,T4,retrieval quality assessment (information sufficiency of search results),Appendix A: whether Google search results suffice for a satisfactory answer.
+D016,T1,document metadata question answering,"Questions such as number of citations/references/authors, publication year, publisher, Scopus categories, title for a given DOI."
+D016,T2,topic-specific question answering,Questions on number of papers per topic and per topic-year.
+D017,T1,multimodal long-document question answering,DocBench and MMLongBench-Doc QA
+D017,T2,multimodal document retrieval (recall evaluation),Table 4 retrieval recall on MMLongBench-Doc page-level evidence annotations
+D018,T1,open-domain question answering over retrieved documents (overall),Overall accuracy across all question types (Table 3(a)).
+D018,T2,extractive question answering,Extracting-type QA pairs (Table 3(b)).
+D018,T3,reasoning question answering,Reasoning-type QA pairs (Table 3(c)).
+D018,T4,computing / numerical question answering,Computing-type QA pairs (Table 3(d)).
+D018,T5,information integrating question answering,Information Integrating-type QA pairs (Table 3(e)).
+D019,T1,open-domain question answering,General knowledge QA on Natural Questions; EM and word-level F1.
+D019,T2,medical open-domain question answering,Huatuo-26M; ROUGE and BLEU scores.
+D019,T3,retrieval context recall evaluation,LLM-as-a-Judge context recall with [模型名称已隐藏]-V3 (Eq. 4).
+D020,T1,"retrieval evaluation (Recall@K, Precision@K, MRR, NDCG@K) over enterprise document corpus","Queries categorized into Descriptive, Analytical, Comparative, Boolean, Temporal, Procedural, Open-Ended (Table 3)."
+D021,T1,groundedness / faithfulness evaluation of RAG answers,Grounded in Context benchmarking (Table 1).
+D021,T2,end-to-end RAG interaction classification (positive/negative/unknown),End-to-end evaluation benchmarking (Table 2).

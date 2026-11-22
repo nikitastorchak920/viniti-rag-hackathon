@@ -1,0 +1,91 @@
+publication_id,title,year,DOI,authors,in_scope,exclusion_reason
+P001,Customized Retrieval Augmented Generation and Benchmarking for EDA Tool Documentation QA,2024,,Yuan Pu; Zhuolun He; Tairu Qiu; Haoyuan Wu; Bei Yu,true,
+P002,CG-RAG: Research Question Answering by Citation Graph Retrieval-Augmented LLMs,2025,,Yuntong Hu; Allen Zhang; Zhihan Lei; Abhinav Angirekula; Zhongjie Dai; Zheng Zhang; Liang Zhao,true,
+P003,URGen: Uncertainty-guided Retrieval-augmented Generation for Guideline-Grounded Medical Question Answering,2026,,Mengieong Hoi; Chen Zhao; Chaoyu Lei; Huifang Zhou; Zhedong Zheng,true,
+P004,LCR-RAG: Enhancing Logical Consistency in Retrieval-Augmented Generation via Neuro-symbolic Reinforcement Learning,2026,,Wenxiang Zheng; Guo Tang; Shixin Jiang; Liangyu Huo; Xiyuan Zhang; Jian Xie; Ming Liu,true,
+P005,SPROUTRAG: Attention-Guided Tree Search with Progressive Embeddings for Long-Document RAG,2026,,Amirhossein Abaskohi; Issam H. Laradji; Peter West; Giuseppe Carenini,true,
+P006,Only Pay What You Must Spend: On-Demand Privacy Budget Payment for Differentially Private RAG,2026,,Zhonghao Sun; Zhiliang Tian; Xinyue Fang; Shuo Ma; Juhua Zhang; Yiping Song; Dongsheng Li,true,
+P007,Retrieval-Augmented Generation for Large Language Model based Few-shot Chinese Spell Checking,2025,,Ming Dong; Zhiwei Cheng; Changyin Luo; Tingting He,true,
+P008,HYBGRAG: Hybrid Retrieval-Augmented Generation on Textual and Relational Knowledge Bases,2025,,Meng-Chieh Lee; Qi Zhu; Costas Mavromatis; Zhen Han; Soji Adeshina; Vassilis N. Ioannidis; Huzefa Rangwala; Christos Faloutsos,true,
+P009,Topic-Initiator: A Proactive Chatbot with Personalized Topic RAG for Enhancing Willingness to Converse,2026,,Kazuya Matsuo; Atsushi Otsuka; Narichika Nomoto; Makoto Nakatsuji,true,
+P010,RAG-Driver: Generalisable Driving Explanations with Retrieval-Augmented In-Context Learning in Multi-Modal Large Language Model,2024,,Jianhao Yuan; Shuyang Sun; Daniel Omeiza; Bo Zhao; Paul Newman; Lars Kunze; Matthew Gadd,true,
+P011,Graphs RAG at Scale: Beyond Retrieval-Augmented Generation with Labeled Property Graphs and Resource Description Framework for Complex and Unknown Search Spaces,2026,,Manie Tadayon; Mayank Gupta,true,
+P012,LLM-Specific Utility for Retrieval-Augmented Generation,2026,10.1145/3799682.3840666,Hengran Zhang; Keping Bi; Jiafeng Guo; Jiaming Zhang; Shuaiqiang Wang; Dawei Yin; Xueqi Cheng,true,
+P013,BubbleRAG: Interactive Cognitive Offloading with Thought Bubble in Retrieval-Augmented Generation,2026,,Fuda Ye; Jiachuan Wang; Yongqi Zhang; Lei Chen; Shuangyin Li,true,
+P014,Efficient Prior-Guided Reasoning for Robust Retrieval-Augmented Generation under Conflicts,2026,,Xiaowei Yuan; Ziyang Huang; Zhao Yang; Yequan Wang; Jun Zhao; Kang Liu,true,
+P015,R³A: Reinforced Reasoning for Relevance Assessment for RAG in User-Generated Content Platforms,2026,,Xiaowei Yuan; Lei Jin; Haoxin Zhang; Ziyang Huang; Yan Gao; Yi Wu; Yao Hu; Jun Zhao; Kang Liu,true,
+P016,Multilingual Retrieval-Augmented Generation for Knowledge-Intensive Question Answering Task,2026,,Leonardo Ranaldi; Barry Haddow; Alexandra Birch,true,
+P017,REAL-MM-RAG: A Real-World Multi-Modal Retrieval Benchmark,2025,,Navve Wasserman; Roi Pony; Oshri Naparstek; Adi Raz Goldfarb; Eli Schwartz; Udi Barzelay; Leonid Karlinsky,false,The paper is a retrieval benchmark and retrieval-model training study; it evaluates document retrieval (NDCG/Recall) only and does not condition answer generation on retrieved context.
+P018,Dual-Confidence Contrastive Decoding for Retrieval-Augmented Generation,2026,,Raymond Li; Md Tawkat Islam Khondaker; Amirhossein Abaskohi; Gabriel Murray; Giuseppe Carenini; Issam H. Laradji,true,
+P019,STRIDE: Strategic Iterative Decision-Making for Retrieval-Augmented Multi-Hop Question Answering,2026,,Wei Chen; Lili Zhao; Zhi Zheng; Huijun Hou; Tong Xu,true,
+P020,Federated Retrieval Augmented Generation for Multi-Product Question Answering,2025,,Parshin Shojaee; Sai Sree Harsha; Dan Luo; Akash Maharaj; Tong Yu; Yunyao Li,true,
+P021,Seeing Through the MIRAGE: Evaluating Multimodal Retrieval Augmented Generation,2026,,Alexander Martin; William Walden; Reno Kriz; Dengjia Zhang; Kate Sanders; Eugene Yang; Chihsheng Jin; Benjamin Van Durme,true,
+P022,Fine-grained Knowledge Enhancement for Retrieval-Augmented Generation,2025,,Jingxuan Han; Zhendong Mao; Yi Liu; Yexuan Che; Zheren Fu; Quan Wang,true,
+P023,VideoStir: Understanding Long Videos via Spatio-Temporally Structured and Intent-Aware RAG,2026,,Honghao Fu; Miao Xu; Yiwei Wang; Dailing Zhang; Jun Liu; Yujun Cai,true,
+P024,VisDoM: Multi-Document QA with Visually Rich Elements Using Multimodal Retrieval-Augmented Generation,2025,,Manan Suri; Puneet Mathur; Franck Dernoncourt; Kanika Gowswami; Ryan A. Rossi; Dinesh Manocha,true,
+P025,The Good and The Bad: Exploring Privacy Issues in Retrieval-Augmented Generation (RAG),2024,,Shenglai Zeng; Jiankun Zhang; Pengfei He; Yue Xing; Yiding Liu; Han Xu; Jie Ren; Shuaiqiang Wang; Dawei Yin; Yi Chang; Jiliang Tang,true,
+P026,Benchmarking Retrieval-Augmented Generation in Multi-Modal Contexts,2025,,Tianshuo Zhou; Zhenghao Liu; Xingsheng Zhu; Yukun Yan; Xinyi Zhang; Xiaoyuan Yi; Ge Yu; Maosong Sun,true,
+P027,Speculative RAG: Enhancing Retrieval Augmented Generation through Drafting,2025,,Zilong Wang; Zifeng Wang; Long T. Le; Huaixiu Steven Zheng; Swaroop Mishra; Vincent Perot; Yuwei Zhang; Anush Mattapalli; Ankur Taly; Jingbo Shang; Chen-Yu Lee; Tomas Pfister,true,
+P028,Exploring Retrieval Augmented Generation in Arabic,2024,,Samhaa R. El-Beltagy; Mohamed A. Abdallah,true,
+P029,RAGPULSE: A Real-World RAG Workload Capturing Authentic Temporal Reuse Patterns for Efficient Serving,2026,,Zhengchao Wang; Yitao Hu; Zhuxuan Chang; Jianing Ye; Guotao Yang; Tianhao Lai; Jiazheng Yu; Zhixin Zhao; Liang Zheng; Youpeng Deng; Sheng Chen; Keqiu Li,true,
+P030,PDF Retrieval Augmented Question Answering,2026,,Meenakshi Rajendran; Kun Zhang; Yuhan Wu; Viet Anh Nguyen; Thi Thu Uyen Hoang,true,
+P031,When Context Misleads: Intent-Guided Decoding for Robust Retrieval-Augmented Generation,2026,,Haolin Jin; Pengyue Yang; Huaming Chen,true,
+P032,HalluGuard: Evidence-Grounded Small Reasoning Models to Mitigate Hallucinations in Retrieval-Augmented Generation,2026,,Loris Bergeron; Ioana Buhnila; Jérôme François; Radu State,true,
+P033,SCAN: Semantic Document Layout Analysis for Textual and Visual Retrieval-Augmented Generation,2026,,Nobuhiro Ueda; Yuyang Dong; Krisztián Boros; Daiki Ito; Takuya Sera; Masafumi Oyamada,true,
+P034,From Norms to Indicators (N2I-RAG): An Agentic Retrieval-Augmented Generation Framework for Legal Indicator Computation,2026,,Youssef Al Mouatamid; Marie Bonnin; Jihad Zahir,true,
+P035,Removal of Hallucination on Hallucination: Debate-Augmented RAG,2025,,Wentao Hu; Wengyu Zhang; Yiyang Jiang; Chen Jason Zhang; Xiaoyong Wei; Qing Li,true,
+P036,RAG-IT: Retrieval-Augmented Instruction Tuning for Automated Financial Analysis - A Case Study for the Semiconductor Sector,2025,,Hai-Thien To; Tien-Cuong Bui; Van-Duc Le,true,
+P037,A Collaborative Multi-Agent Approach to Retrieval-Augmented Generation Across Diverse Data Sources,2024,,Aniruddha Salve; Mahesh Deshmukh; Saba Attar; Sayali Shivpuje; Arnab Mitra Utsab,false,"The paper proposes a multi-agent RAG architecture but reports no measured evaluation results (no tables, plots, or quantitative numbers for any configuration); it is a design/position paper with only qualitative discussion and a related-work literature gap table."
+P038,Optimizing Retrieval-Augmented Generation with Elasticsearch for Enhanced Question-Answering Systems,,,Jiajing Chen; Runyuan Bao; Hongye Zheng; Zhen Qi; Jianjun Wei; Jiacheng Hu,true,
+P039,TagRAG: Tag-guided Hierarchical Knowledge Graph Retrieval-Augmented Generation,2026,,Wenbiao Tao; Xinyuan Li; Yunshi Lan; Weining Qian,true,
+P040,GEAR: Graph-enhanced Agent for Retrieval-augmented Generation,2025,,Zhili Shen; Chenxin Diao; Pavlos Vougiouklis; Pascual Merita; Shriram Piramanayagam; Enting Chen; Damien Graux; Andre Melo; Ruofei Lai; Zeren Jiang; Zhongyang Li; Ye Qi; Yang Ren; Dandan Tu; Jeff Z. Pan,true,
+P041,Knowledge Graph-Guided Retrieval Augmented Generation,2025,,Xiangrong Zhu; Yuexiang Xie; Yi Liu; Yaliang Li; Wei Hu,true,
+P042,Evaluating the Impact of Source Diversity for RAG in Historical Research,2026,,Ruhi Mahadeshwar; Tommaso Caselli; Andreas van Cranenburgh; Malvina Nissim,true,
+P043,MoM: Mixtures of Scenario-Aware Document Memories for Retrieval-Augmented Generation Systems,2025,,Jihao Zhao; Zhiyuan Ji; Simin Niu; Hanyu Wang; Feiyu Xiong; Zhiyu Li,true,
+P044,Conversation AI Dialog for Medicare powered by Finetuning and Retrieval Augmented Generation,2022,,Atharva Mangeshkumar Agrawal; Rutika Pandurang Shinde; Vasanth Kumar Bhukya; Ashmita Chakraborty; Sagar Bharat Shah; Tanmay Shukla; Sree Pradeep Kumar Relangi; Nilesh Mutyam,true,
+P045,CoRe-MMRAG: Cross-Source Knowledge Reconciliation for Multimodal RAG,2025,,Yang Tian; Fan Liu; Jingyuan Zhang; Victoria W.; Yupeng Hu; Liqiang Nie,true,
+P046,Logic Matters in Lightweight Hallucination Classification for RAG System,2026,,Ningyuan Yang; Kaizhu Huang,true,
+P047,Less Is More: Graph-free Multimodal RAG via Multi-signal Late Fusion,2026,,Hongkuan Zhou; Lavdim Halilaj; Yuqicheng Zhu; Tithi Rakshit,true,
+P048,AGRAG: Advanced Graph-based Retrieval-Augmented Generation for LLMs,2026,,Yubo Wang; Haoyang Li; Fei Teng; Lei Chen,true,
+P049,Detecting Hallucinations in Retrieval-Augmented Generation via Semantic-level Internal Reasoning Graph,2026,,Jianpeng Hu; Yanzeng Li; Jialun Zhong; Wenfa Qi; Lei Zou,true,
+P050,ReFilter: Improving Robustness of Retrieval-Augmented Generation via Gated Filter,2026,,Yixin Chen; Ying Xiong; Shangyu Wu; Xiangrui Ke; Nan Guan; Chun Jason Xue,true,
+P051,P051,,,,false,Unprocessed: no scope decision
+P052,P052,,,,false,Unprocessed: no scope decision
+P053,P053,,,,false,Unprocessed: no scope decision
+P054,P054,,,,false,Unprocessed: no scope decision
+P055,P055,,,,false,Unprocessed: no scope decision
+P056,P056,,,,false,Unprocessed: no scope decision
+P057,P057,,,,false,Unprocessed: no scope decision
+P058,P058,,,,false,Unprocessed: no scope decision
+P059,P059,,,,false,Unprocessed: no scope decision
+P060,P060,,,,false,Unprocessed: no scope decision
+P061,P061,,,,false,Unprocessed: no scope decision
+P062,P062,,,,false,Unprocessed: no scope decision
+P063,P063,,,,false,Unprocessed: no scope decision
+P064,P064,,,,false,Unprocessed: no scope decision
+P065,P065,,,,false,Unprocessed: no scope decision
+P066,P066,,,,false,Unprocessed: no scope decision
+P067,P067,,,,false,Unprocessed: no scope decision
+P068,P068,,,,false,Unprocessed: no scope decision
+P069,P069,,,,false,Unprocessed: no scope decision
+P070,P070,,,,false,Unprocessed: no scope decision
+P071,P071,,,,false,Unprocessed: no scope decision
+P072,P072,,,,false,Unprocessed: no scope decision
+P073,P073,,,,false,Unprocessed: no scope decision
+P074,P074,,,,false,Unprocessed: no scope decision
+P075,P075,,,,false,Unprocessed: no scope decision
+P076,P076,,,,false,Unprocessed: no scope decision
+P077,P077,,,,false,Unprocessed: no scope decision
+P078,P078,,,,false,Unprocessed: no scope decision
+P079,P079,,,,false,Unprocessed: no scope decision
+P080,P080,,,,false,Unprocessed: no scope decision
+P081,P081,,,,false,Unprocessed: no scope decision
+P082,P082,,,,false,Unprocessed: no scope decision
+P083,P083,,,,false,Unprocessed: no scope decision
+P084,P084,,,,false,Unprocessed: no scope decision
+P085,P085,,,,false,Unprocessed: no scope decision
+P086,P086,,,,false,Unprocessed: no scope decision
+P087,P087,,,,false,Unprocessed: no scope decision
+P088,P088,,,,false,Unprocessed: no scope decision
+P089,P089,,,,false,Unprocessed: no scope decision
+P090,P090,,,,false,Unprocessed: no scope decision

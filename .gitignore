@@ -22,3 +22,9 @@ submission/
 *.json
 !submission_template/schema.json
 !app/*.json
+!/results/*/validation.json
+/.claudeignore
+/AGENTS.md
+/TODO.md
+/handoff/
+/out_solar_dev.zip

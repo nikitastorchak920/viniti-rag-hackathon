@@ -1,0 +1,867 @@
+publication_id,config_id,rag_variant,retrieval_method,retriever_model,embedding_model,embedding_version,chunking_method,chunk_size,chunk_overlap,chunk_unit,index_type,vector_store,top_k,reranker_model,generator_model,generator_version,prompt_strategy,context_strategy,note
+P001,C01,RAG-EDA,Hybrid (Faiss semantic + BM25 lexical),bge-reranker-large (fine-tuned),bge-large-en-v1.5 (fine-tuned),,markdown section/subsection chunks,,,,Faiss vector database,Faiss,20,bge-reranker-large (fine-tuned),Qwen-14b-chat,,,,Proposed flow; reranker top-k=5; generator 4-bit quantized; Table 4 row 'RAG-EDA (ours)'
+P001,C02,RAG-EDA,Hybrid (Faiss semantic + BM25 lexical),bge-reranker-large (fine-tuned),bge-large-en-v1.5 (fine-tuned),,markdown section/subsection chunks,,,,Faiss vector database,Faiss,20,bge-reranker-large (fine-tuned),Gpt-4,,,,Ablation replacing generator with [模型名称已隐藏]-4; Table 4 row 'RAG-EDA+[模型名称已隐藏]-4'
+P001,C03,Vanilla-RAG,Semantic (Faiss),,text-embedding-ada-002,,,,,,Faiss vector database,Faiss,5,,Gpt-4,,,,Baseline [11]; Table 4 row 'Vanilla-RAG [11]'
+P001,C04,RAG-fusion,Hybrid (semantic + lexical) with RRF,,text-embedding-ada-002,,,,,,Faiss vector database,Faiss,20,,Gpt-4,,,,"Baseline [13,14]; RRF returns top-5; Table 4 row 'RAG-fusion [13, 14]'"
+P001,C05,HyDE,Semantic (Faiss) with hypothetical document,,text-embedding-ada-002,,,,,,Faiss vector database,Faiss,5,,Gpt-4,,,,Baseline [15]; Table 4 row 'HyDE [15]'
+P001,C06,llmlingua,Semantic (Faiss) with prompt compression,,text-embedding-ada-002,,,,,,Faiss vector database,Faiss,5,,Gpt-4,,,,Baseline [16-18]; Table 4 row 'llmlingua [16–18]'
+P001,C07,ITER-RETGEN,"Semantic (Faiss), iterative retrieval-generation",,text-embedding-ada-002,,,,,,Faiss vector database,Faiss,5,,Gpt-4,,,,Baseline [19]; 2 iterations; Table 4 row 'ITER-RETGEN [19]'
+P001,C08,text-embedding-ada-002,Semantic (Faiss),,text-embedding-ada-002,,,,,,Faiss vector database,Faiss,,,,,,,Retriever-only baseline; Table 1 row 'text-embedding-ada-002'
+P001,C09,bge-large-en-v1.5,Semantic (Faiss),,bge-large-en-v1.5,,,,,,Faiss vector database,Faiss,,,,,,,Retriever-only baseline; Table 1 row 'bge-large-en-v1.5'
+P001,C10,Our embedding model,Semantic (Faiss),,bge-large-en-v1.5 (fine-tuned),,,,,,Faiss vector database,Faiss,,,,,,,Fine-tuned embedding; Table 1 row 'Our embedding model'
+P001,C11,RRF,Hybrid (Faiss + BM25) with RRF,,,,,,,,,,,,,,,,Reranker baseline; Table 2 row 'RRF'
+P001,C12,bge-reranker-large,Hybrid (Faiss + BM25),bge-reranker-large,,,,,,,,,,bge-reranker-large,,,,,Reranker baseline; Table 2 row 'bge-reranker-large'
+P001,C13,Our reranker,Hybrid (Faiss + BM25),bge-reranker-large (fine-tuned),,,,,,,,,,bge-reranker-large (fine-tuned),,,,,Fine-tuned reranker; Table 2 row 'Our reranker'
+P001,C14,GPT-4,,,,,,,,,,,,,Gpt-4,,,,Generator baseline; Table 3 row '[模型名称已隐藏]-4 [27]'
+P001,C15,Qwen1.5-14B-Chat,,,,,,,,,,,,,Qwen1.5-14B-Chat,,,,Generator baseline; Table 3 row 'Qwen1.5-14B-Chat [23]'
+P001,C16,llama-2-13B-chat,,,,,,,,,,,,,llama-2-13B-chat,,,,Generator baseline; Table 3 row 'llama-2-13B-chat [24]'
+P001,C17,Baichuan2-13B-Chat,,,,,,,,,,,,,Baichuan2-13B-Chat,,,,Generator baseline; Table 3 row 'Baichuan2-13B-Chat [25]'
+P001,C18,RAG-EDA-generator,,,,,,,,,,,,,Qwen-14b-chat (fine-tuned),,,,Fine-tuned generator; Table 3 row 'RAG-EDA-generator (ours)'
+P002,C01,BM25,Sparse retrieval,BM25,,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row BM25; sparse baseline
+P002,C02,Doc2Query,Sparse retrieval,Doc2Query,,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row Doc2Query
+P002,C03,MiniLM,Dense retrieval,MiniLM,MiniLM,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row MiniLM
+P002,C04,LaBSE,Dense retrieval,LaBSE,LaBSE,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row LaBSE
+P002,C05,mContriever,Dense retrieval,mContriever,mContriever,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row mContriever
+P002,C06,E5,Dense retrieval,E5,E5,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row E5
+P002,C07,SPAR,Dense retrieval,SPAR,SPAR,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row SPAR
+P002,C08,Score Fusion,Hybrid retrieval (score fusion),,,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row Score Fusion
+P002,C09,ColBERT,Hybrid retrieval (late interaction),ColBERT,ColBERT,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row ColBERT
+P002,C10,CLEAR,Hybrid retrieval,CLEAR,,,,,,,,,,,GPT-4 (gpt-4o-2024-05-13),,,,Table 2 row CLEAR
+P002,C11,LeSeGR,Lexical-Semantic Graph Retrieval,BGE-M3 (sparse) + MiniLM (dense),MiniLM,,semantic chunking,8192,,tokens,contextual citation graph,,,,GPT-4 (gpt-4o-2024-05-13),,summarize graph context then concatenate with central chunks,Table 2 row LeSeGR (Ours); default settings per Table 5,
+P002,C12,LeSeGR,Lexical-Semantic Graph Retrieval,BGE-M3 (sparse) + MiniLM (dense),MiniLM,,semantic chunking,8192,,tokens,contextual citation graph,,,,,,,,Table 3 row LeSeGR (Ours); retrieval-only evaluation on PubMedQA
+P002,C13,LeSeGR (GAT encoder,Lexical-Semantic Graph Retrieval,BGE-M3 (sparse) + MiniLM (dense),MiniLM,,,,,,GAT graph encoder,,,,,,,,Table 5 Graph Encoder row GAT
+P002,C14,LeSeGR (GCN encoder,Lexical-Semantic Graph Retrieval,BGE-M3 (sparse) + MiniLM (dense),MiniLM,,,,,,GCN graph encoder,,,,,,,,Table 5 Graph Encoder row GCN
+P002,C15,LeSeGR (Top-n=2,Lexical-Semantic Graph Retrieval,BGE-M3 (sparse) + MiniLM (dense),MiniLM,,,,,,contextual citation graph,,,2,,,,,Table 5 Top-n row 2
+P002,C16,LeSeGR (Top-n=8,Lexical-Semantic Graph Retrieval,BGE-M3 (sparse) + MiniLM (dense),MiniLM,,,,,,contextual citation graph,,,8,,,,,Table 5 Top-n row 8
+P002,C17,LeSeGR (TF-IDF sparse signal,Lexical-Semantic Graph Retrieval,TF-IDF (sparse) + MiniLM (dense),MiniLM,,,,,,contextual citation graph,,,,,,,,Table 5 Sparse Signal row TF-IDF
+P002,C18,LeSeGR (BM25 sparse signal,Lexical-Semantic Graph Retrieval,BM25 (sparse) + MiniLM (dense),MiniLM,,,,,,contextual citation graph,,,,,,,,Table 5 Sparse Signal row BM25
+P002,C19,LeSeGR (Doc2Query sparse signal,Lexical-Semantic Graph Retrieval,Doc2Query (sparse) + MiniLM (dense),MiniLM,,,,,,contextual citation graph,,,,,,,,Table 5 Sparse Signal row Doc2Query
+P003,C01,Vanilla LLM,,,,,,,,,,,,,Llama-3.1-8B,,,,No retrieval; Table 1 row Vanilla LLM (p.6)
+P003,C02,Fixed-1 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,1,,Llama-3.1-8B,,,,Table 1 row Fixed-1 RAG (p.6)
+P003,C03,Fixed-5 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,5,,Llama-3.1-8B,,,,Table 1 row Fixed-5 RAG (p.6)
+P003,C04,URGen,multi-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Llama-3.1-8B,,,,"Table 1 row URGen (Ours) (p.6); ZARD depth clip[1,5] | top_k: 1-5"
+P003,C05,Vanilla LLM,,,,,,,,,,,,,Mistral-7B,,,,Table 1 row Vanilla LLM (p.6)
+P003,C06,Fixed-1 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,1,,Mistral-7B,,,,Table 1 row Fixed-1 RAG (p.6)
+P003,C07,Fixed-5 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,5,,Mistral-7B,,,,Table 1 row Fixed-5 RAG (p.6)
+P003,C08,URGen,multi-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Mistral-7B,,,,Table 1 row URGen (Ours) (p.6) | top_k: 1-5
+P003,C09,Vanilla LLM,,,,,,,,,,,,,Meditron-7B,,,,Table 1 row Vanilla LLM (p.6)
+P003,C10,Fixed-1 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,1,,Meditron-7B,,,,Table 1 row Fixed-1 RAG (p.6)
+P003,C11,Fixed-5 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,5,,Meditron-7B,,,,Table 1 row Fixed-5 RAG (p.6)
+P003,C12,URGen,multi-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Meditron-7B,,,,Table 1 row URGen (Ours) (p.6) | top_k: 1-5
+P003,C13,URGen (full,multi-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Llama-3.1-8B,,,,Table 2 ablation row (p.7) | top_k: 1-5
+P003,C14,w/o uncertainty calibration,multi-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Llama-3.1-8B,,,,Table 2 ablation row (p.7) | top_k: 1-5
+P003,C15,w/o adaptive retrieval (Fixed-k = 5,multi-temperature LLM keypoint ranking,,,,,,,,,,5,,Llama-3.1-8B,,,,Table 2 ablation row (p.7)
+P003,C16,w/o retrieval temperature diversity (M1 = 1,single-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Llama-3.1-8B,,,,Table 2 ablation row (p.7) | top_k: 1-5
+P003,C17,w/o generation temperature diversity (M2 = 1,multi-temperature LLM keypoint ranking with ZARD,,,,,,,,,,,,Llama-3.1-8B,,,,Table 2 ablation row (p.7) | top_k: 1-5
+P003,C18,w/o multi retrieval (Fixed-k = 1,single-temperature LLM keypoint ranking,,,,,,,,,,1,,Llama-3.1-8B,,,,"Table 2 ablation row, footnote * (p.7)"
+P003,C19,Fixed-2 RAG,multi-temperature LLM keypoint ranking,,,,,,,,,,2,,Llama-3.1-8B,,,,Table 3 row Fixed-2 RAG (p.7)
+P004,C01,Standard RAG,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; vanilla pipeline (p.5-6)
+P004,C02,ReAct,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; agent-based baseline (p.6)
+P004,C03,IRCoT,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; iterative reasoning baseline (p.6)
+P004,C04,Self-RAG,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; self-corrective baseline (p.6)
+P004,C05,SeaKR,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; selective retrieval baseline (p.6)
+P004,C06,R3-RAG,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; RL baseline (p.6)
+P004,C07,RAG-RL,,,,,,,,,,,,,Qwen3-8B,,,,Table 1 row; RL baseline (p.6)
+P004,C08,LCR-RAG,dense retrieval (cosine similarity),,,,recursive character splitting,200,20,characters,FAISS,,5,,Qwen3-8B,,,,"Table 1 row; full framework, Appendix A (p.11)"
+P004,C09,LCR-RAG,,,,,,,,,,,,,Qwen3-32B,,,,Table 8 row LCR-RAG (32B)
+P004,C10,LCR-RAG,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P004,C11,LCR-RAG,,,,,,,,,,,,,DeepSeek-R1-8B,,,,Table 7 [模型名称已隐藏]-R1-8B block
+P004,C12,LCR-RAG,,,,,,,,,,,,,GLM-4-9B,,,,Table 7 GLM-4-9B block
+P004,C13,LCR-RAG,,,,,,,,,,,,,Ministral-3-8B,,,,Table 7 Ministral-3-8B block
+P004,C14,ReAct,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P004,C15,IRCoT,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P004,C16,Self-RAG,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P004,C17,SeaKR,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P004,C18,R3-RAG,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P004,C19,RAG-RL,,,,,,,,,,,,,Llama-3.3-8B,,,,Table 7 Llama-3.3-8B block
+P005,C01,SPROUTRAG,attention-guided hierarchical tree retrieval with hierarchical beam search,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,attention-guided binary tree,,5,QWEN3-RERANKER-4B,QWEN3-8B,,,candidates collected from all tree levels,"default setting b=5, lambda=0.1; Table 1/2/3 default row"
+P005,C02,Dense X Retrieval,proposition-level retrieval,,,,propositions,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C03,Meta-Chunking-PPL,perplexity-based chunk boundary detection,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C04,Meta-Chunking-MSP,margin-sampling-based chunk boundary detection,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C05,RAPTOR,recursive clustering and summarization tree,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C06,LightRAG,graph-structured retrieval,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C07,PropRAG,beam search over proposition paths,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C08,MoC,mixture-of-chunking-learners routing,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C09,SAKI-RAG,SLLM inter-sentence attention pairwise expansion with LLM filtering,SLLM,,,sentence-level,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"baseline, Table 1"
+P005,C10,GraphRAG,entity-relation graph retrieval,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"end-to-end baseline, Table 2"
+P005,C11,ReflectiveRAG,self-reflective retrieval loop,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"end-to-end baseline, Table 2"
+P005,C12,REFRAG,decoding-time context compression,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"end-to-end baseline, Table 2"
+P005,C13,PageIndex,reasoning-based vectorless page index search,,,,,,,,,,,QWEN3-RERANKER-4B,QWEN3-8B,,,,"end-to-end baseline, Table 2"
+P005,C14,SPROUTRAG (Not trained,attention-guided hierarchical tree retrieval,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,attention-guided binary tree,,5,QWEN3-RERANKER-4B,,,,,"ablation, Table 3 row 'Not trained'"
+P005,C15,SPROUTRAG (w/o Lret,attention-guided hierarchical tree retrieval,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,attention-guided binary tree,,5,QWEN3-RERANKER-4B,,,,,"ablation, Table 3 row 'w/o Lret'"
+P005,C16,SPROUTRAG (w/o Lattn,attention-guided hierarchical tree retrieval,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,attention-guided binary tree,,5,QWEN3-RERANKER-4B,,,,,"ablation, Table 3 row 'w/o Lattn'"
+P005,C17,SPROUTRAG (Uniform attention aggregation,attention-guided hierarchical tree retrieval,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,attention-guided binary tree,,5,QWEN3-RERANKER-4B,,,,,"ablation, Table 3 row 'Uniform attention aggregation'"
+P005,C18,SPROUTRAG (Embedding-similarity tree,embedding-similarity tree with hierarchical beam search,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,embedding-similarity binary tree,,5,QWEN3-RERANKER-4B,,,,,"ablation, Table 3 row 'Embedding-similarity tree'"
+P005,C19,SPROUTRAG (Leaf-only retrieval,leaf-only retrieval,SLLM (1.3B-parameter SentenceVAE),,,sentence-level chunks (up to two sentences),2,,sentences,attention-guided binary tree,,5,QWEN3-RERANKER-4B,,,,,"ablation, Table 3 row 'Leaf-only retrieval'"
+P006,C01,Non-RAG,,,,,,,,,,,,,OPT-1.3B,,,,"Table 1 row 'Non-RAG' (page 7); no retrieval, performance lower bound."
+P006,C02,Non-RAG,,,,,,,,,,,,,Pythia-1.4B,,,,Table 1 row 'Non-RAG' (page 7).
+P006,C03,Non-RAG,,,,,,,,,,,,,Mistral-7B,,,,Table 1 row 'Non-RAG' (page 7).
+P006,C04,Non-RAG,,,,,,,,,,,,,Llama-3.1-8B,,,,Table 1 row 'Non-RAG' (page 7).
+P006,C05,Non-Private-RAG,dense retrieval,DPR,all-MiniLM-L6-v2,,,,,,,,,,OPT-1.3B,,,,"Table 1 row 'Non-Private-RAG' (page 7); standard RAG without privacy protection, utility upper bound. Retriever per Sec. 5.1."
+P006,C06,Non-Private-RAG,dense retrieval,DPR,all-MiniLM-L6-v2,,,,,,,,,,Pythia-1.4B,,,,Table 1 row 'Non-Private-RAG' (page 7).
+P006,C07,Non-Private-RAG,dense retrieval,DPR,all-MiniLM-L6-v2,,,,,,,,,,Mistral-7B,,,,Table 1 row 'Non-Private-RAG' (page 7).
+P006,C08,Non-Private-RAG,dense retrieval,DPR,all-MiniLM-L6-v2,,,,,,,,,,Llama-3.1-8B,,,,Table 1 row 'Non-Private-RAG' (page 7).
+P006,C09,DPVoteRAG,,,,,,,,,,,,,OPT-1.3B,,,,"Table 1 row 'DPVoteRAG' (page 7); baseline of Koga et al., 2024, DP voting at every generation step."
+P006,C10,DPVoteRAG,,,,,,,,,,,,,Pythia-1.4B,,,,Table 1 row 'DPVoteRAG' (page 7).
+P006,C11,DPVoteRAG,,,,,,,,,,,,,Mistral-7B,,,,Table 1 row 'DPVoteRAG' (page 7).
+P006,C12,DPVoteRAG,,,,,,,,,,,,,Llama-3.1-8B,,,,Table 1 row 'DPVoteRAG' (page 7).
+P006,C13,DPSparseVoteRAG,,,,,,,,,,,,,OPT-1.3B,,,,"Table 1 row 'DPSparseVoteRAG' (page 7); baseline of Koga et al., 2024, sparsified private token generation via voting."
+P006,C14,DPSparseVoteRAG,,,,,,,,,,,,,Pythia-1.4B,,,,Table 1 row 'DPSparseVoteRAG' (page 7).
+P006,C15,DPSparseVoteRAG,,,,,,,,,,,,,Mistral-7B,,,,Table 1 row 'DPSparseVoteRAG' (page 7).
+P006,C16,DPSparseVoteRAG,,,,,,,,,,,,,Llama-3.1-8B,,,,Table 1 row 'DPSparseVoteRAG' (page 7).
+P006,C17,MuRAG,,,,,,,,,,,,,OPT-1.3B,,,,"Table 1 row 'MuRAG' (page 7); baseline of Wu et al., 2026, narrowed retrieval scope."
+P006,C18,MuRAG,,,,,,,,,,,,,Pythia-1.4B,,,,Table 1 row 'MuRAG' (page 7).
+P006,C19,MuRAG,,,,,,,,,,,,,Mistral-7B,,,,Table 1 row 'MuRAG' (page 7).
+P006,C20,MuRAG,,,,,,,,,,,,,Llama-3.1-8B,,,,Table 1 row 'MuRAG' (page 7).
+P006,C21,SparsePay-RAG,two-stage retrieval via public topics (topic-guided clustering),DPR,all-MiniLM-L6-v2,,topic-guided clustering,,,,,,,,OPT-1.3B,,,,Table 1 row 'SparsePay-RAG' (page 7); K and epsilon_token vary with epsilon (Sec. 5.1).
+P006,C22,SparsePay-RAG,two-stage retrieval via public topics (topic-guided clustering),DPR,all-MiniLM-L6-v2,,topic-guided clustering,,,,,,,,Pythia-1.4B,,,,Table 1 row 'SparsePay-RAG' (page 7).
+P006,C23,SparsePay-RAG,two-stage retrieval via public topics (topic-guided clustering),DPR,all-MiniLM-L6-v2,,topic-guided clustering,,,,,,,,Mistral-7B,,,,Table 1 row 'SparsePay-RAG' (page 7).
+P006,C24,SparsePay-RAG,two-stage retrieval via public topics (topic-guided clustering),DPR,all-MiniLM-L6-v2,,topic-guided clustering,,,,,,,,Llama-3.1-8B,,,,Table 1 row 'SparsePay-RAG' (page 7).
+P006,C26,SparsePay-RAG (-TGC,global retrieval (topic-guided clustering removed),DPR,all-MiniLM-L6-v2,,,,,,,,,,OPT-1.3B,,,,Table 2 column '-TGC' (page 8); removes topic-guided clustering.
+P006,C27,SparsePay-RAG (-AT,two-stage retrieval via public topics (topic-guided clustering),DPR,all-MiniLM-L6-v2,,topic-guided clustering,,,,,,,,OPT-1.3B,,,,Table 2 column '-AT' (page 8); removes adaptive triggering.
+P006,C28,SparsePay-RAG (-CD,two-stage retrieval via public topics (topic-guided clustering),DPR,all-MiniLM-L6-v2,,topic-guided clustering,,,,,,,,OPT-1.3B,,,,"Table 2 column '-CD' (page 8); removes DP contrastive decoding, clips and aggregates raw private logits."
+P006,C35,DPVoteRAG (original,,,,,,,,,,,,,OPT-1.3B,,,,"Table 11 (page 18), original protocol at epsilon=10."
+P006,C36,DPVoteRAG (+ fallback,,,,,,,,,,,,,OPT-1.3B,,,,"Table 11 (page 18), fallback-enhanced at epsilon=10."
+P006,C37,DPSparseVoteRAG (original,,,,,,,,,,,,,OPT-1.3B,,,,"Table 11 (page 18), original protocol at epsilon=10."
+P006,C38,DPSparseVoteRAG (+ fallback,,,,,,,,,,,,,OPT-1.3B,,,,"Table 11 (page 18), fallback-enhanced at epsilon=10."
+P007,C01,RagID,nearest neighbor search over milvus vector database of CSC examples,bge-large-zh,bge-large-zh,,,,,,milvus,milvus,,,GPT3.5,,C-prompt (corrector few-shot prompt),RAGFew-Shot+IDS,"RAGFew-Shot+IDS; Table 2 rows, Table 3 row"
+P007,C02,RagID,nearest neighbor search over milvus vector database of CSC examples,bge-large-zh,bge-large-zh,,,,,,milvus,milvus,,,GLM4,,C-prompt (corrector few-shot prompt),RAGFew-Shot+IDS,RAGFew-Shot+IDS; Table 2 rows
+P007,C03,RagID,nearest neighbor search over milvus vector database of CSC examples,bge-large-zh,bge-large-zh,,,,,,milvus,milvus,,,GPT3.5,,C-prompt (corrector few-shot prompt),RAGFew-Shot,ablation without IDS; Table 3
+P007,C04,RagID,,,,,,,,,,,,,GPT3.5,,C-prompt (corrector few-shot prompt),FixedFew-Shot+IDS,ablation without RAG; Table 3
+P007,C05,RagID,,,,,,,,,,,,,GPT3.5,,C-prompt (corrector few-shot prompt),FixedFew-Shot,ablation without RAG and IDS; Table 3
+P007,C06,FixedFew-Shot,,,,,,,,,,,,,BERT,,,FixedFew-Shot,baseline; Table 2
+P007,C07,FixedFew-Shot,,,,,,,,,,,,,ReaLiSe,,,FixedFew-Shot,baseline; Table 2
+P007,C08,FixedFew-Shot,,,,,,,,,,,,,CRASpell,,,FixedFew-Shot,baseline; Table 2
+P007,C09,FixedFew-Shot,,,,,,,,,,,,,SCOPE,,,FixedFew-Shot,baseline; Table 2
+P008,C01,QAGNN,,,,,,,,,,,,,,,,,Table 5 row; RoBERTa base model (Appx C.1.2)
+P008,C02,Think-on-Graph,,,,,,,,,,,,,Claude 3 Sonnet,,,,Table 5 row; 10% of testing data
+P008,C03,Dense Retriever,,,,,,,,,,,,,,,,,Table 5 row; RoBERTa base model
+P008,C04,VSS (Text Retrieval Module),,,ada-002,,,,,,,,,,,,,,Table 5 row; text retrieval module
+P008,C05,Multi-VSS,,,ada-002,,,,,,,,,,,,,,Table 5 row
+P008,C06,VSS w/ LLM Reranker,,,ada-002,,,,,,,,,,Claude 3 Opus,,,,Table 5 row; 10% of testing data
+P008,C07,ReAct,,,ada-002,,,,,,,,,,Claude 3 Opus,,,,Table 5 row
+P008,C08,Reflexion,,,ada-002,,,,,,,,,,Claude 3 Opus,,,,Table 5 row
+P008,C09,AVATAR,,,ada-002,,,,,,,,,,Claude 3 Opus,,,,Table 5 row
+P008,C10,Hybrid Retrieval Module,graph retriever (ego-graph) + VSS ranker,,ada-002,,,,,,,,,,Claude 3 Sonnet,,,,Table 5 row; no critic module
+P008,C11,HYBGRAG,retriever bank (text + hybrid retrieval modules),,ada-002,,,,,,,,,,Claude 3 Sonnet,,,,Table 5 row; main method
+P008,C12,HYBGRAG,retriever bank (text + hybrid retrieval modules),,ada-002,,,,,,,,,,Claude 3 Haiku,,,,Table 6 row
+P008,C13,Router for SR,retriever bank (text + hybrid retrieval modules),,ada-002,,,,,,,,,,Claude 3 Sonnet,,,,Table 7 row; single-agent self-reflection
+P008,C16,CoT LLM,,,,,,,,,,,,,Llama 3.1 70B,,,,Table 8 row; CRAG
+P008,C17,Text-Only RAG,,,,,,,,,,,,,Llama 3.1 70B,,,,Table 8 row; CRAG
+P008,C18,Graph-Only RAG,,,,,,,,,,,,,Llama 3.1 70B,,,,Table 8 row; CRAG
+P008,C19,Text & Graph RAG,,,,,,,,,,,,,Llama 3.1 70B,,,,Table 8 row; CRAG
+P009,C01,PT-RAG,category-guided LLM retrieval over organized topic candidates,,GiNZA,,,,,,Redis,,,,ChatGPT-4o-mini,,,,"Ours; Sec. 3.2, Sec. 4.1.3; alpha=0.8; Table 3 rows (c)"
+P009,C02,PT-RAG-Knowledge-Out,category-guided LLM retrieval without speaker knowledge,,GiNZA,,,,,,Redis,,,,ChatGPT-4o-mini,,,,Ablation of PT-RAG without knowledge estimation; Sec. 4.1.3; Table 3 rows (d)
+P009,C03,Vanilla-RAG,dense vector similarity top-k chunk retrieval,,,,fixed-sized chunks,,,,,,5,,ChatGPT-4o-mini,,,,llama-index implementation; K=5; Table 3 rows (a)
+P009,C04,PersonaRAG,Vanilla-RAG retriever + multi-agent reranking/refinement,,,,fixed-sized chunks,,,,,,5,,ChatGPT-4o-mini,,,,Zerhoudi (2025); retriever of Vanilla-RAG; Table 3 rows (b)
+P009,C05,Topic-Initiator,PT-RAG,,GiNZA,,,,,,Redis,,,,ChatGPT-4o-mini,,,,Chatbot with PT-RAG initial utterance; Sec. 4.2.1-4.2.2; Figure 6
+P009,C06,Proactive (no new info.,,,,,,,,,,,,,ChatGPT-4o-mini,,,,Proactive strategy following Zhang et al. (2023); Sec. 4.2.2; Figure 6
+P009,C07,Passive,,,,,,,,,,,,,ChatGPT-4o-mini,,,,Baseline responding only after user input; Sec. 4.2.2; Figure 6
+P010,C01,RAG-Driver,"Hybrid Search (video + control signal projected embedding, triplet loss)",LanguageBind video encoder (ViT-B/32) + MLP projector,,,,,,,vector similarity search (cosine),,2,,Vicuna 1.5 7B,,Contextual System Information + Current Query + 2 ICL examples,"OURS row, Tab. I/II; 2 ICL examples",
+P010,C02,RAG-Driver,Visual Search (video embeddings only),LanguageBind video encoder (ViT-B/32),,,,,,,vector similarity search (cosine),,2,,Vicuna 1.5 7B,,,"Tab. III row 4 (Visual Search, ICL training+inference)",
+P010,C03,RAG-Driver,Hybrid Search,LanguageBind video encoder (ViT-B/32) + MLP projector,,,,,,,vector similarity search (cosine),,1,,Vicuna 1.5 7B,,,Tab. IV row 1 ICL example,
+P010,C04,RAG-Driver,Hybrid Search,LanguageBind video encoder (ViT-B/32) + MLP projector,,,,,,,vector similarity search (cosine),,2,,Vicuna 1.5 7B,,,Tab. IV row 2 ICL examples,
+P010,C05,RAG-Driver (retrieval engine finetuned on target domain,Hybrid Search finetuned with Spoken-SAX data,LanguageBind video encoder (ViT-B/32) + MLP projector,,,,,,,vector similarity search (cosine),,2,,Vicuna 1.5 7B,,,Tab. V row Finetune ✓,
+P010,C06,RAG-Driver (retrieval engine not finetuned,Hybrid Search,LanguageBind video encoder (ViT-B/32) + MLP projector,,,,,,,vector similarity search (cosine),,2,,Vicuna 1.5 7B,,,Tab. V row Finetune ×,
+P010,C07,Base w/o ICL,,LanguageBind video encoder (ViT-B/32),,,,,,,,,,,Vicuna 1.5 7B,,,Tab. I lower part Base w/o ICL,
+P010,C08,S2VT,,,,,,,,,,,,,,,,Tab. I baseline [76],
+P010,C09,S2VT++,,,,,,,,,,,,,,,,Tab. I baseline [76],
+P010,C10,SAA,,,,,,,,,,,,,,,,Tab. I baseline [39],
+P010,C11,WAA,,,,,,,,,,,,,,,,Tab. I baseline [39],
+P010,C12,ADAPT,,,,,,,,,,,,,,,,Tab. I/II baseline [35],
+P010,C13,DriveGPT4,,,,,,,,,,,,,,,,Tab. I/II baseline [81],
+P011,C01,RAG2 (Agentic RAG),embedding-based retrieval with reranking,,BGE-m3,,,,,,vector database,,,BAAI/bge-reranker-v2-m3; BAAI/bge-reranker-v2-gemma; cross-encoder/ms-marco-MiniLM-L6-v2,,,,,Defined Section 4.3; rerankers from Section 3.5; best result with/without reranking selected (p.10)
+P011,C02,RAGRDF,SPARQL traversal over RDF triplets in Amazon Neptune with node selection agent and relationship detection agent,,BGE-m3,,,,,,Amazon Neptune (RDF),,,,,,,,Defined Section 4.1; up to 50 embedding-selected and up to 100 LLM-selected relationships
+P011,C03,RAGLPG,text-to-Cypher query generation over Labeled Property Graph,,,,,,,,Labeled Property Graph (openCypher),,,,,,,,Defined Section 4.2; text2cypher model neo4j/text-to-cypher-Gemma-3-27B-Instruct-2025.04.0 evaluated and found unsatisfactory (Section 3.11)
+P011,C04,RAG1,JSON-to-text narrative conversion then chunking and embedding,,BGE-m3,,,,,,,,,,,,,,Defined Section 3.3; excluded from main experiments (Section 5)
+P012,C01,Without retrieval,,,,,,,,,,,,,Llama3.1-8B-Instruct,,,,Table 2 row 'Without retrieval'; no passage context
+P012,C02,Without retrieval,,,,,,,,,,,,,Qwen3-8B,,,,Table 2 row 'Without retrieval'
+P012,C03,Without retrieval,,,,,,,,,,,,,Qwen3-14B,,,,Table 2 row 'Without retrieval'
+P012,C04,Without retrieval,,,,,,,,,,,,,Qwen3-32B,,,,Table 2 row 'Without retrieval'
+P012,C05,RAG with top-20 retrieved passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,,,Table 2 row 'RP'; top-20 BGE-M3 retrieval
+P012,C06,RAG with top-20 retrieved passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,,,Table 2 row 'RP'
+P012,C07,RAG with top-20 retrieved passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,,,Table 2 row 'RP'
+P012,C08,RAG with top-20 retrieved passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,,,Table 2 row 'RP'
+P012,C09,RAG with merged candidate pool (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,,,Table 2 row 'MCP'
+P012,C10,RAG with merged candidate pool (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,,,Table 2 row 'MCP'
+P012,C11,RAG with merged candidate pool (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,,,Table 2 row 'MCP'
+P012,C12,RAG with merged candidate pool (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,,,Table 2 row 'MCP'
+P012,C13,RAG with human-annotated gold passages (HGP,human annotation,,,,,,,,,,,,Llama3.1-8B-Instruct,,,,Table 2 row 'HGP'
+P012,C14,RAG with human-annotated gold passages (HGP,human annotation,,,,,,,,,,,,Qwen3-8B,,,,Table 2 row 'HGP'
+P012,C15,RAG with human-annotated gold passages (HGP,human annotation,,,,,,,,,,,,Qwen3-14B,,,,Table 2 row 'HGP'
+P012,C16,RAG with human-annotated gold passages (HGP,human annotation,,,,,,,,,,,,Qwen3-32B,,,,Table 2 row 'HGP'
+P012,C17,Gold Utilitarian Passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,,,Table 2 row 'Gold Utilitarian Passages (RP)'
+P012,C18,Gold Utilitarian Passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,,,Table 2 row 'Gold Utilitarian Passages (RP)'
+P012,C19,Gold Utilitarian Passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,,,Table 2 row 'Gold Utilitarian Passages (RP)'
+P012,C20,Gold Utilitarian Passages (RP,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,,,Table 2 row 'Gold Utilitarian Passages (RP)'
+P012,C21,Gold Utilitarian Passages (HGP,human annotation,,,,,,,,,,,,Llama3.1-8B-Instruct,,,,Table 2 row 'Gold Utilitarian Passages (HGP)'
+P012,C22,Gold Utilitarian Passages (HGP,human annotation,,,,,,,,,,,,Qwen3-8B,,,,Table 2 row 'Gold Utilitarian Passages (HGP)'
+P012,C23,Gold Utilitarian Passages (HGP,human annotation,,,,,,,,,,,,Qwen3-14B,,,,Table 2 row 'Gold Utilitarian Passages (HGP)'
+P012,C24,Gold Utilitarian Passages (HGP,human annotation,,,,,,,,,,,,Qwen3-32B,,,,Table 2 row 'Gold Utilitarian Passages (HGP)'
+P012,C25,Gold Utilitarian Passages (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,,,Table 2 row 'Gold Utilitarian Passages (MCP)'
+P012,C26,Gold Utilitarian Passages (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,,,Table 2 row 'Gold Utilitarian Passages (MCP)'
+P012,C27,Gold Utilitarian Passages (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,,,Table 2 row 'Gold Utilitarian Passages (MCP)'
+P012,C28,Gold Utilitarian Passages (MCP,BGE-M3 dense retrieval + human gold passages,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,,,Table 2 row 'Gold Utilitarian Passages (MCP)'
+P012,C29,PVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,pointwise verbalized selection without pseudo-answer,,Table 3 row 'PVS (w/o PA)'
+P012,C30,PVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,pointwise verbalized selection with pseudo-answer,,Table 3 row 'PVS (with PA)'
+P012,C31,LVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,listwise verbalized selection without pseudo-answer,,Table 3 row 'LVS (w/o PA)'
+P012,C32,LVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,listwise verbalized selection with pseudo-answer,,Table 3 row 'LVS (with PA)'
+P012,C33,PVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,pointwise verbalized selection without pseudo-answer,,Table 3 row 'PVS (w/o PA)'
+P012,C34,PVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,pointwise verbalized selection with pseudo-answer,,Table 3 row 'PVS (with PA)'
+P012,C35,LVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,listwise verbalized selection without pseudo-answer,,Table 3 row 'LVS (w/o PA)'
+P012,C36,LVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,listwise verbalized selection with pseudo-answer,,Table 3 row 'LVS (with PA)'
+P012,C37,PVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,pointwise verbalized selection without pseudo-answer,,Table 3 row 'PVS (w/o PA)'
+P012,C38,PVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,pointwise verbalized selection with pseudo-answer,,Table 3 row 'PVS (with PA)'
+P012,C39,LVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,listwise verbalized selection without pseudo-answer,,Table 3 row 'LVS (w/o PA)'
+P012,C40,LVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,listwise verbalized selection with pseudo-answer,,Table 3 row 'LVS (with PA)'
+P012,C41,PVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,pointwise verbalized selection without pseudo-answer,,Table 3 row 'PVS (w/o PA)'
+P012,C42,PVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,pointwise verbalized selection with pseudo-answer,,Table 3 row 'PVS (with PA)'
+P012,C43,LVS (w/o PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,listwise verbalized selection without pseudo-answer,,Table 3 row 'LVS (w/o PA)'
+P012,C44,LVS (with PA,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,listwise verbalized selection with pseudo-answer,,Table 3 row 'LVS (with PA)'
+P012,C45,Initial Retrieval,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,,,Table 4 row 'Initial Retrieval'
+P012,C46,AttR,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,attention-based utility ranking,,Table 4 row 'AttR'
+P012,C47,Likelihood,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,likelihood-based utility ranking,,Table 4 row 'Likelihood'
+P012,C48,LVR (w/o Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,listwise verbalized ranking without pseudo-answer,,Table 4 row 'LVR (w/o Pseudo answer)'
+P012,C49,LVR (w/ Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,listwise verbalized ranking with pseudo-answer,,Table 4 row 'LVR (w/ Pseudo answer)'
+P012,C50,Initial Retrieval,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,,,Table 4 row 'Initial Retrieval'
+P012,C51,AttR,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,attention-based utility ranking,,Table 4 row 'AttR'
+P012,C52,Likelihood,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,likelihood-based utility ranking,,Table 4 row 'Likelihood'
+P012,C53,LVR (w/o Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,listwise verbalized ranking without pseudo-answer,,Table 4 row 'LVR (w/o Pseudo answer)'
+P012,C54,LVR (w/ Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,listwise verbalized ranking with pseudo-answer,,Table 4 row 'LVR (w/ Pseudo answer)'
+P012,C55,Initial Retrieval,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,,,Table 4 row 'Initial Retrieval'
+P012,C56,Likelihood,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,likelihood-based utility ranking,,Table 4 row 'Likelihood'
+P012,C57,LVR (w/o Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,listwise verbalized ranking without pseudo-answer,,Table 4 row 'LVR (w/o Pseudo answer)'
+P012,C58,LVR (w/ Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-14B,,listwise verbalized ranking with pseudo-answer,,Table 4 row 'LVR (w/ Pseudo answer)'
+P012,C59,Initial Retrieval,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,,,Table 4 row 'Initial Retrieval'
+P012,C60,Likelihood,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,likelihood-based utility ranking,,Table 4 row 'Likelihood'
+P012,C61,LVR (w/o Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,listwise verbalized ranking without pseudo-answer,,Table 4 row 'LVR (w/o Pseudo answer)'
+P012,C62,LVR (w/ Pseudo answer,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-32B,,listwise verbalized ranking with pseudo-answer,,Table 4 row 'LVR (w/ Pseudo answer)'
+P012,C63,Initial Retrieval (Top-20,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,,,Table 6 row 'Initial Retrieval (Top-20)'
+P012,C64,PVS (w/ A,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,pointwise verbalized selection with pseudo-answer,,Table 6 row 'PVS (w/ A)'
+P012,C65,LVS (w/ A,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,listwise verbalized selection with pseudo-answer,,Table 6 row 'LVS (w/ A)'
+P012,C66,Retrieval (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,5,,Llama3.1-8B-Instruct,,,,Table 6 row 'Retrieval (Top-5)'
+P012,C67,AttR (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,"attention-based utility ranking, top-5 used as evidence",,Table 6 row 'AttR (Top-5)'
+P012,C68,Likelihood (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,"likelihood-based utility ranking, top-5 used as evidence",,Table 6 row 'Likelihood (Top-5)'
+P012,C69,LVR (w/ A) (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Llama3.1-8B-Instruct,,"listwise verbalized ranking with pseudo-answer, top-5 used as evidence",,Table 6 row 'LVR (w/ A) (Top-5)'
+P012,C70,Retrieval (Top-20,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,,,Table 6 row 'Retrieval (Top-20)'
+P012,C71,PVS (w/ A,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,pointwise verbalized selection with pseudo-answer,,Table 6 row 'PVS (w/ A)'
+P012,C72,LVS (w/ A,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,listwise verbalized selection with pseudo-answer,,Table 6 row 'LVS (w/ A)'
+P012,C73,Initial Retrieval (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,5,,Qwen3-8B,,,,Table 6 row 'Initial Retrieval (Top-5)'
+P012,C74,AttR (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,"attention-based utility ranking, top-5 used as evidence",,Table 6 row 'AttR (Top-5)'
+P012,C75,Likelihood (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,"likelihood-based utility ranking, top-5 used as evidence",,Table 6 row 'Likelihood (Top-5)'
+P012,C76,LVR (w/ A) (Top-5,BGE-M3 dense retrieval,BGE-M3,BGE-M3,,,,,,,,20,,Qwen3-8B,,"listwise verbalized ranking with pseudo-answer, top-5 used as evidence",,Table 6 row 'LVR (w/ A) (Top-5)'
+P013,C01,Standard RAG,,,,,,,,,,,,,,,,,"Table 1, closed-source baseline | Unresolved masked generator: [模型名称已隐藏]-4o"
+P013,C04,Standard RAG,,,,,,,,,,,,,Mistral7B,,,,"Table 1, base LLM"
+P013,C05,LongLLMLingua,,,,,,,,,,,,,Mistral7B,,,,"Table 1, retrieval-enhanced"
+P013,C06,Adaptive RAG,,,,,,,,,,,,,Mistral7B,,,,"Table 1, retrieval-enhanced"
+P013,C07,BGM,,,,,,,,,,,,,Mistral7B,,,,"Table 1, retrieval-enhanced"
+P013,C08,LLMLingua-2,,,,,,,,,,,,,Mistral7B,,,,"Table 1, retrieval-enhanced"
+P013,C09,ThoT,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced, training-free"
+P013,C10,SelfElicit,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced"
+P013,C11,MetaRAG,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced"
+P013,C12,Prompt Tuning,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced"
+P013,C13,SPRING,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced"
+P013,C14,Prefix Tuning,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced"
+P013,C15,R2AG,,,,,,,,,,,,,Mistral7B,,,,"Table 1, generation-enhanced"
+P013,C16,BubbleRAG,Contriever re-ranker,Contriever,,,,,,,,,,,Mistral7B,,,,"Table 1, ours; two-layer MLP thought bubble"
+P013,C17,BubbleRAG w/o. thought bubble,,,,,,,,,,,,,Mistral7B,,,,Table 2 ablation; learnable tokens replace bookmarks
+P013,C18,BubbleRAG w/o. interactive reading,,,,,,,,,,,,,Mistral7B,,,,Table 2 ablation; one-time bookmark generation
+P013,C19,Contriever,Contriever,Contriever,,,,,,,,,,,,,,,"Table 3, attention-based retrieval baseline"
+P013,C22,BubbleRAG,,,,,,,,,,,,,Mistral7B,,,,"Table 3, attention-based retrieval"
+P013,C32,Standard RAG,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C33,Adaptive RAG,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C34,LongLLMLingua,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C35,BGM,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C36,LLMLingua-2,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C37,ThoT,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C38,SelfElicit,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C39,Prompt Tuning,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C40,Prefix Tuning,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C41,SPRING,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C42,R2AG,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C43,BubbleRAG,,,,,,,,,,,,,LLaMA27B,,,,Table 5
+P013,C44,Standard RAG,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C45,Adaptive RAG,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C46,LongLLMLingua,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C47,BGM,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C48,LLMLingua-2,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C49,ThoT,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C50,SelfElicit,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C51,MetaRAG,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C52,Prompt Tuning,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C53,Prefix Tuning,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C54,SPRING,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C55,R2AG,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C56,BubbleRAG,,,,,,,,,,,,,Qwen38B,,,,Table 5
+P013,C57,BubbleRAG w/o. thought bubble,,,,,,,,,,,,,Qwen38B,,,,Table 6 ablation
+P013,C58,BubbleRAG w/o. interactive reading,,,,,,,,,,,,,Qwen38B,,,,Table 6 ablation
+P013,C59,BubbleRAG w/o. thought bubble,,,,,,,,,,,,,LLaMA27B,,,,Table 6 ablation
+P013,C60,BubbleRAG w/o. interactive reading,,,,,,,,,,,,,LLaMA27B,,,,Table 6 ablation
+P013,C61,Textual Bookmarks,,,,,,,,,,,,,Mistral7B,,,,"Table 7, 32 annotation tokens per document"
+P013,C62,Textual Bookmarks (Qwen3,,,,,,,,,,,,,Mistral7B,,,,"Table 7, annotations generated by Qwen3"
+P014,C01,Parametric Answer,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 1/Table 2; no documents
+P014,C02,Direct Inference,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 1/Table 2
+P014,C03,Standard CoT,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 1/Table 2
+P014,C04,Joint CoT,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 1/Table 2
+P014,C05,Prior-Guided CoT,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 1/Table 2
+P014,C06,COIECD,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2 decoding-based baseline
+P014,C07,SC,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2; sampling size 10
+P014,C08,MADAM-RAG,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2; adapted 72B agent setup to 7B
+P014,C09,RAAT,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2 training-based baseline
+P014,C10,RALM,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2 training-based baseline
+P014,C11,KnowPO,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2 training-based baseline
+P014,C12,GRPO-RAG,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2; Standard CoT RL baseline
+P014,C13,BrPr (1-turn,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2; Standard CoT prompt
+P014,C14,BrPr (2-turn,,,,,,,,,,,,,Qwen2.5-7B-Instruct,,,,Table 2; Prior-Guided CoT prompt
+P014,C15,Direct Inference,,,,,,,,,,,,,Qwen3-8B,,,,Table 2 lower block
+P014,C16,COIECD,,,,,,,,,,,,,Qwen3-8B,,,,Table 2 lower block
+P014,C17,SC,,,,,,,,,,,,,Qwen3-8B,,,,Table 2 lower block
+P014,C18,MADAM-RAG,,,,,,,,,,,,,Qwen3-8B,,,,Table 2 lower block
+P014,C19,Standard CoT,,,,,,,,,,,,,Qwen3-8B,,,,Table 2 lower block
+P015,C01,UMbrela,prompting,,,,,,,,,,,,Qwen2.5-7B,,,,"Table 2, NoteRel column block; prompting baseline"
+P015,C02,UMbrela,prompting,,,,,,,,,,,,QwQ-32B,,,,"Table 2, NoteRel column block"
+P015,C03,UMbrela,prompting,,,,,,,,,,,,DeepSeek-V3,,,,"Table 2, NoteRel column block"
+P015,C04,UMbrela,prompting,,,,,,,,,,,,,,,,"Table 2, NoteRel column block | Unresolved masked generator: [模型名称已隐藏]-R1"
+P015,C05,UMbrela,prompting,,,,,,,,,,,,Gpt-4o,,,,"Table 2, NoteRel column block"
+P015,C06,SFT,,,,,,,,,,,,,Qwen2.5-1.5B,,,"Table 2, NoteRel column block; SFT baseline",
+P015,C07,SFT,,,,,,,,,,,,,Qwen2.5-1.5B + pretrained,,,"Table 2, NoteRel column block; cold-start pretraining then SFT",
+P015,C08,SFT,,,,,,,,,,,,,Qwen2.5-7B,,,"Table 2, NoteRel column block",
+P015,C09,SFT,,,,,,,,,,,,,Qwen2.5-7B + pretrained,,,"Table 2, NoteRel column block",
+P015,C10,R1-Zero,,,,,,,,,,,,,Qwen2.5-7B,,,"Table 2, NoteRel column block; RL without cold start",
+P015,C11,R1,,,,,,,,,,,,,Qwen2.5-7B,,,"Table 2, NoteRel column block",
+P015,C12,R3A-Zero,,,,,,,,,,,,,Qwen2.5-7B,,,"Table 2, NoteRel column block; R³A without cold start",
+P015,C13,R3A,,,,,,,,,,,,,Qwen2.5-7B,,,"Table 2, NoteRel column block; full R³A-7B",
+P015,C14,R1-Zero,,,,,,,,,,,,,Qwen2.5-1.5B,,,"Table 2, second NoteRel block (1.5B models)",
+P015,C15,R1,,,,,,,,,,,,,Qwen2.5-1.5B,,,"Table 2, second NoteRel block",
+P015,C16,R3A-Zero,,,,,,,,,,,,,Qwen2.5-1.5B,,,"Table 2, second NoteRel block",
+P015,C17,R3A,,,,,,,,,,,,,Qwen2.5-1.5B,,,"Table 2, second NoteRel block",
+P015,C18,R3A-Distill,,,,,,,,,,,,,Qwen2.5-1.5B,,,"Table 3 latency; distilled student, no reasoning traces",
+P016,C01,Baseline (no RAG,,,,,,,,,,,,,GPT-4o,,,,"No-retrieval baseline, Figure 2 / Table 14 / Table 18"
+P016,C02,tRAG,monolingual retrieval on English Wikipedia dump (query translated to English),Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,GPT-4o,,,,"Query translation via Google Translate; Table 3, Table 14, Table 18"
+P016,C03,monoRAG,monolingual retrieval on Wikipedia dump in query language,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,GPT-4o,,,,"Table 14, Table 18"
+P016,C04,MultiRAG,multilingual retrieval over union of Wikipedia dumps in all task languages,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,GPT-4o,,,,"Table 2, Table 14, Table 18"
+P016,C05,CrossRAG,multilingual retrieval over union of Wikipedia dumps; retrieved docs translated to English,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,GPT-4o,,,,"Translation via Google Translate; Table 2, Table 14, Table 18"
+P016,C06,Baseline (no RAG,,,,,,,,,,,,,Command-R,,,,Figure 2 / Table 14 / Table 18
+P016,C07,tRAG,monolingual retrieval on English Wikipedia dump (query translated to English),Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Command-R,,,,"Table 3, Table 14, Table 18"
+P016,C08,monoRAG,monolingual retrieval on Wikipedia dump in query language,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Command-R,,,,"Table 14, Table 18"
+P016,C09,MultiRAG,multilingual retrieval over union of Wikipedia dumps in all task languages,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Command-R,,,,"Table 2, Table 14, Table 18"
+P016,C10,CrossRAG,multilingual retrieval over union of Wikipedia dumps; retrieved docs translated to English,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Command-R,,,,"Translation via Google Translate; Table 2, Table 14, Table 18"
+P016,C11,Baseline (no RAG,,,,,,,,,,,,,Llama-3-8b,,,,Figure 2 / Table 14 / Table 18
+P016,C12,tRAG,monolingual retrieval on English Wikipedia dump (query translated to English),Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Llama-3-8b,,,,"Table 3, Table 14, Table 18"
+P016,C13,monoRAG,monolingual retrieval on Wikipedia dump in query language,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Llama-3-8b,,,,"Table 14, Table 18"
+P016,C14,MultiRAG,multilingual retrieval over union of Wikipedia dumps in all task languages,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Llama-3-8b,,,,"Table 2, Table 4, Table 14, Table 18"
+P016,C15,CrossRAG,multilingual retrieval over union of Wikipedia dumps; retrieved docs translated to English,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Llama-3-8b,,,,"Translation via Google Translate; Table 2, Table 4, Table 14, Table 18"
+P016,C16,CrossRAG,multilingual retrieval over union of Wikipedia dumps; retrieved docs translated to English,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Llama-3-8b,,,[模型名称已隐藏]-4o as translation tool,"Table 3, Table 4"
+P016,C17,Translation-following (TF,multilingual retrieval over union of Wikipedia dumps,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,Llama-3-8b,,,,"Instruction-tuned on news_commentary En-X translations; Table 4, Table 10"
+P016,C18,MultiRAG,multilingual retrieval over union of Wikipedia dumps in all task languages,BGE-m3,,,,,,,,,5,,Llama-3-8b,,,,"Retrieval ablation on MKQA subset, Figure 6"
+P016,C19,CrossRAG,multilingual retrieval over union of Wikipedia dumps; retrieved docs translated to nearest typological language,Cohere,Cohere_Embed_V3,wikipedia-2023-11-embed-multilingual-v3,,,,,,,5,,GPT-4o,,,,"Table 20, MKQA"
+P018,C01,zero-shot,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7; no retrieved documents"
+P018,C02,full,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7; full-context decoding"
+P018,C03,CAD,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7; alpha=0.2"
+P018,C04,ADACAD,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7; JSD floor 0.0"
+P018,C05,DVD,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7; beta=0.25, gamma=0.2, doc top-k=10"
+P018,C06,COCOA,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7"
+P018,C07,DCCD,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 1, page 7; top-k=10"
+P018,C08,zero-shot,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C09,full,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C10,CAD,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C11,ADACAD,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C12,DVD,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C13,COCOA,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C14,DCCD,,,,,,,,,,,,,Qwen3.5-9B,,,,"Table 1, page 7"
+P018,C15,zero-shot,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C16,full,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C17,CAD,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C18,ADACAD,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C19,DVD,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C20,COCOA,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C21,DCCD,,,,,,,,,,,,,Phi-3-medium (14B),,,,"Table 1, page 7"
+P018,C23,Fixed Gate,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 2, page 8; epsilon_t=1"
+P018,C24,Token-Only,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 2, page 8"
+P018,C25,Doc-Only,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 2, page 8"
+P018,C26,Random,,,,,,,,,,,,,Qwen3.5-2B,,,,"Table 2, page 8"
+P019,C01,CoT,,,,,,,,,,,,,GPT-4o-mini,,,,"Non-retrieval baseline, Table 1 (p.7)"
+P019,C02,RAG w/ CoT,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,GPT-4o-mini,,CoT prompting,,"Single-step RAG baseline, Table 1 (p.7)"
+P019,C03,Iter-RetGen,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,GPT-4o-mini,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C04,GenGround,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,GPT-4o-mini,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C05,DualRAG,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,GPT-4o-mini,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C06,STRIDE,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,GPT-4o-mini,,Meta-Planner + Supervisor,,"Proposed method, Table 1 (p.7) | top_k: 3 on 2WikiMultihopQA and MuSiQue; 5 on HotpotQA"
+P019,C07,CoT,,,,,,,,,,,,,Qwen3-8B,,,,"Non-retrieval baseline, Table 1 (p.7)"
+P019,C08,RAG w/ CoT,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,Qwen3-8B,,CoT prompting,,"Single-step RAG baseline, Table 1 (p.7)"
+P019,C09,SelfAsk,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,Qwen3-8B,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C10,Iter-RetGen,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,Qwen3-8B,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C11,GenGround,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,Qwen3-8B,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C12,DualRAG,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,5,,Qwen3-8B,,,,"Iterative RAG baseline, Table 1 (p.7)"
+P019,C13,STRIDE,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,Qwen3-8B,,Meta-Planner + Supervisor,,"Proposed method, Table 1 (p.7) | top_k: 3 on 2WikiMultihopQA and MuSiQue; 5 on HotpotQA"
+P019,C14,STRIDE-FT,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,Qwen3-8B,,Meta-Planner + Supervisor,,"Fine-tuned variant, Table 1 (p.7) | top_k: 3 on 2WikiMultihopQA and MuSiQue; 5 on HotpotQA"
+P019,C15,w/o Meta-Planner,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,Qwen3-8B,,,,"Ablation, Table 2 (p.7)"
+P019,C16,w/o Supervisor,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,Qwen3-8B,,,,"Ablation, Table 2 (p.7)"
+P019,C17,w/o Extractor,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,Qwen3-8B,,,,"Ablation, Table 2 (p.7)"
+P019,C18,w/o Fallback,"dense retrieval (Contriever, FAISS-GPU)",Contriever,Contriever,,,,,,FAISS-GPU,,,,Qwen3-8B,,,,"Ablation, Table 2 (p.7)"
+P020,C01,MKP-QA,Federated search with stochastic gating,BERT-based bi-encoder retriever (Sentence-BERT),Sentence-BERT,,,,,,,,5,,GPT-3.5-turbo-1106,,,,Method defined in Sec. 3; generator [模型名称已隐藏]-3.5-turbo-1106 (Sec. 5)
+P020,C02,MKP-QA,Federated search with stochastic gating,BERT-based bi-encoder retriever (Sentence-BERT),Sentence-BERT,,,,,,,,5,,GPT-4-0314,,,,Method defined in Sec. 3; generator [模型名称已隐藏]-4-0314 (Sec. 5)
+P020,C03,Unified Index and Search (UIS,"Single multi-domain index, no domain relevance",Retriever fine-tuned on all three product domains,,,,,,,,,5,,GPT-3.5-turbo-1106,,,,Baseline Sec. 5.1; top-5 documents
+P020,C04,Unified Index and Search (UIS,"Single multi-domain index, no domain relevance",Retriever fine-tuned on all three product domains,,,,,,,,,5,,GPT-4-0314,,,,Baseline Sec. 5.1; top-5 documents
+P020,C05,Router Filter and Search (RFS,"Domain router selects most likely domain, search within domain subset",,,,,,,,,,5,,GPT-3.5-turbo-1106,,,,Baseline Sec. 5.1; top-5 documents
+P020,C06,Router Filter and Search (RFS,"Domain router selects most likely domain, search within domain subset",,,,,,,,,,5,,GPT-4-0314,,,,Baseline Sec. 5.1; top-5 documents
+P020,C07,LLM Filter and Search (LFS,"ReSLLM zero-shot [模型名称已隐藏]-4 domain selection, search within domain subset",,,,,,,,,,5,,GPT-3.5-turbo-1106,,,,Baseline Sec. 5.1; top-5 documents
+P020,C08,LLM Filter and Search (LFS,"ReSLLM zero-shot [模型名称已隐藏]-4 domain selection, search within domain subset",,,,,,,,,,5,,GPT-4-0314,,,,Baseline Sec. 5.1; top-5 documents
+P021,C01,MIRAGE,,,,,,,,,,,,,Qwen3.5,,,,Automatic MIRAGE implementation; INFOF1/CITEF1 with Qwen3.5 verifier (p.8)
+P021,C02,MIRAGE,,,,,,,,,,,,,CLUE,,,,"Automatic MIRAGE with CLUE verifier (Appendix C, Table 8/9/10)"
+P021,C03,ALCE,,,,,,,,,,,,,Qwen3.5,,,,"Multimodal ALCE implementation (p.8, Table 4/5)"
+P021,C04,ARGUE,,,,,,,,,,,,,Qwen3.5,,,,"Auto-ARGUE implementation (p.8, Table 4/5)"
+P021,C05,RAGAS,,,,,,,,,,,,,Qwen3.5,,,,"RAGAS implementation (p.8, Table 4/5)"
+P021,C06,ROUGE-L,,,,,,,,,,,,,,,,,"Surface-level baseline (p.7, Table 3)"
+P021,C07,BERTScore,,,,,,,,,,,,,,,,,"Surface-level baseline (p.7, Table 3)"
+P021,C08,CAG LLM Only,OmniEmbed,,,,,,,,,,,,,,,,"WIKIVIDEO prediction setting: no videos, citations retrieved with OmniEmbed (p.14)"
+P021,C09,CAG Oracle Video,Video-ColBERT,,,,,,,,,,,,,,,,WIKIVIDEO prediction setting: oracle video set (p.14)
+P021,C10,CAG RAG,MMMORRF,,,,,,,,,,,,,,,,WIKIVIDEO prediction setting: retrieve 5 videos from MultiVENT2.0 (p.14)
+P021,C11,Audio Flamingo 3,,,,,,,,,,,,,Audio Flamingo 3,,,,"Claim grounding verifier, audio-only (Table 1)"
+P021,C12,Qwen2-Audio,,,,,,,,,,,,,Qwen2-Audio,,,,"Claim grounding verifier, audio-only (Table 1)"
+P021,C13,Qwen2.5-VL,,,,,,,,,,,,,Qwen2.5-VL,,,,"Claim grounding verifier, vision-language (Table 1)"
+P021,C14,Qwen3.5,,,,,,,,,,,,,Qwen3.5,,,,"Claim grounding verifier, vision-language (Table 1)"
+P021,C15,Qwen2.5-Omni,,,,,,,,,,,,,Qwen2.5-Omni,,,,"Claim grounding verifier, omnimodal (Table 1)"
+P021,C16,CLUE,,,,,,,,,,,,,CLUE,,,,"Claim grounding verifier, omnimodal (Table 1)"
+P022,C01,wo-RAG,,,,,,,,,,,,,,,,,"Multi-hop baseline, Table 1, p.6"
+P022,C02,SR-RAG,,,,,,,,,,,,,,,,,"Single-round RAG baseline, Table 1, p.6"
+P022,C03,FL-RAG,,,,,,,,,,,,,,,,,"Fix Length RAG baseline, Table 1, p.6"
+P022,C04,FS-RAG,,,,,,,,,,,,,,,,,"Fix Sentence RAG baseline, Table 1, p.6"
+P022,C05,FLARE,,,,,,,,,,,,,,,,,"Baseline, Table 1, p.6"
+P022,C06,DRAGIN,Contriever,Contriever,,,,,,,,,,,,,,,"Multi-round retrieval pipeline, Table 1, p.6"
+P022,C07,DRAGIN+FKE,Contriever,Contriever,,,,,,,,,,,,,,,"FKE applied to DRAGIN, Table 1, p.6"
+P022,C08,LLaMA27B,,,,,,,,,,,,,LLaMA27B,,,,"Single-hop baseline, Table 1, p.6"
+P022,C09,Alpaca7B,,,,,,,,,,,,,Alpaca7B,,,,"Single-hop baseline, Table 1, p.6"
+P022,C10,LLaMA213B,,,,,,,,,,,,,LLaMA213B,,,,"Single-hop baseline, Table 1, p.6"
+P022,C11,Alpaca13B,,,,,,,,,,,,,Alpaca13B,,,,"Single-hop baseline, Table 1, p.6"
+P022,C12,Self-RAG,,,,,,,,,,,,,,,,,"Single-hop baseline, Table 1, p.6"
+P022,C13,CRAG,,,,,,,,,,,,,,,,,"Single-round retrieval pipeline, Table 1, p.6"
+P022,C14,CRAG+FKE,,,,,,,,,,,,,,,,,"FKE applied to CRAG, Table 1, p.6"
+P022,C18,DRAGIN(7B,,,,,,,,,,,,,Llama2-7B-chat,,,,"Model scale ablation, Table 4, p.7"
+P022,C19,DRAGIN(13B,,,,,,,,,,,,,Llama2-13B-chat,,,,"Model scale ablation, Table 4, p.7"
+P023,C01,LLaVA-Video (7B),,,,,,,,,,,,,LLaVA-Video (7B),,,,"Native MLLM baseline, Table 1"
+P023,C02,Video-RAG,,,,,,,,,,,,,LLaVA-Video (7B),,,,Table 1 row + Video-RAG
+P023,C03,TV-RAG,,,,,,,,,,,,,LLaVA-Video (7B),,,,Table 1 row + TV-RAG
+P023,C04,VideoStir,graph-based clip retrieval + intent-aware frame retrieval,Perception Encoder,Perception Encoder,,event boundary detector (PELT),,,clip,spatio-temporal graph,,3,,LLaVA-Video (7B),,,,"Table 1 row + VideoStir (Ours); N=3, L=2, eta=0.4, kappa_s=3.25"
+P023,C05,mPLUG-Owl3 (8B),,,,,,,,,,,,,mPLUG-Owl3 (8B),,,,"Native MLLM baseline, Table 1"
+P023,C06,Video-RAG,,,,,,,,,,,,,mPLUG-Owl3 (8B),,,,Table 1 row + Video-RAG
+P023,C07,TV-RAG,,,,,,,,,,,,,mPLUG-Owl3 (8B),,,,Table 1 row + TV-RAG
+P023,C08,VideoStir,graph-based clip retrieval + intent-aware frame retrieval,Perception Encoder,Perception Encoder,,event boundary detector (PELT),,,clip,spatio-temporal graph,,3,,mPLUG-Owl3 (8B),,,,Table 1 row + VideoStir (Ours)
+P023,C09,Aria (25B),,,,,,,,,,,,,Aria (25B),,,,"Native MLLM baseline, Table 1"
+P023,C10,Video-RAG,,,,,,,,,,,,,Aria (25B),,,,Table 1 row + Video-RAG
+P023,C11,TV-RAG,,,,,,,,,,,,,Aria (25B),,,,Table 1 row + TV-RAG
+P023,C12,VideoStir,graph-based clip retrieval + intent-aware frame retrieval,Perception Encoder,Perception Encoder,,event boundary detector (PELT),,,clip,spatio-temporal graph,,3,,Aria (25B),,,,Table 1 row + VideoStir (Ours)
+P023,C13,InternVL-1.5 (26B),,,,,,,,,,,,,InternVL-1.5 (26B),,,,"Native MLLM baseline, Table 1"
+P023,C14,Video-RAG,,,,,,,,,,,,,InternVL-1.5 (26B),,,,Table 1 row + Video-RAG
+P023,C15,TV-RAG,,,,,,,,,,,,,InternVL-1.5 (26B),,,,Table 1 row + TV-RAG
+P023,C16,VideoStir,graph-based clip retrieval + intent-aware frame retrieval,Perception Encoder,Perception Encoder,,event boundary detector (PELT),,,clip,spatio-temporal graph,,3,,InternVL-1.5 (26B),,,,Table 1 row + VideoStir (Ours)
+P023,C17,LLaVA-Video (72B),,,,,,,,,,,,,LLaVA-Video (72B),,,,"Native MLLM baseline, Table 1"
+P023,C18,Video-RAG,,,,,,,,,,,,,LLaVA-Video (72B),,,,Table 1 row + Video-RAG
+P023,C19,TV-RAG,,,,,,,,,,,,,LLaVA-Video (72B),,,,Table 1 row + TV-RAG
+P024,C01,Long Context,,,,,,,,,,,,,Qwen2-VL,,,,Table 3 row; long-context baseline
+P024,C02,Long Context,,,,,,,,,,,,,Gemini,,,,Table 3 row; long-context baseline
+P024,C03,Long Context,,,,,,,,,,,,,,,,,Table 3 row; long-context baseline | Unresolved masked generator: [模型名称已隐藏]4o
+P024,C04,Text RAG,text retrieval,BGE-1.5,,,recursive-split,3000,,characters,,,7,,Qwen2-VL,,,,"Table 3 row; Sec 6.1 chunking, k=7 per Sec 7.1 | chunk_overlap: 10%"
+P024,C05,Text RAG,text retrieval,BGE-1.5,,,recursive-split,3000,,characters,,,7,,Gemini,,,,Table 3 row | chunk_overlap: 10%
+P024,C06,Text RAG,text retrieval,BGE-1.5,,,recursive-split,3000,,characters,,,7,,,,,,Table 3 row | Unresolved masked generator: [模型名称已隐藏]4o | chunk_overlap: 10%
+P024,C07,Visual RAG,visual retrieval,ColQwen2,,,,,,,,,5,,Qwen2-VL,,,,Table 3 row; k=5 per Sec 7.1
+P024,C08,Visual RAG,visual retrieval,ColQwen2,,,,,,,,,5,,Gemini,,,,Table 3 row
+P024,C09,Visual RAG,visual retrieval,ColQwen2,,,,,,,,,5,,,,,,Table 3 row | Unresolved masked generator: [模型名称已隐藏]4o
+P024,C10,VisDoMRAG,textual + visual retrieval,BGE-1.5; ColQwen2,,,recursive-split,3000,,characters,,,,,Qwen2-VL,,Evidence Curation + CoT + Modality Fusion,,Table 3 row; Sec 5 | chunk_overlap: 10%; top_k: 5; 7
+P024,C11,VisDoMRAG,textual + visual retrieval,BGE-1.5; ColQwen2,,,recursive-split,3000,,characters,,,,,Gemini,,Evidence Curation + CoT + Modality Fusion,,Table 3 row | chunk_overlap: 10%; top_k: 5; 7
+P024,C12,VisDoMRAG,textual + visual retrieval,BGE-1.5; ColQwen2,,,recursive-split,3000,,characters,,,,,,,Evidence Curation + CoT + Modality Fusion,,Table 3 row | Unresolved masked generator: [模型名称已隐藏]4o | chunk_overlap: 10%; top_k: 5; 7
+P024,C14,Text RAG (Prompt Ablation,text retrieval,BGE-1.5,,,recursive-split,3000,,characters,,,7,,,,simplified prompt (no evidence curation/CoT/consistency),,Table 5 row 'Text Prompt Ablation' | Unresolved masked generator: [模型名称已隐藏]4o | chunk_overlap: 10%
+P024,C16,Visual RAG (Prompt Ablation,visual retrieval,ColQwen2,,,,,,,,,5,,,,simplified prompt (no evidence curation/CoT/consistency),,Table 5 row 'Vision Prompt Ablation' | Unresolved masked generator: [模型名称已隐藏]4o
+P024,C17,VisDoMRAG (Prompt Ablation,textual + visual retrieval,BGE-1.5; ColQwen2,,,recursive-split,3000,,characters,,,,,,,simplified prompt (no evidence curation/CoT/consistency),,Table 5 row 'VisDoMRAG Prompt Ablation' | Unresolved masked generator: [模型名称已隐藏]4o | chunk_overlap: 10%; top_k: 5; 7
+P024,C18,VisDoMRAG (Early Fusion,textual + visual retrieval,BGE-1.5; ColQwen2,,,recursive-split,3000,,characters,,,,,,,early fusion,,Table 5 row 'Early Fusion' | Unresolved masked generator: [模型名称已隐藏]4o | chunk_overlap: 10%; top_k: 5; 7
+P024,C19,BM25,BM25,BM25,,,,,,,,,5,,,,,,Table 4 row; retriever-only
+P024,C20,MiniLM,dense retrieval,MiniLM,sentence-transformers/all-MiniLM-L6-v2,,,,,,,,5,,,,,,Table 4 row; retriever-only
+P024,C21,MPNet,dense retrieval,MPNet,sentence-transformers/all-mpnet-base-v2,,,,,,,,5,,,,,,Table 4 row; retriever-only
+P024,C22,BGE1.5,dense retrieval,BGE-1.5,BAAI/bge-base-en-v1.5,1.5,,,,,,,5,,,,,,Table 4 row; retriever-only
+P024,C23,ColPali,visual retrieval,ColPali,vidore/colpali-v1.2,,,,,,,,5,,,,,,Table 4 row; retriever-only
+P024,C24,ColQwen2,visual retrieval,ColQwen2,vidore/colqwen2-v0.1,,,,,,,,5,,,,,,Table 4 row; retriever-only
+P025,C01,RAG (untargeted attack,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 1 Health row; k=2 default (p.4)
+P025,C02,RAG (untargeted attack,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-13b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 1 Health row
+P025,C03,RAG (untargeted attack,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,GPT-3.5-turbo,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 1 Health row
+P025,C04,RAG (targeted attack,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 2 Health row
+P025,C05,RAG (targeted attack,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-13b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 2 Health row
+P025,C06,RAG (targeted attack,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,GPT-3.5-turbo,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 2 Health row
+P025,C07,"RAG (untargeted attack, embedding ablation",k-NN retrieval (L2-norm),all-MiniLM-L6-v2,all-MiniLM-L6-v2,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 4; p.11
+P025,C08,"RAG (untargeted attack, embedding ablation",k-NN retrieval (L2-norm),e5-base-v2,e5-base-v2,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 4; p.11
+P025,C09,"RAG (targeted attack, embedding ablation",k-NN retrieval (L2-norm),all-MiniLM-L6-v2,all-MiniLM-L6-v2,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 5; p.13
+P025,C10,"RAG (targeted attack, embedding ablation",k-NN retrieval (L2-norm),e5-base-v2,e5-base-v2,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 5; p.13
+P025,C11,"RAG (targeted attack, temperature ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 6; temperature 0/0.6/1
+P025,C12,"RAG (untargeted attack, temperature ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 7; temperature 0/0.6/1
+P025,C13,"RAG (targeted attack, question ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 10; 5 command variants
+P025,C14,"RAG (untargeted attack, question ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 11; 5 command variants
+P025,C15,"RAG (untargeted attack, k ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,,,documents,Chroma,Chroma,,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,"Table 19; k=1,2,4 | chunk_size: 1-4; top_k: 1-4"
+P025,C16,"RAG (untargeted attack, k ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,,,documents,Chroma,Chroma,,,GPT-3.5-turbo,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,"Table 19; k=1,2,4 | chunk_size: 1-4; top_k: 1-4"
+P025,C17,"RAG (targeted attack, k ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,,,documents,Chroma,Chroma,,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,"Table 18; k=1,2,4 | chunk_size: 1-4; top_k: 1-4"
+P025,C18,"RAG (targeted attack, k ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,,,documents,Chroma,Chroma,,,GPT-3.5-turbo,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,"Table 18; k=1,2,4 | chunk_size: 1-4; top_k: 1-4"
+P025,C19,"RAG (untargeted attack, re-ranking mitigation",k-NN retrieval (L2-norm) + bge-reranker-large,bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,bge-reranker-large,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 20; p.6
+P025,C20,"RAG (targeted attack, re-ranking mitigation",k-NN retrieval (L2-norm) + bge-reranker-large,bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,bge-reranker-large,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 21; p.6
+P025,C21,"RAG (untargeted attack, summarization mitigation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},extractive summarization (Sum) / abstractive summarization (Sum.Para) of retrieved docs,Table 22; p.6
+P025,C22,"RAG (targeted attack, summarization mitigation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},extractive summarization (Sum) / abstractive summarization (Sum.Para) of retrieved docs,Table 23; p.6
+P025,C23,"RAG (targeted attack, distance threshold mitigation",k-NN retrieval (L2-norm) with distance threshold p,bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 24; threshold 0.2-1.2
+P025,C24,"RAG (untargeted attack, distance threshold mitigation",k-NN retrieval (L2-norm) with distance threshold p,bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,Llama-7b-chat,,composite structured prompting: {information}+{command},concatenate retrieved docs with query,Table 25; threshold 0.2-1.2
+P025,C25,RAG (targeted attack on training data,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,GPT-Neo-1.3B,,targeted prompting (no command component),concatenate retrieved docs with query,Table 3; retrieval data = Chatdoctor/HealthcareMagic
+P025,C28,RAG (prefix attack on training data,k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,GPT-Neo-1.3B,,prefix attack (first 100 tokens),concatenate retrieved docs with query,Table 3; retrieval data = Enron
+P025,C29,LLM only (no retrieval,,,,,,,,,,,,,GPT-Neo-1.3B,,targeted prompting / prefix attack,,Table 3 None row
+P025,C30,Random Noise + prompt,,,,,,,,,,,,,GPT-Neo-1.3B,,targeted prompting / prefix attack,50 tokens of random noise prepended,Table 3 Random Noise+prompt row
+P025,C31,System Prompt + prompt,,,,,,,,,,,,,GPT-Neo-1.3B,,targeted prompting / prefix attack,protective system prompt prepended,Table 3 System Prompt+prompt row
+P025,C32,"RAG (prefix attack, shared prefix ablation",k-NN retrieval (L2-norm),bge-large-en-v1.5,bge-large-en-v1.5,,,2,,documents,Chroma,Chroma,2,,GPT-Neo-1.3B,,prefix attack with same prefix appended to retrieval data,concatenate retrieved docs with query,Table 9; retrieval data = wikitext
+P025,C33,"LLM only (no retrieval, shared prefix ablation",,,,,,,,,,,,,GPT-Neo-1.3B,,prefix attack,,Table 9 Only use LLM column
+P026,C01,Zero-Shot,,,,,,,,,,,,,Qwen2.5-VL (7B),,,,Table 4/Table 6 row 'Qwen2.5-VL (7B)'
+P026,C02,Vanilla RAG,VISTA,VISTA,,,,,,,,,,,Qwen2.5-VL (7B),,,,"Table 4 row 'w/ top5'; Table 6 rows w/ top1, top3, top5 | top_k: top5"
+P026,C03,MM-RAIT,VISTA,VISTA,,,,,,,,,,,Qwen2.5-VL (7B),,,,Table 6 row 'MM-RAIT' | top_k: top5
+P026,C04,Zero-Shot,,,,,,,,,,,,,InternVL 3 (8B),,,,Table 4/Table 6 row 'InternVL 3 (8B)'
+P026,C05,Vanilla RAG,VISTA,VISTA,,,,,,,,,,,InternVL 3 (8B),,,,"Table 4 row 'w/ top5'; Table 6 rows w/ top1, top3, top5 | top_k: top5"
+P026,C06,MM-RAIT,VISTA,VISTA,,,,,,,,,,,InternVL 3 (8B),,,,Table 6 row 'MM-RAIT' | top_k: top5
+P026,C07,Zero-Shot,,,,,,,,,,,,,LLaVA-NeXT (7B),,,,Table 4 row 'LLaVA-NeXT(7B)'; Table 6 'LLaVA-NeXT-interleave-qwen (7B)'
+P026,C08,Vanilla RAG,VISTA,VISTA,,,,,,,,,,,LLaVA-NeXT (7B),,,,"Table 4 row 'w/top5'; Table 6 rows w/ top1, top3, top5 | top_k: top5"
+P026,C09,MM-RAIT,VISTA,VISTA,,,,,,,,,,,LLaVA-NeXT (7B),,,,Table 6 row 'MM-RAIT' | top_k: top5
+P026,C10,Zero-Shot,,,,,,,,,,,,,,,,,Table 4 row '[模型名称已隐藏]-4o-mini'; 300 instances per task | Unresolved masked generator: [模型名称已隐藏]-4o-mini
+P026,C11,Vanilla RAG,VISTA,VISTA,,,,,,,,,,,,,,,"Table 4 row 'w/ top5'; Table 6 rows w/ top1, top3, top5 | Unresolved masked generator: [模型名称已隐藏]-4o-mini | top_k: top5"
+P026,C12,Zero-Shot,,,,,,,,,,,,,MiniCPM-V 2.6 (8B),,,,Table 4 row 'MiniCPM-V 2.6 (8B)'
+P026,C13,Vanilla RAG,VISTA,VISTA,,,,,,,,,,,MiniCPM-V 2.6 (8B),,,,"Table 4 rows w/top1, w/top3, w/top5 | top_k: top5"
+P026,C14,MM-RAIT,VISTA,VISTA,,,,,,,,,,,MiniCPM-V 2.6 (8B),,,,"Table 4 row 'MM-RAIT w/ top5'; Table 8 rows MM-RAIT w/ top1, top3, top5 | top_k: top5"
+P026,C15,Zero-Shot,,,,,,,,,,,,,Qwen2-VL (7B),,,,Table 4 row 'Qwen2-VL (7B)'
+P026,C16,Vanilla RAG,VISTA,VISTA,,,,,,,,,,,Qwen2-VL (7B),,,,"Table 4 rows w/top1, w/top3, w/top5 | top_k: top5"
+P026,C17,MM-RAIT,VISTA,VISTA,,,,,,,,,,,Qwen2-VL (7B),,,,"Table 4 row 'MM-RAIT w/ top5'; Table 8 rows MM-RAIT w/ top1, top3, top5 | top_k: top5"
+P026,C18,Vanilla RAG (Only Text,VISTA,VISTA,,,,,,,,,,,MiniCPM-V 2.6 (8B),,,,Table 5 'Only Text' rows; image features removed | top_k: top5
+P026,C19,Vanilla RAG (Only Image,VISTA,VISTA,,,,,,,,,,,MiniCPM-V 2.6 (8B),,,,Table 5 'Only Image' rows; text removed from top-ranked inputs | top_k: top5
+P027,C01,Standard RAG,dense retrieval (top 10 docs),,,,,,,,,,10,,Mistral7B,v0.1,,all retrieved documents in prompt,Table 1 row; page 7
+P027,C02,Standard RAG,dense retrieval (top 10 docs),,,,,,,,,,10,,Mixtral8x7B,v0.1,,all retrieved documents in prompt,Table 1 row; page 7
+P027,C03,Standard RAG,dense retrieval (top 10 docs),,,,,,,,,,10,,Mistral-Instruct7B,,,all retrieved documents in prompt,Table 1 row; page 7
+P027,C04,Standard RAG,dense retrieval (top 10 docs),,,,,,,,,,10,,Mixtral-Instruct8x7B,,,all retrieved documents in prompt,Table 1 row; page 7
+P027,C05,Standard RAG,,,,,,,,,,,,,Alpaca7B,,,numbers reported in Asai et al. (2023),Table 1 row; page 7
+P027,C06,Standard RAG,,,,,,,,,,,,,Toolformer6B,,,numbers reported in Asai et al. (2023),Table 1 row; page 7
+P027,C07,Standard RAG,,,,,,,,,,,,,SAIL7B,,,numbers reported in Asai et al. (2023),Table 1 row; page 7
+P027,C08,CRAG,,,,,,,,,,,,,Mistral-7B,,,reproduced with Mistral7B (v0.1),Table 1 row; page 7
+P027,C09,Self-RAG,,,,,,,,,,,,,Mistral-7B,,,reproduced with Mistral7B (v0.1),Table 1 row; page 7
+P027,C10,Self-CRAG,,,,,,,,,,,,,Mistral-7B,,,Self-RAG on CRAG refined documents,Table 1 row; page 7
+P027,C11,Speculative RAG,multi-perspective sampling (K-Means clustering),,InBedderRoberta,,,,,,,,10,,MDrafter-7B,v0.1,,"m=5 drafts, k=2 docs per draft (TriviaQA/PopQA/PubHealth/ARC-C); m=10, k=6 for MuSiQue","Table 1 row; drafter alone, rho_Draft as confidence"
+P027,C12,Speculative RAG,multi-perspective sampling (K-Means clustering),,InBedderRoberta,,,,,,,,10,,MVerifier-7B + MDrafter-7B,v0.1,,"m=5 drafts, k=2 docs per draft (TriviaQA/PopQA/PubHealth/ARC-C); m=10, k=6 for MuSiQue",Table 1 row; Mistral7B verifier
+P027,C13,Speculative RAG,multi-perspective sampling (K-Means clustering),,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,"m=5 drafts, k=2 docs per draft (TriviaQA/PopQA/PubHealth/ARC-C); m=10, k=6 for MuSiQue",Table 1 row; Mixtral8x7B verifier
+P027,C14,"Speculative RAG (rho = Score(alpha|Q, delta",multi-perspective sampling,,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,rationale replaced by retrieved document subset in verification,Table 2 row; page 8
+P027,C15,"Speculative RAG (rho = Score(alpha|Q, beta, delta",multi-perspective sampling,,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,documents added to rationale in verification,Table 2 row; page 8
+P027,C16,Speculative RAG (Random sampling w/o multi-perspective clustering,random sampling,,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,drafting-stage ablation,Table 3 row; page 10
+P027,C17,Speculative RAG (Always sampling from the same perspective cluster,single-cluster sampling,,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,drafting-stage ablation,Table 3 row; page 10
+P027,C18,Speculative RAG (w/o rho_Draft,multi-perspective sampling,,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,rho = rho_Self-contain * rho_Self-reflect,Table 3 row; page 10
+P027,C19,Speculative RAG (w/o rho_Self-contain,multi-perspective sampling,,InBedderRoberta,,,,,,,,10,,MVerifier-8x7B + MDrafter-7B,v0.1,,rho = rho_Draft * rho_Self-reflect,Table 3 row; page 10
+P028,C01,RAG,dense retrieval (cosine similarity in Chroma),E5-Large,multilingual-e5-large,,,,,,Chroma DB,Chroma DB,5,,GPT3.5 Turbo,,,,Table 8 row; Ar_EduText generator experiment
+P028,C02,RAG,dense retrieval (cosine similarity in Chroma),E5-Large,multilingual-e5-large,,,,,,Chroma DB,Chroma DB,5,,Llama3 (llama_70b),,,,Table 8 row; Ar_EduText generator experiment
+P028,C03,RAG,dense retrieval (cosine similarity in Chroma),E5-Large,multilingual-e5-large,,,,,,Chroma DB,Chroma DB,5,,Mistral (Mistral_7b),,,,Table 8 row; Ar_EduText generator experiment
+P028,C04,RAG,dense retrieval (cosine similarity in Chroma),E5-Large,multilingual-e5-large,,,,,,Chroma DB,Chroma DB,5,,Mixtral,,,,Table 8 row; Ar_EduText generator experiment
+P028,C05,RAG,dense retrieval (cosine similarity in Chroma),E5-Large,multilingual-e5-large,,,,,,Chroma DB,Chroma DB,5,,JAIS (jais_7b_quantized),,,,Table 8 row; Ar_EduText generator experiment
+P028,C09,Retrieval only,dense retrieval (cosine similarity in Chroma),E5-Large,multilingual-e5-large,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C10,Retrieval only,dense retrieval (cosine similarity in Chroma),E5-Small,multilingual-e5-small,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C11,Retrieval only,dense retrieval (cosine similarity in Chroma),BGE,bge-m3,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C12,Retrieval only,dense retrieval (cosine similarity in Chroma),GPT,text-embedding-ada-002,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C13,Retrieval only,dense retrieval (cosine similarity in Chroma),AraVec (Wikipedia - SG),wikipedia_sg_300,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C14,Retrieval only,dense retrieval (cosine similarity in Chroma),Cohere 2,multilingual-22-12,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C15,Retrieval only,dense retrieval (cosine similarity in Chroma),AraBert,aubmindlab/bert-base-arabertv02,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C16,Retrieval only,dense retrieval (cosine similarity in Chroma),AraVec (Wikipedia - CBOW),wikipedia_cbow_300,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C17,Retrieval only,dense retrieval (cosine similarity in Chroma),Ollama,nomic-embed-text,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C18,Retrieval only,dense retrieval (cosine similarity in Chroma),JAIS (13B Q),core42_jais-13b-bnb-4bit,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P028,C19,Retrieval only,dense retrieval (cosine similarity in Chroma),Cohere 1,embed-multilingual-v3.0,,,,,,Chroma DB,Chroma DB,5,,,,,,Table 3 row; Ar_EduText retrieval experiment
+P029,C01,CacheBlend,CacheBlend,,,,,,,,,,,,Qwen3-8B,,,,"PIC baseline; Figure 9/10, page 7"
+P029,C02,CacheBlend + GAD,CacheBlend; Global Aware Dispatch,,,,,,,,,,,,Qwen3-8B,,,,"hit-rate-aware allocation + GAD scheduling; Figure 9/10, page 7"
+P029,C03,CacheBlend + GAD + QCE,CacheBlend; Global Aware Dispatch; Queue Aware Cache Eviction,,,,,,,,,,,,Qwen3-8B,,,,"adds queue-aware cache eviction; Figure 9/10, page 7"
+P029,C04,CacheBlend,,,,,,,,,,,,,Qwen3-8B,,,,"scalability sweep, 6K requests, 150x replay; Figure 11, page 8"
+P029,C05,CacheBlend + GAD + QCE,,,,,,,,,,,,,Qwen3-8B,,,,"scalability sweep, 6K requests, 150x replay; Figure 11, page 8"
+P029,C12,CacheBlend,,,,,,,,,,,,,Qwen3-32B,,,,"scalability sweep, 6K requests, 150x replay; Figure 11, page 8"
+P029,C13,CacheBlend + GAD + QCE,,,,,,,,,,,,,Qwen3-32B,,,,"scalability sweep, 6K requests, 150x replay; Figure 11, page 8"
+P030,C01,Baseline,plain text chunk retrieval,,,,,,,,,,,,,,,,"Baseline: PDFs parsed to plain text, chunks stored in a database, retrieved chunks put in prompt; no preprocessing, no image/table retrieval (p.7, Table 1) | Unresolved masked generator: [模型名称已隐藏]-3.5-turbo"
+P030,C03,PIER-QA,ElasticSearch top-10 chunk retrieval with RAPTOR semantic indexing,,GTE-large,,,1000,,characters,RAPTOR tree-structured index,ElasticSearch,10,,,,,,"PIER-QA system with [模型名称已隐藏]-3.5-turbo agent (p.7, Table 1; system described p.3) | Unresolved masked generator: [模型名称已隐藏]-3.5-turbo"
+P030,C05,PIER-QA,ElasticSearch top-10 chunk retrieval with RAPTOR semantic indexing,,GTE-large,,,1000,,characters,RAPTOR tree-structured index,ElasticSearch,10,,Llama3-70B-Instruct,,,,"PIER-QA with Llama3-70B-Instruct, quantized at 4-bit precision (p.7, Table 2)"
+P030,C06,PIER-QA,ElasticSearch top-10 chunk retrieval with RAPTOR semantic indexing,,GTE-large,,,1000,,characters,RAPTOR tree-structured index,ElasticSearch,10,,RAG-Llama3-70B,,,,"PIER-QA with finetuned RAG-Llama3-70B (LoRA, 4-bit quantized) (p.7, Table 2)"
+P031,C01,Closed-book Q-only,,,,,,,,,,,,,Qwen3-32B,,,,"Diagnostic reference, no context; Table I row 'Closed-book Q-only†' (p.6)"
+P031,C02,Direct RAG,,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'Direct RAG' (p.6)
+P031,C03,ExplicitSCR,,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'ExplicitSCR' (p.6)
+P031,C04,RCR-InternalEval,,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'RCR-InternalEval' (p.6)
+P031,C05,RCR-ContextEval,,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'RCR-ContextEval' (p.6)
+P031,C06,RCR-InternalConf,,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'RCR-InternalConf' (p.6)
+P031,C07,MADAM-RAG,,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'MADAM-RAG' (p.6)
+P031,C08,IGD,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen3-32B,,,,Table I row 'IGD' (p.6); method Sec. III
+P031,C09,Closed-book Q-only,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'Closed-book Q-only†' (p.6)
+P031,C10,Direct RAG,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'Direct RAG' (p.6)
+P031,C11,ExplicitSCR,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'ExplicitSCR' (p.6)
+P031,C12,RCR-InternalEval,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'RCR-InternalEval' (p.6)
+P031,C13,RCR-ContextEval,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'RCR-ContextEval' (p.6)
+P031,C14,RCR-InternalConf,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'RCR-InternalConf' (p.6)
+P031,C15,MADAM-RAG,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'MADAM-RAG' (p.6)
+P031,C16,IGD,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table I row 'IGD' (p.6); ablation backbone (Table III)
+P031,C17,Closed-book Q-only,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'Closed-book Q-only†' (p.6)
+P031,C18,Direct RAG,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'Direct RAG' (p.6)
+P031,C19,ExplicitSCR,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'ExplicitSCR' (p.6)
+P031,C20,RCR-InternalEval,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'RCR-InternalEval' (p.6)
+P031,C21,RCR-ContextEval,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'RCR-ContextEval' (p.6)
+P031,C22,RCR-InternalConf,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'RCR-InternalConf' (p.6)
+P031,C23,MADAM-RAG,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'MADAM-RAG' (p.6)
+P031,C24,IGD,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table I row 'IGD' (p.6)
+P031,C25,Closed-book Q-only,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'Closed-book Q-only†' (p.6)
+P031,C26,Direct RAG,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'Direct RAG' (p.6)
+P031,C27,ExplicitSCR,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'ExplicitSCR' (p.6)
+P031,C28,RCR-InternalEval,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'RCR-InternalEval' (p.6)
+P031,C29,RCR-ContextEval,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'RCR-ContextEval' (p.6)
+P031,C30,RCR-InternalConf,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'RCR-InternalConf' (p.6)
+P031,C31,MADAM-RAG,,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'MADAM-RAG' (p.6)
+P031,C32,IGD,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Mistral-7B-Instruct-v0.3,,,,Table I row 'IGD' (p.6)
+P031,C33,Closed-book Q-only,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'Closed-book Q-only†' (p.6)
+P031,C34,Direct RAG,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'Direct RAG' (p.6)
+P031,C35,ExplicitSCR,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'ExplicitSCR' (p.6)
+P031,C36,RCR-InternalEval,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'RCR-InternalEval' (p.6)
+P031,C37,RCR-ContextEval,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'RCR-ContextEval' (p.6)
+P031,C38,RCR-InternalConf,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'RCR-InternalConf' (p.6)
+P031,C39,MADAM-RAG,,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'MADAM-RAG' (p.6)
+P031,C40,IGD,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Phi-4 14B,,,,Table I row 'IGD' (p.6)
+P031,C42,IGD w/o Answer Filter,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Ablation row 'w/o Answer Filter' (Table III, p.8)"
+P031,C43,IGD w/o Token Correction,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Ablation row 'w/o Token Correction' (Table III, p.8)"
+P031,C44,IGD w/o Activation Gate,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Ablation row 'w/o Activation Gate' (Table III, p.8)"
+P031,C45,IGD w/o Mode Prior,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Ablation row 'w/o Mode Prior' (Table III, p.8)"
+P031,C46,IGD w/o Reliability Gate,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Ablation row 'w/o Reliability Gate' (Table III, p.8)"
+P031,C47,IGD Single Memory View,IDF-based lexical localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Ablation row 'Single Memory View' (Table III, p.8)"
+P031,C48,IGD,[模型名称已隐藏]-5 localizer for support snippet,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Fig. 5B [模型名称已隐藏]-5 localizer variant (p.9)
+P032,C01,HalluGuard,,,,,,,,,,,,,Qwen3-4B,,,,Ours; think mode; LoRA+ORPO fine-tuned; Table 1 row HalluGuard-4B
+P032,C02,Bespoke-Minicheck,,,,,,,,,,,,,Bespoke-Minicheck-7B,,,,Baseline; leaderboard result; Table 1
+P032,C03,,,,,,,,,,,,,,Claude-3.5 Sonnet,,,,Baseline; leaderboard result; Table 1
+P032,C04,,,,,,,,,,,,,,Qwen3-235B-A22B,,,,Evaluated with our prompt in think mode; Table 1
+P032,C05,,,,,,,,,,,,,,Granite Guardian 3.3,,,,Baseline; leaderboard result; Table 1
+P032,C06,,,,,,,,,,,,,,Mistral-Large 2,,,,Baseline; leaderboard result; Table 1
+P032,C07,,,,,,,,,,,,,,gpt-4-turbo-preview,,,,Baseline; leaderboard result; Table 1
+P032,C08,,,,,,,,,,,,,,gpt-4o-2024-05-13,,,,Baseline; leaderboard result; Table 1
+P032,C09,,,,,,,,,,,,,,Qwen3-4B,,,,Backbone; evaluated with our prompt in think mode; Table 1
+P032,C10,,,,,,,,,,,,,,Qwen2.5-72B-Instruct,,,,Baseline; leaderboard result; Table 1
+P032,C11,,,,,,,,,,,,,,Llama-3.3-70B-Instruct,,,,Baseline; leaderboard result; Table 1
+P032,C12,,,,,,,,,,,,,,Llama-3.1-405B-Instruct,,,,Baseline; leaderboard result; Table 1
+P032,C13,,,,,,,,,,,,,,gpt-4o-mini-2024-07-18,,,,Baseline; leaderboard result; Table 1
+P032,C14,,,,,,,,,,,,,,QwQ-32B-Preview,,,,Baseline; leaderboard result; Table 1
+P032,C15,,,,,,,,,,,,,,Mixtral-8x22B,,,,Baseline; leaderboard result; Table 1
+P032,C16,,,,,,,,,,,,,,Llama-3.1-8B-Instruct,,,,Baseline; leaderboard result; Table 1
+P032,C17,,,,,,,,,,,,,,GPT-3.5-Turbo,,,,Baseline; leaderboard result; Table 1
+P032,C18,,,,,,,,,,,,,,Qwen3-0.6B,,,,Evaluated with our prompt in think mode; Table 1
+P032,C19,,,,,,,,,,,,,,Llama-3.2-3B-Instruct,,,,Baseline; leaderboard result; Table 1
+P033,C01,Ground Truth,,,,,,,,,,,,,,,,,"Upper bound using ground truth page text for retrieval and generation; Table 6, p.7"
+P033,C02,Nougat,,,,,,,,,,,,,Nougat-350M,,,,"OCR-specialized small VLM, no layout analysis; Table 6, p.7"
+P033,C03,GOT,,,,,,,,,,,,,GOT-580M,,,,"OCR-specialized small VLM, no layout analysis; Table 6, p.7"
+P033,C04,DiT,DiT,,,,,,,,,,,,GOT-580M,,,,"Fine-grained layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C05,DocLayout-YOLO,DocLayout-YOLO,,,,,,,,,,,,GOT-580M,,,,"Fine-grained layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C06,Beehive,Beehive,,,,,,,,,,,,GOT-580M,,,,"Fine-grained layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C07,SCAN,SCAN,,,,,,,,,,,,GOT-580M,,,,"SCAN semantic layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C08,InternVL2.5,,,,,,,,,,,,,InternVL2.5-78B,,,,"VLM for OCR, no layout analysis; Table 6, p.7"
+P033,C09,olmOCR,,,,,,,,,,,,,olmOCR-7B,,,,"VLM for OCR, no layout analysis; Table 6, p.7"
+P033,C10,Qwen2.5-VL,,,,,,,,,,,,,Qwen2.5-VL-72B,,,,"VLM for OCR, no layout analysis; Table 6, p.7"
+P033,C11,DiT,DiT,,,,,,,,,,,,Qwen2.5-VL-72B,,,,"Fine-grained layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C12,Beehive,Beehive,,,,,,,,,,,,Qwen2.5-VL-72B,,,,"Fine-grained layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C13,DocLayout-YOLO,DocLayout-YOLO,,,,,,,,,,,,Qwen2.5-VL-72B,,,,"Fine-grained layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C14,SCAN,SCAN,,,,,,,,,,,,Qwen2.5-VL-72B,,,,"SCAN semantic layout analysis followed by VLM text conversion; Table 6, p.7"
+P033,C15,No chunking,,,,,,,,,,,,,Qwen2.5-VL-72B,,,,"Visual RAG with single-page images; Table 8, p.8"
+P034,C01,N2I-RAG,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Mistral-Nemo:12b,,,,Full Pipeline (all agents activated); Table 4 row 'Full'; Section 3.5
+P034,C02,N2I-RAG without hallucination control agents,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Mistral-Nemo:12b,,,,"Without-Hall: main agents kept except relevance, groundedness and coherence checks; Table 4 row 'Without-Hall'; Section 3.5"
+P034,C03,Retrieval-only Baseline,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Mistral-Nemo:12b,,,,"Only vector search via ChromaDB, without LLM agents; Table 4 row 'Baseline'; Section 3.5"
+P034,C04,N2I-RAG,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Llama3.2:3B,,,,Full pipeline with Llama3.2:3B; Figure 2 heatmap; Section 4.1
+P034,C05,N2I-RAG,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Qwen3:8b,,,,Full pipeline with Qwen3:8b; Figure 2 heatmap; Section 4.1
+P034,C06,Baseline (without N2I-RAG architecture,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Mistral-Nemo:12b,,,,"Mistral Nemo without the architecture; Section 4.1 text (F1 0.768, specificity 0.612)"
+P034,C07,Baseline (without N2I-RAG architecture,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Llama3.2:3B,,,,Llama baseline; Figure 2 heatmap; Section 4.1
+P034,C08,Baseline (without N2I-RAG architecture,ChromaDB HNSW cosine similarity with BGE-M3 embeddings,BGE-M3,BGE-M3,,,,,,HNSW (ChromaDB),ChromaDB,10,,Qwen3:8b,,,,Qwen baseline; Figure 2 heatmap; Section 4.1
+P035,C01,Naive Gen,,,,,,,,,,,,,Llama-3.1-8B-Instruct,,,,No retrieval baseline; Table 1 row 'Naive Gen'
+P035,C02,MAD,,,,,,,,,,,,,Llama-3.1-8B-Instruct,,,,"Multi-agent debate without retrieval (Du et al., 2024); Table 1 row 'MAD'"
+P035,C03,Naive RAG,dense retrieval,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,,Standard RAG without optimization; Table 1 row 'Naive RAG'
+P035,C04,IRCoT,iterative retrieval,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,,Iteration number set to 5 (Appendix A.1); Table 1 row 'IRCoT'
+P035,C05,Iter-RetGen,iterative retrieval,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,,Table 1 row 'Iter-RetGen'
+P035,C06,FLARE,active retrieval,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,,Table 1 row 'FLARE'
+P035,C07,SuRe,dense retrieval,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,,Summarized retrieval baseline; Table 1 row 'SuRe'
+P035,C08,Self-RAG,self-reflective retrieval,E5-base-v2,E5-base-v2,,,,,,,,3,,Self-RAG-Llama2-7B,,,,Uses Self-RAG-Llama2-7B model from authors (Appendix A.1); Table 1 row 'Self-RAG'
+P035,C09,DRAG,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,"Max debate rounds r=3, 3 agents per stage, epsilon=0; Table 1 row 'DRAG'"
+P035,C10,DRAG (RetIter=0,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,"Retrieval debate rounds 0, response rounds fixed at 3; Table 2 / Table 6"
+P035,C11,DRAG (RetIter=1,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Retrieval debate rounds 1; Table 2 / Table 6
+P035,C12,DRAG (RetIter=2,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Retrieval debate rounds 2; Table 2 / Table 6
+P035,C13,DRAG (RetIter=3,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Retrieval debate rounds 3; Table 2 / Table 6
+P035,C14,DRAG (RetIter=4,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Retrieval debate rounds 4; Table 2 / Table 6
+P035,C15,DRAG (ResIter=0,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,"Response debate rounds 0, retrieval rounds fixed at 3; Table 2 / Table 6"
+P035,C16,DRAG (ResIter=1,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Response debate rounds 1; Table 2 / Table 6
+P035,C17,DRAG (ResIter=2,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Response debate rounds 2; Table 2 / Table 6
+P035,C18,DRAG (ResIter=4,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Response debate rounds 4; Table 2 / Table 6
+P035,C19,fRetDebate,retrieval debate only,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Ablation: retrieval debate without response debate; Table 5
+P035,C20,fResDebate,response debate only,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Ablation: response debate without retrieval debate; Table 5
+P035,C21,Info Asymmetry,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Ablation: all agents have equal access to retrieval evidence; Table 5
+P035,C22,DRAG w/o fResDebate,retrieval debate only,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Subset analysis on questions whose gold answer is absent from retrieved docs; Table 4
+P035,C23,DRAG with fResDebate,retrieval debate + response debate,E5-base-v2,E5-base-v2,,,,,,,,3,,Llama-3.1-8B-Instruct,,,zero-shot,Subset analysis on questions whose gold answer is absent from retrieved docs; Table 4
+P036,C01,RAG-IT,dense retrieval (cosine similarity),text-embedding-3-large,text-embedding-3-large,,,512,128,tokens,"vector database (e.g., ChromaDB)",ChromaDB,3,,Llama-2-7B,,,,Financially-augmented LLM fine-tuned with LoRA/QLoRA; Table 3 row 1; setup p.10
+P036,C02,baseline,dense retrieval (cosine similarity),text-embedding-3-large,text-embedding-3-large,,,512,128,tokens,"vector database (e.g., ChromaDB)",ChromaDB,3,,Llama-2-7b,,,,General open-source LLM baseline given same financial contexts; Table 3 row 2
+P036,C03,baseline,dense retrieval (cosine similarity),text-embedding-3-large,text-embedding-3-large,,,512,128,tokens,"vector database (e.g., ChromaDB)",ChromaDB,3,,GPT-3.5,,,,Commercial LLM baseline given same financial contexts; Table 3 row 3
+P038,C01,RAG,traditional full-text search engine,,,,,,,,,,,,,,,,Traditional RAG baseline; defined p.4 (1)
+P038,C02,BM25-RAG,BM25 scoring function,,,,,,,,,,,,,,,,BM25-RAG baseline; defined p.4 (2)
+P038,C03,TF-IDF-RAG,TF-IDF vector similarity,,,,,,,,,,,,,,,,TF-IDF-RAG baseline; defined p.4 (3)
+P038,C04,ES-RAG,Elasticsearch,,,,,,,,,,,,,,,,Proposed Elasticsearch-based RAG; defined p.4 (4)
+P039,C01,TagRAG,Domain-centric Knowledge Retrieval (cosine similarity) + Hierarchical Tag Chain Integration,bge-large-en-v1.5,bge-large-en-v1.5,,,1200,100,tokens,nano-vectordb,nano-vectordb,3,,Qwen3-4B,,,,"Main results Table 1; chunk size/overlap 1200/100, top-k 3 (p.6)"
+P039,C02,NaiveRAG,,,,,,,,,,,,,Qwen3-4B,,,,"Baseline, Table 1 (p.6)"
+P039,C03,GraphRAG,,,,,,,,,,,,,Qwen3-4B,,,,"Baseline, Table 1 (p.6)"
+P039,C04,LightRAG,,,,,,,,,,,,,Qwen3-4B,,,,"Baseline, Table 1 (p.6)"
+P039,C05,MiniRAG,,,,,,,,,,,,,Qwen3-4B,,,,"Baseline, Table 1 (p.6)"
+P039,C06,Zero-shot LLM Generation,,,,,,,,,,,,,Qwen3-4B,,,,"Zero-shot baseline, Table 1 (p.6)"
+P039,C07,Zero-shot LLM Generation,,,,,,,,,,,,,Qwen3-30B-A3B,,,,"Zero-shot baseline, Table 1 (p.6)"
+P039,C08,Zero-shot LLM Generation,,,,,,,,,,,,,Llama-3.3-70B-Instruct,,,,"Zero-shot baseline, Table 1 (p.6)"
+P039,C09,TagRAG w/o chain,,,,,,,,,,,,,Qwen3-4B,,,,"Ablation, Table 2 (p.7)"
+P039,C10,TagRAG w/o fusion,,,,,,,,,,,,,Qwen3-4B,,,,"Ablation, Table 2 (p.7)"
+P039,C11,TagRAG,bge-base-en-v1.5,bge-base-en-v1.5,bge-base-en-v1.5,,,,,,,,,,Qwen3-4B,,,,"Retriever adaption, Table 3 (p.8), CS"
+P039,C12,TagRAG,bge-small-en-v1.5,bge-small-en-v1.5,bge-small-en-v1.5,,,,,,,,,,Qwen3-4B,,,,"Retriever adaption, Table 3 (p.8), CS"
+P039,C13,TagRAG,,,,,,,,,,,,,glm-edge-1.5b-chat,,,,"Appendix B.1, Table 8 (p.13)"
+P039,C14,NaiveRAG,,,,,,,,,,,,,glm-edge-1.5b-chat,,,,"Appendix B.1, Table 8 (p.13)"
+P039,C15,GraphRAG,,,,,,,,,,,,,glm-edge-1.5b-chat,,,,"Appendix B.1, Table 8 (p.13)"
+P039,C16,LightRAG,,,,,,,,,,,,,glm-edge-1.5b-chat,,,,"Appendix B.1, Table 8 (p.13)"
+P039,C17,MiniRAG,,,,,,,,,,,,,glm-edge-1.5b-chat,,,,"Appendix B.1, Table 8 (p.13)"
+P039,C18,TagRAG,,,,,,,,,,,,,Qwen3-1.7B,,,,"Lightweight adaption, Table 9 (p.13), CS"
+P040,C01,ColBERTv2,ColBERTv2,ColBERTv2,,,,,,,,,,,,,,,"Single-step retrieval baseline, Table 2 (p.6)"
+P040,C02,HippoRAG,HippoRAG,,,,,,,,,,,,,,,,"Single-step retrieval baseline, Table 2 (p.6)"
+P040,C03,BM25,BM25,,,,,,,,,,,,,,,,"Single-step retrieval baseline, Table 2 (p.6)"
+P040,C04,NaiveGE,BM25,,,,,,,,,,,,,,,,"BM25 + NaiveGE, Table 2 (p.6)"
+P040,C05,SyncGE,BM25,,,,,,,,,,,,,,,,"BM25 + SyncGE, Table 2 (p.6)"
+P040,C06,SBERT,SBERT,all-mpnet-base-v2,,,,,,,,,,,,,,"Single-step retrieval baseline, Table 2 (p.6); embedding per Appendix B.1",
+P040,C07,NaiveGE,SBERT,all-mpnet-base-v2,,,,,,,,,,,,,,,"SBERT + NaiveGE, Table 2 (p.6)"
+P040,C08,SyncGE,SBERT,all-mpnet-base-v2,,,,,,,,,,,,,,,"SBERT + SyncGE, Table 2 (p.6)"
+P040,C09,Hybrid,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,,,,,"Single-step retrieval baseline, Table 2 (p.6)"
+P040,C10,NaiveGE,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,,,,,"Hybrid + NaiveGE, Table 2 (p.6)"
+P040,C11,SyncGE,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,,,,,"Hybrid + SyncGE, Table 2 (p.6)"
+P040,C12,IRCoT,BM25,,,,,,,,,,,,,,,,"IRCoT (BM25), Table 2 (p.6)"
+P040,C13,IRCoT,ColBERTv2,ColBERTv2,,,,,,,,,,,,,,,"IRCoT (ColBERTv2), Table 2 (p.6)"
+P040,C14,HippoRAG w/ IRCoT,HippoRAG + IRCoT,,,,,,,,,,,,,,,,"Multi-step baseline, Table 2 (p.6)"
+P040,C15,GEAR,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,GPT-4o mini,,,,"Main system, Table 2 (p.6); [模型名称已隐藏]-4o-mini-2024-07-18, temperature 0"
+P040,C16,GEAR,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,GPT-3.5 turbo,,,,"Table 8 (p.14); [模型名称已隐藏]-3.5-turbo-1106, temperature 0"
+P040,C17,GEAR,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,Llama-3.1-8B,,,,Table 10 (p.17)
+P040,C18,GEAR,Hybrid (BM25 + SBERT via RRF),all-mpnet-base-v2,,,,,,,,,,,Qwen-2.5-8B,,,,Table 10 (p.17)
+P041,C01,LLM-only,,,,,,,,,,,,,LLaMA3-8B,,,,No retrieval; Table 1 row LLM-only (p.6)
+P041,C02,Semantic RAG,semantic-based retrieval,,mxbaiembed-large,,,,,,,,10,,LLaMA3-8B,,,,Table 1 row Semantic RAG; k=10 default (p.6)
+P041,C03,Rerank,semantic-based retrieval + cross-encoder rerank,,mxbaiembed-large,,,,,,,,10,bge-reranker-large,LLaMA3-8B,,,,Table 1 row + Rerank (p.6)
+P041,C04,Hybrid RAG,semantic + keyword (BM25) retrieval merged by cross-encoder reranker,,mxbaiembed-large,,,,,,,,10,bge-reranker-large,LLaMA3-8B,,,,Table 1 row Hybrid RAG (p.6)
+P041,C05,LightRAG,graph-based index retrieval,,mxbaiembed-large,,,,,,,,10,,LLaMA3-8B,,,,Table 1 row LightRAG (p.6)
+P041,C06,GraphRAG,graph-based index with community summaries,,mxbaiembed-large,,,,,,,,10,,LLaMA3-8B,,,,Table 1 row GraphRAG (p.6)
+P041,C07,KG2RAG,semantic retrieval + KG-guided expansion + KG-based context organization,,mxbaiembed-large,,,,,,,,10,bge-reranker-large,LLaMA3-8B,,,,"Table 1 row KG2RAG; m=1 (p.6, p.8)"
+P041,C08,KG2RAG w/o organization,semantic retrieval + KG-guided expansion (no context organization),,mxbaiembed-large,,,,,,,,10,bge-reranker-large,LLaMA3-8B,,,,Ablation Table 3/4 row w/o organization (p.7)
+P041,C09,KG2RAG w/o expansion,semantic retrieval + KG-based context organization (no expansion),,mxbaiembed-large,,,,,,,,10,bge-reranker-large,LLaMA3-8B,,,,Ablation Table 3/4 row w/o expansion (p.7)
+P041,C14,KG2RAG,semantic retrieval + KG-guided expansion + KG-based context organization,,mxbaiembed-large,,,,,,,,5,bge-reranker-large,LLaMA3-8B,,,,"k=5 setting, Figure 5 (p.8)"
+P041,C15,KG2RAG,semantic retrieval + KG-guided expansion + KG-based context organization,,mxbaiembed-large,,,,,,,,15,bge-reranker-large,LLaMA3-8B,,,,"k=15 setting, Figure 5 (p.8)"
+P042,C01,RAG,"MMR (cosine similarity), top 40 retrieved then top 20 diverse, ColBERT-v2 reranking to top 3",ColBERT-v2,distilusebase-multilingual-cased-v1,,paragraph,,,paragraph,FAISS,FAISS,3,ColBERT-v2,Qwen3-4B,,,,"Page 4, RAG experiments; augmented setting"
+P042,C02,RAG,"MMR (cosine similarity), top 40 retrieved then top 20 diverse, ColBERT-v2 reranking to top 3",ColBERT-v2,distilusebase-multilingual-cased-v1,,paragraph,,,paragraph,FAISS,FAISS,3,ColBERT-v2,Qwen3-30B-A3B,,,,"Page 4, RAG experiments; augmented setting"
+P042,C03,RAG,"MMR (cosine similarity), top 40 retrieved then top 20 diverse, ColBERT-v2 reranking to top 3",ColBERT-v2,distilusebase-multilingual-cased-v1,,paragraph,,,paragraph,FAISS,FAISS,3,ColBERT-v2,Qwen3-235B-A22B,,,,"Page 4, RAG experiments; augmented setting"
+P042,C04,Baseline (parametric knowledge,,,,,,,,,,,,,Qwen3-4B,,,,"Page 4, baseline setting; empty context"
+P042,C05,Baseline (parametric knowledge,,,,,,,,,,,,,Qwen3-30B-A3B,,,,"Page 4, baseline setting; empty context"
+P042,C06,Baseline (parametric knowledge,,,,,,,,,,,,,Qwen3-235B-A22B,,,,"Page 4, baseline setting; empty context"
+P043,C01,Original,,,,,fixed-length chunking,,,,,,,,,,,,Rule-based baseline; page 8 Table 1 row 'Original'; described page 14
+P043,C02,Llama_index,,,,,SimpleNodeParser sentence-boundary chunking,,,,,,,,,,,,Baseline; page 8 Table 1 row 'Llama_index'; page 14
+P043,C03,Semantic Chunking,,,,,SemanticSplitterNodeParser similarity chunking,,,,,,,,,,,,Baseline; page 8 Table 1 row 'Semantic Chunking'; page 14
+P043,C04,LumberChunker,,,,,LLM-based dynamic chunking,,,,,,,,Qwen2.5-14B,,,,Baseline; page 8 Table 1 row 'LumberChunker'; page 14
+P043,C05,MoC MetaChunker,,,,,learned meta-chunker,,,,,,,,,,,,Baseline; page 8 Table 1 row 'MoC MetaChunker'; page 14
+P043,C06,MoM,three-layer document memory retrieval,,bge-base-zh-v1.5,,scenario-aware document memory extraction,,,,Milvus,,8,,Qwen2.5-14B,,,,"Page 8 Table 1 row 'Qwen2.5-14B'; top_k=8, Milvus, bge-base-zh-v1.5 (page 8)"
+P043,C07,MoM,three-layer document memory retrieval,,bge-base-zh-v1.5,,scenario-aware document memory extraction,,,,Milvus,,8,,Qwen3-14B,,,,Page 8 Table 1 row 'Qwen3-14B'
+P043,C08,MoM,three-layer document memory retrieval,,bge-base-zh-v1.5,,scenario-aware document memory extraction,,,,Milvus,,8,,MemReader-1.5B,,,,Page 8 Table 1 row 'MemReader-1.5B'; trained from Qwen2.5-1.5B
+P043,C09,MoM,three-layer document memory retrieval,,bge-base-zh-v1.5,,scenario-aware document memory extraction,,,,Milvus,,8,,MemReader-3B,,,,Page 8 Table 1 row 'MemReader-3B'; trained from Qwen2.5-3B
+P043,C10,MoM,three-layer document memory retrieval,,bge-base-zh-v1.5,,scenario-aware document memory extraction,,,,Milvus,,8,,MemReader-7B,,,,Page 8 Table 1 row 'MemReader-7B'; trained from Qwen2.5-7B
+P043,C14,MoM,,,,,,,,,,,,,Qwen2.5-14B,,,,Page 9 Table 2 row 'Qwen2.5-14B'
+P043,C15,MoM,,,,,,,,,,,,,Qwen2.5-72B,,,,Page 9 Table 2 row 'Qwen2.5-72B'
+P044,C01,LSTM,,,,,,,,,,,,,,,,,"Baseline LSTM; Table 1 row 'LSTM', page 9"
+P044,C02,GPT (FT),,,,,,,,,,,,,,,,,"Fine-tuned [模型名称已隐藏]-3.5 (text-davinci-002/003); Table 1 row '[模型名称已隐藏] (FT)', page 9 | Unresolved masked generator: [模型名称已隐藏]-3.5"
+P044,C03,GPT (RAG),cosine similarity dense retrieval,,GPT embedding model,,RecursiveCharacterTextSplitter,,,,ChromaDB,ChromaDB,4,,,,,,"RAG with [模型名称已隐藏]-4 generator, top-4 chunks; Table 1 row '[模型名称已隐藏] (RAG)', page 9 | Unresolved masked generator: [模型名称已隐藏]-4"
+P044,C04,Llama (FT,,,,,,,,,,,,,meta-llama/Llama-2-7b-chat-hf,,,,"Fine-tuned Llama-2-7b-chat with LoRA/PEFT; Table 1 row 'Llama (FT)', page 9"
+P044,C05,Llama (RAG,sentence embedding retrieval,,Sentence Transformer,,,,,,,,,,meta-llama/Llama-2-7b-chat-hf,,,,"RAG with Llama-2-7b-chat, context window 4096 tokens; Table 1 row 'Llama (RAG)', page 9"
+P045,C01,Qwen2-VL-Param,,,,,,,,,,,,,Qwen2-VL-7B,,,,"Parametric-only baseline, no external context (p.6 §4.3; Table 3)"
+P045,C02,Qwen2-VL-Oracle,ground-truth wiki entry,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,,,Qwen2-VL-7B,,,,Upper bound with gold wiki entry (p.6 §4.3; Table 3)
+P045,C03,Qwen2-VL-1-Stage,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,all retrieved entries encoded,Wiki-LLaVA one-stage replication (p.6 §4.3; Table 3)
+P045,C04,Qwen2-VL-2-Stage,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,rerank then generate from top-ranked,LLaVA-mR2AG/EchoSight two-stage replication (p.6 §4.3; Table 3)
+P045,C05,Qwen2-VL-MMSTaR,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,Chain-of-Thought over all retrieved entries,STaR-style baseline (p.6 §4.3; Table 3)
+P045,C06,CoRe-MMRAG,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,four-stage prompt,"Proposed method, zero-shot (p.4 §3.2; Table 3)"
+P045,C07,Wiki-LLaVA,,,,,,,,,,,,,Vicuna-7B,,,,Fine-tuned baseline (Table 3)
+P045,C08,RoRA-VLM,,,,,,,,,,,,,Vicuna-7B,,,,"Fine-tuned baseline, Wiki+Web KB (Table 3)"
+P045,C09,EchoSight,,,,,,,,,,,,,LLaMA3-8B,,,,Fine-tuned baseline (Table 3)
+P045,C10,LLaVA-mR2AG,Google Lens,,,,,,,,,,,,Vicuna-7B,,,,Fine-tuned baseline; Enc-VQA uses Google Lens retrieval (Table 3)
+P045,C11,LLaVA-1.5,,,,,,,,,,,,,Vicuna-7B,,,,Zero-shot baseline without retrieval (Table 3)
+P045,C13,Qwen2-VL-2-Stage,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,rerank then generate,Fine-tuned with L_PRKI + L_SFT (p.6 §4.3; Table 3)
+P045,C16,CoRe-MMRAG w/o L_PRKI,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,,"Ablation, Table 5"
+P045,C17,CoRe-MMRAG w/o L_VTKI,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,,"Ablation, Table 5"
+P045,C18,CoRe-MMRAG w/o L_SFT,Eva-CLIP-8B top-5 retrieval,Eva-CLIP-8B,Eva-CLIP-8B,,,,,,FAISS,,5,,Qwen2-VL-7B,,,,"Ablation, Table 5"
+P046,C01,Config A,Semantic Evidence Aggregation (graph-based),HHEM-2.1-Open,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"NLI discriminator HHEM-2.1-Open (60M) + relevance scorer mxbai-rerank-base-v2 (480M); ≈0.56B total; p.5 §4.2, Table 5"
+P046,C02,Config B,Semantic Evidence Aggregation (graph-based),MiniCheck-FT5,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"Replaces HHEM with MiniCheck-FT5 (~1B); ≈1.5B total; p.5 §4.2, Table 5"
+P046,C03,HHEM-2.1-Open,,HHEM-2.1-Open,,,,,,,,,,,,,,,"Standalone NLI baseline, 0.06B; Table 5, Table 7"
+P046,C04,AlignScore-Base,,AlignScore-Base,,,,,,,,,,,,,,,"Standalone NLI baseline, 0.2B; Table 5"
+P046,C05,AlignScore-Large,,AlignScore-Large,,,,,,,,,,,,,,,"Standalone NLI baseline, 0.4B; Table 5, Table 7"
+P046,C06,RAGAS Faithfulness,,RAGAS Faithfulness,,,,,,,,,,,,,,,"FaithfulnesswithHHEM variant, categorized as NLI method; Table 5, Appendix E"
+P046,C07,Provenance,,Provenance,,,,,,,,,,,,,,,"Lightweight fact-checker baseline; Table 5, Table 16"
+P046,C08,Qwen3-0.6B,,,,,,,,,,,,,Qwen3-0.6B,,,,"Small LLM baseline, 0.6B; Table 5"
+P046,C09,Qwen3-0.6B-reason,,,,,,,,,,,,,Qwen3-0.6B-reason,,,,"Small LLM reasoning baseline, 0.6B; Table 5"
+P046,C10,MiniCheck-FT5,,MiniCheck-FT5,,,,,,,,,,,,,,,"Standalone NLI baseline, ~1B; Table 5, Table 7"
+P046,C11,TrueTeacher,,TrueTeacher,,,,,,,,,,,,,,,"Standalone NLI baseline, 11B; Table 5, Table 7"
+P046,C12,GPT-3.5-Turbo,,,,,,,,,,,,,GPT-3.5-Turbo,,,,"LLM baseline, ~175B; Table 5"
+P046,C13,GPT-4o,,,,,,,,,,,,,GPT-4o,,,,"LLM baseline, ~2000B; Table 5"
+P046,C14,Ours,Semantic Evidence Aggregation (graph-based),nli-roberta-base,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"NLI-agnostic variant, 0.1B discriminator; Table 7"
+P046,C15,Ours,Semantic Evidence Aggregation (graph-based),DeBERTa-v3-base,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"NLI-agnostic variant, 0.3B discriminator; Table 7"
+P046,C16,Ours,Semantic Evidence Aggregation (graph-based),ModernBERT-large-nli,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"NLI-agnostic variant, 0.4B discriminator; Table 7"
+P046,C17,Ours,Semantic Evidence Aggregation (graph-based),AlignScore-Large,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"NLI-agnostic variant, 0.4B discriminator; Table 7"
+P046,C18,Ours,Semantic Evidence Aggregation (graph-based),TrueTeacher,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,"NLI-agnostic variant, 11B discriminator; Table 7"
+P046,C19,Full (A+B+C,Semantic Evidence Aggregation (graph-based),HHEM-2.1-Open,all-MiniLM-L6-v2,,Long Context Segmentation,256,,tokens,,,,,,,,,Ablation full pipeline on bridge-hard; Table 8
+P047,C01,TrioRAG,multi-signal late fusion (RRF),jina-embeddings-v4,jina-embeddings-v4,,MinerU text extraction + full-page images,,,,Qdrant multi-vector collection,Qdrant,10,,Qwen2.5-VL-7B,,,text + full-page images,Default multi-vector TrioRAG; Table 1 row 'TrioRAG (Ours) M'
+P047,C02,TrioRAG,multi-signal late fusion (RRF),jina-embeddings-v4,jina-embeddings-v4,dense 2048-dim,MinerU text extraction + full-page images,,,,Qdrant,Qdrant,10,,Qwen2.5-VL-7B,,,text + full-page images,Dense-indexing ablation; Table 1 row 'TrioRAG (Ours) D'
+P047,C03,Naive RAG + Concat,concatenation before retrieval (no RRF),jina-embeddings-v4,jina-embeddings-v4,dense,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 1 row 'Naive RAG + Concat D'
+P047,C04,Naive RAG + Concat,concatenation before retrieval (no RRF),jina-embeddings-v4,jina-embeddings-v4,multi-vector,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 1 row 'Naive RAG + Concat M'
+P047,C05,MMGraphRAG,graph-based retrieval,jina-embeddings-v4,jina-embeddings-v4,dense,,,,,,,,,Qwen2.5-VL-7B,,,,Graph baseline; Table 1 row 'MMGraphRAG D'; run on MMLongBench
+P047,C06,RAG-Anything,graph-based retrieval,jina-embeddings-v4,jina-embeddings-v4,dense,,,,,,,,,Qwen2.5-VL-7B,,,,Graph baseline; Table 1 row 'RAG-Anything D'
+P047,C07,TrioRAG,multi-signal late fusion (RRF),jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,Doc Page Image,Table 4 input representation 'Doc Page Image'
+P047,C08,TrioRAG,multi-signal late fusion (RRF),jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,Text + Cropped Image,Table 4 input representation 'Text + Cropped Image'
+P047,C09,TrioRAG,multi-signal late fusion (RRF),jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,Text + Doc Page Image,Table 4 input representation 'Text + Doc Page Image' (default)
+P047,C10,TrioRAG,RRF fusion of T+I+E,jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 5 question strategy T+I+E
+P047,C11,TrioRAG,RRF fusion of E+I,jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 5 question strategy E+I
+P047,C12,TrioRAG,RRF fusion of T+I,jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 5 question strategy T+I
+P047,C13,TrioRAG,Borda count fusion,jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 10 fusion method Borda
+P047,C14,TrioRAG,score mean fusion,jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 10 fusion method Score Mean
+P047,C15,TrioRAG,rank mean fusion,jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 10 fusion method Rank Mean
+P047,C17,TrioRAG,text signal only (T),jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 7/8 run T
+P047,C18,TrioRAG,image signal only (I),jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 7/8 run I
+P047,C19,TrioRAG,enhanced query signal only (E),jina-embeddings-v4,jina-embeddings-v4,,,,,,,,10,,Qwen2.5-VL-7B,,,,Table 7/8 run E
+P048,C01,AGRAG,MCMI subgraph + hybrid retrieval,Contriever,Contriever,,fixed-length token chunks,256,32,tokens,KG (entity-relation-entity triples + passage nodes),,5,Qwen-3-Reranker-0.6B,Qwen-2.5-14B-Instruct,,,,"main setting; Table II, Table IV row AGRAG; ka=5, kr=5, tau=0.5, b=3"
+P048,C02,AGRAG-L,MCMI subgraph + hybrid retrieval,Contriever,Contriever,,fixed-length token chunks,256,32,tokens,KG (entity-relation-entity triples + passage nodes),,5,Qwen-3-Reranker-0.6B,Qwen3-4B-Instruct-2507,,,,"low-resource setting on 2080Ti; Table V, Table VI"
+P048,C03,AGRAG w. HR Only,hybrid retrieval only (no reasoning path),Contriever,Contriever,,fixed-length token chunks,256,32,tokens,,,5,,Qwen-2.5-14B-Instruct,,,,ablation; Table IV row AGRAG w. HR Only
+P048,C04,AGRAG w. LLM ER,MCMI subgraph + hybrid retrieval with LLM entity extraction,Contriever,Contriever,,fixed-length token chunks,256,32,tokens,KG (LLM entity extraction),,5,Qwen-3-Reranker-0.6B,Qwen-2.5-14B-Instruct,,,,ablation; Table IV row AGRAG w. LLM ER
+P048,C05,AGRAG w.o. HR,MCMI subgraph only (no hybrid retrieved chunks),Contriever,Contriever,,fixed-length token chunks,256,32,tokens,KG (entity-relation-entity triples + passage nodes),,5,Qwen-3-Reranker-0.6B,Qwen-2.5-14B-Instruct,,,,ablation; Table IV row AGRAG w.o. HR
+P048,C06,AGRAG w.o. MCMI,minimum cost Steiner tree reasoning path + hybrid retrieval,Contriever,Contriever,,fixed-length token chunks,256,32,tokens,KG (entity-relation-entity triples + passage nodes),,5,Qwen-3-Reranker-0.6B,Qwen-2.5-14B-Instruct,,,,ablation; Table IV row AGRAG w.o. MCMI
+P048,C07,AGRAG w.o. Cle.,MCMI subgraph + hybrid retrieval without query-aware triplet filter,Contriever,Contriever,,fixed-length token chunks,256,32,tokens,KG (entity-relation-entity triples + passage nodes),,5,,Qwen-2.5-14B-Instruct,,,,ablation; Table IV row AGRAG w.o. Cle.
+P048,C08,NaiveRAG,dense vector similarity top-k,,bge-large-en-v1.5,,,,,,vector database,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C09,L.LLMLingua,NaiveRAG retrieval + LongLLMLingua prompt compression,,bge-large-en-v1.5,,,,,,vector database,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C10,RAPTOR,tree-organized retrieval,,bge-large-en-v1.5,,,,,,tree index,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C11,SiReRAG,similarity + relatedness tree retrieval,,bge-large-en-v1.5,,,,,,dual index trees,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C12,SiReRAG-L,similarity + relatedness tree retrieval,,bge-large-en-v1.5,,,,,,dual index trees,,5,,Qwen3-4B-Instruct-2507,,,,"low-resource baseline; Table V, Table VI"
+P048,C13,G-Retriever,PCST subgraph retrieval,,bge-large-en-v1.5,,,,,,KG,,5,,Qwen-2.5-14B-Instruct,,,,baseline; Table II
+P048,C14,MIXRAG,MoE query routing over entity/relation/subgraph experts,,bge-large-en-v1.5,,,,,,KG,,5,,Qwen-2.5-14B-Instruct,,,,baseline; Table II
+P048,C15,GraphRAG,community-based local search,,bge-large-en-v1.5,,,,,,KG with community summaries,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C16,LightRAG,entity vector similarity + 1-hop neighborhood (hybrid search),,bge-large-en-v1.5,,,,,,KG,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C17,HippoRAG2,PPR over KG with passage nodes,Contriever,Contriever,,,,,,KG with passage nodes,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C18,HippoRAG2-L,PPR over KG with passage nodes,Contriever,Contriever,,,,,,KG with passage nodes,,5,,Qwen3-4B-Instruct-2507,,,,"low-resource baseline; Table V, Table VI"
+P048,C19,F.GraphRAG,PPR node scoring + top-k passages,,bge-large-en-v1.5,,,,,,KG,,5,,Qwen-2.5-14B-Instruct,,,,"baseline; Table II, Table III"
+P048,C20,Pure LLM,,,,,,,,,,,,,Qwen-2.5-14B,,,,no retrieval; Table III row Pure LLM
+P049,C01,Prompt,,,,,,,,,,,,,llama-7b,,,,Table 1 row Promptllama-7b (p.7); prompt engineering baseline (p.6)
+P049,C02,Prompt,,,,,,,,,,,,,,,,,Table 1 row Prompt[模型名称已隐藏]-3.5-turbo (p.7) | Unresolved masked generator: [模型名称已隐藏]-3.5-turbo
+P049,C03,SelfCheckGPT,,,,,,,,,,,,,llama-7b,,,,Table 1 row SelfCheck[模型名称已隐藏]llama-7b (p.7); sampling frequency 5 (p.9)
+P049,C04,SelfCheckGPT,,,,,,,,,,,,,,,,,Table 1 row SelfCheck[模型名称已隐藏][模型名称已隐藏]-3.5-turbo (p.7) | Unresolved masked generator: [模型名称已隐藏]-3.5-turbo
+P049,C05,Fintune,,,,,,,,,,,,,llama-7b,,,,Table 1 row Fintunellama-7b (p.7); fine-tuning baseline (p.6)
+P049,C06,Fintune,,,,,,,,,,,,,qwen2-7b,,,,Table 1 row Fintuneqwen2-7b (p.7)
+P049,C07,EigenScore,,,,,,,,,,,,,,,,,Table 1 row EigenScore (p.7); embedding-space consistency baseline (p.6)
+P049,C08,SEP,,,,,,,,,,,,,,,,,Table 1 row SEP (p.7); linear probe on hidden states (p.6)
+P049,C09,LRP4RAG,,,,,,,,,,,,,,,,,Table 1 row LRP4RAGLLM (p.7); LRP attribution + SVM/LLM (p.6)
+P049,C10,SIRG,,,,,,,,,,,,,,,,,Table 1 row SIRG (Ours) (p.7); AlignScore RoBERTa 124M discriminator (p.16)
+P050,C01,Vanilla,,,,,,,,,,,,,Llama-3.2-1B-Instruct,,,,"Table 1 row Vanilla, Llama-3.2-1B-Instruct; no retrieval"
+P050,C02,S-RAG,BM25,,,,,,,,,,,,Llama-3.2-1B-Instruct,,,,Table 1 row S-RAG; in-context standard RAG
+P050,C03,PRAG,BM25,,,,,,,,,,,,Llama-3.2-1B-Instruct,,,,Table 1 row PRAG; parametric fusion baseline
+P050,C04,DyPRAG,BM25,,,,,,,,,,,,Llama-3.2-1B-Instruct,,,,Table 1 row DyPRAG; parametric fusion baseline
+P050,C05,ReFilter,BM25,,,,,,,,,,,,Llama-3.2-1B-Instruct,,,,Table 1 row Ours; latent-based fusion with gated filter
+P050,C06,Vanilla,,,,,,,,,,,,,Llama-3-8B-Instruct,,,,"Table 1 row Vanilla, Llama-3-8B-Instruct"
+P050,C07,S-RAG,BM25,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table 1 row S-RAG
+P050,C08,PRAG,BM25,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table 1 row PRAG
+P050,C09,DyPRAG,BM25,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table 1 row DyPRAG
+P050,C10,ReFilter,BM25,,,,,,,,,,,,Llama-3-8B-Instruct,,,,Table 1 row Ours
+P050,C11,Vanilla,,,,,,,,,,,,,Qwen2.5-1.5B-Instruct,,,,"Table 1 row Vanilla, Qwen2.5-1.5B-Instruct"
+P050,C12,S-RAG,BM25,,,,,,,,,,,,Qwen2.5-1.5B-Instruct,,,,Table 1 row S-RAG
+P050,C13,PRAG,BM25,,,,,,,,,,,,Qwen2.5-1.5B-Instruct,,,,Table 1 row PRAG
+P050,C14,DyPRAG,BM25,,,,,,,,,,,,Qwen2.5-1.5B-Instruct,,,,Table 1 row DyPRAG
+P050,C15,ReFilter,BM25,,,,,,,,,,,,Qwen2.5-1.5B-Instruct,,,,Table 1 row Ours; also Table 3 full model
+P050,C16,Vanilla,,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,"Table 1 row Vanilla, Qwen2.5-14B-Instruct"
+P050,C17,S-RAG,BM25,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table 1 row S-RAG
+P050,C18,PRAG,BM25,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table 1 row PRAG
+P050,C19,DyPRAG,BM25,,,,,,,,,,,,Qwen2.5-14B-Instruct,,,,Table 1 row DyPRAG

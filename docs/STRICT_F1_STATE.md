@@ -4,11 +4,11 @@
 
 The frozen local baseline had 18 complete caches and scored 668 Strict/1,350 Loose TP. The full recovery benchmark scored 860 Strict/1,853 Loose TP (5,305 scored predictions, 19,392 gold). Strict R/P/F1 changed from 0.03445/0.16725/0.05713 to 0.04435/0.16211/0.06964. Loose R/P/F1 changed from 0.06962/0.33801/0.11545 to 0.09555/0.34929/0.15006. Scope agreement was 21/21, zero stubs and zero structural errors. The native-text-only checker left 941 unmatched citations, including image-only pages.
 
-D009 resumed the legacy page plan with saved entity IDs and two unchanged result windows. D002's expanded passport hit the 16,384-token gateway limit. The compact passport succeeded at the same limit with 3,113 output tokens. D013 completed using the existing parser. Plot recovery yielded +10,135 Loose TP and zero Strict TP in its controlled comparison and remains opt-in. The corpus context comparison preserved the previous scores. See [the audit](../METRIC_AUDIT.md#выполнение-плана--22112026) for the OCR and model A/B and operational evidence.
+D009 resumed the legacy page plan with saved entity IDs and two unchanged result windows. D002's expanded passport hit the 16,384-token gateway limit. The compact passport succeeded at the same limit with 3,113 output tokens. D013 completed using the existing parser. Plot recovery yielded +10,135 Loose TP and zero Strict TP in its controlled comparison and remains opt-in. The corpus context comparison preserved the previous scores. See [the audit](METRIC_AUDIT.md#выполнение-плана--22112026) for the OCR and model A/B and operational evidence.
 
 ## Metric audit · Saved rows from incomplete caches
 
-The same Stage 3 export over the frozen Stage 2 cache gained 101 Strict and 150 Loose TP after including saved windows from one incomplete paper. This moved the corpus from 3,994 to 4,183 scored predictions, Strict F1 from 0.05713 to 0.06524, and Loose F1 from 0.11545 to 0.12725. The candidate has 18 fully processed papers, one partial paper, and two unresolved scope decisions. The checker reported zero structural errors and 476 review findings. The run used zero API tokens and took 8.2 seconds. The default export and raw cache status remain compatible. See [the audit and execution prompt](../METRIC_AUDIT.md).
+The same Stage 3 export over the frozen Stage 2 cache gained 101 Strict and 150 Loose TP after including saved windows from one incomplete paper. This moved the corpus from 3,994 to 4,183 scored predictions, Strict F1 from 0.05713 to 0.06524, and Loose F1 from 0.11545 to 0.12725. The candidate has 18 fully processed papers, one partial paper, and two unresolved scope decisions. The checker reported zero structural errors and 476 review findings. The run used zero API tokens and took 8.2 seconds. The default export and raw cache status remain compatible. See [the audit and execution prompt](METRIC_AUDIT.md).
 
 ## Stage 3 · Entity passport and source-backed normalization
 
@@ -53,7 +53,7 @@ The configured DeepSeek model was kept. The two-paper live run took 615.6 second
 
 ## S2.1 · Table recovery approved for the default export
 
-[RECALL-DEV-002](FROM_ANTIGRAVITY.md#recall-dev-002) at `96f3c30` isolated table recovery on the complete 21-paper cache with zero API calls. Scored predictions rose from 4,911 to 4,945. Strict R/P/F1 was 0.038/0.150/0.061 (741 TP, +10), and Loose R/P/F1 was 0.096/0.375/0.152 (1,854 TP, +12). All 34 cells came from D007 PDF page 7, Table 2. There were zero structural errors, per-paper regressions or new table-recovery reviews. A laptop sleep during OCR affected the separate quote-review count.
+[RECALL-DEV-002](https://github.com/nikitastorchak920/viniti-rag-hackathon/blob/437e18c/handoff/FROM_ANTIGRAVITY.md#recall-dev-002) at `96f3c30` isolated table recovery on the complete 21-paper cache with zero API calls. Scored predictions rose from 4,911 to 4,945. Strict R/P/F1 was 0.038/0.150/0.061 (741 TP, +10), and Loose R/P/F1 was 0.096/0.375/0.152 (1,854 TP, +12). All 34 cells came from D007 PDF page 7, Table 2. There were zero structural errors, per-paper regressions or new table-recovery reviews. A laptop sleep during OCR affected the separate quote-review count.
 
 Default adoption was verified locally on D007 with byte-identical CSVs for the default and explicit opt-in, 729 to 763 result rows compared with opting out, and a clean slice checker. The 17-document local comparison gained the same 10 Strict and 12 Loose TP. All 44 core tests passed.
 
@@ -61,7 +61,7 @@ The source audit confirms that the selection cap belongs to the experimental con
 
 ## R1.4 · Full-cache verification completed
 
-The [RECALL-DEV-001 report](FROM_ANTIGRAVITY.md#recall-dev-001) at `676ef1f` tested `dae1acc` on all 21 caches in `out_dev_domain2_scan_cache`. Both rebuilds completed without API calls, stubs or structural errors. The checker exited 2 with review items.
+The [RECALL-DEV-001 report](https://github.com/nikitastorchak920/viniti-rag-hackathon/blob/437e18c/handoff/FROM_ANTIGRAVITY.md#recall-dev-001) at `676ef1f` tested `dae1acc` on all 21 caches in `out_dev_domain2_scan_cache`. Both rebuilds completed without API calls, stubs or structural errors. The checker exited 2 with review items.
 
 | Full-cache export | Scored predictions | Strict R/P/F1 | Strict TP | Loose R/P/F1 | Loose TP | Strict F1 without D014 |
 |---|---:|---|---:|---|---:|---:|
@@ -132,7 +132,7 @@ Reproduce the candidate with `python main.py --input dev --output out_dev_strict
 ## P0.1 · Completed offline baseline audit
 
 - Historical checkpoint. No production settings or extraction code changed during P0.1.
-- Reference: code `b5cb065`, full report [DOMAIN2-DEV-001](FROM_ANTIGRAVITY.md#domain2-dev-001) at `4b77325`.
+- Reference: code `b5cb065`, full report [DOMAIN2-DEV-001](https://github.com/nikitastorchak920/viniti-rag-hackathon/blob/437e18c/handoff/FROM_ANTIGRAVITY.md#domain2-dev-001) at `4b77325`.
 - Local command: `python main.py --input dev --output out_dev_strict_audit --rebuild-csv-only`. Exit 1 reflects four incomplete local caches. The build has 17 processed papers, no API calls, and retained all 21 gold papers in the scoring denominator. It is distinct from the full, 21-paper post-OCR snapshot. Scoring used the repository evaluator's strict and loose multiset keys.
 
 | Snapshot | Strict P | Strict R | Strict F1 | Strict TP | Loose P | Loose R | Loose F1 | Loose TP | Pred | Gold |

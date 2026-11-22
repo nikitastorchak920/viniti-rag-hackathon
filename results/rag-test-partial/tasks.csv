@@ -1,0 +1,93 @@
+publication_id,task_id,task_type,note
+P001,T1,documentation question answering,"EDA tool documentation QA; categories functionality, VLSI-flow, GUI, installation & test"
+P002,T1,"research question answering (True/False, multiple-choice, generative)",Table 1 example QA pairs and metrics
+P002,T2,"retrieval evaluation (Hit@1, Hit@3)",Section 5.1 Metrics
+P003,T1,guideline-grounded medical multiple-choice question answering,Disease-scoped ophthalmology MCQA with expert-curated keypoint corpus
+P004,T1,open-domain multi-hop / long-form question answering,"F1 for HotpotQA, MuSiQue, TriviaQA; ROUGE-L for ASQA; RAGAS Faithfulness and Answer Relevance (p.6)"
+P004,T2,query complexity routing classification,"Dynamic Router lane classification, Table 6 (p.12)"
+P005,T1,"retrieval evaluation (Recall, Precision, Information Efficiency)","averaged over k in {1,3,5}"
+P005,T2,end-to-end answer generation,"F1 on HotpotQA/WebQuestions; ROUGE-L, METEOR, BERTScore on Dragonball"
+P005,T3,online efficiency measurement,Tok/Q and latency per query
+P006,T1,open-domain question answering,"NQ and TriviaQA, scored with Match Accuracy."
+P006,T2,medical dialogue response generation,"ChatDoctor, scored with BERTScore F1."
+P006,T3,membership inference attack (Interrogation Attack),"Sec. 5.4, Figure 2; AUC of TPR-FPR curve on ChatDoctor."
+P007,T1,Chinese spelling check (detection and correction),sentence-level detection and correction in few-shot setting
+P008,T1,hybrid question answering (retrieval of documents from semi-structured knowledge base),STARK
+P008,T2,end-to-end RAG question answering,CRAG
+P009,T1,novel and interesting topic retrieval for a target user,RQ1 automatic evaluation; query asks for information of interest likely unknown to user
+P009,T2,proactive conversation initiation / willingness to converse,RQ2 human A/B test on initial utterances
+P010,T1,driving action explanation (text generation),"BLEU4, CIDEr, METEOR"
+P010,T2,driving action justification (text generation),"BLEU4/BLEU3, CIDEr, METEOR"
+P010,T3,next control signal prediction (course and speed),RMSE and tolerant accuracy A_sigma
+P011,T1,"fund information question answering over four intents (Compare, Detail, Search/Listing, Other)",intent categories defined in Section 3.10
+P012,T1,open-domain factoid question answering,"NQ, TriviaQA, MS MARCO-FQA"
+P012,T2,multi-hop question answering,"HotpotQA, 2WikiQA"
+P012,T3,fact verification,FEVER
+P013,T1,open-domain question answering,NQ-10 / NQ-30
+P013,T2,multi-hop question answering,"HotpotQA, 2Wiki, MuSiQue"
+P014,T1,open-domain question answering,RAG-Bench NQ/TriviaQA/WebQ
+P014,T2,multi-hop question answering,HotpotQA and 2WikiMultihopQA
+P015,T1,query-document relevance assessment,3-level relevance scoring (0/1/2)
+P016,T1,open-domain multilingual question answering,"MLQA, MKQA, XOR-TyDi QA"
+P016,T2,language identification of generated answers,"OpenLID-based evaluation of generated language (Figure 5, Figure 9)"
+P018,T1,factual-conflict multi-document question answering,DRQA; LLM-as-a-judge accuracy
+P018,T2,open-domain question answering,"NQ, TriviaQA, PopQA, RetrievalQA; normalized string exact match"
+P019,T1,open-domain multi-hop question answering,"EM, F1, Precision, Recall"
+P020,T1,multi-product question answering,What-is/Where-is and How-to product queries across Adobe product domains
+P020,T2,multi-domain document retrieval,Acc@Top1 retrieval evaluation
+P021,T1,multilingual text report generation with citations,RAGTIME
+P021,T2,audiovisual article generation from multiple videos with citations,WIKIVIDEO and WIKIVIDEO-25
+P021,T3,"claim grounding / verification across text, audio, video, audiovisual",Section 5
+P022,T1,multi-hop question answering,"2WikiMultihopQA, HotpotQA"
+P022,T2,single-hop question answering,"PopQA, ARC-Challenge"
+P023,T1,long-video question answering,multiple-choice video QA benchmarks
+P023,T2,frame-query intent relevance scoring,IR-600K relevance level prediction (1-5)
+P024,T1,multi-document multimodal question answering,QA over collections of visually rich documents
+P024,T2,retrieval / source document identification,evidence extraction and document identification
+P025,T1,privacy leakage / data extraction from retrieval database (targeted and untargeted attacks),RQ1; p.4-6
+P025,T2,training data memorization / extraction from LLM (targeted and prefix attacks),RQ2; p.7-8
+P026,T1,image captioning,open-domain
+P026,T2,multi-modal question answering,open-domain
+P026,T3,multi-modal fact verification,open-domain
+P027,T1,free-form open-domain question answering,"TriviaQA, MuSiQue, PopQA; accuracy = gold answer contained in response"
+P027,T2,closed-set generation (claim verification / multiple-choice),"PubHealth, ARC-Challenge; accuracy"
+P028,T1,Arabic question answering (retrieval + generation),RAG pipeline over Arabic passages
+P028,T2,Arabic passage retrieval,Recall@k and MRR evaluation of embedding models
+P029,T1,RAG serving workload replay / system performance evaluation,"TTFT, TPOT, cache hit rate, prefill time"
+P030,T1,"PDF question answering over text, images, tables and diagrams",multi-modal questions over PDF documents
+P030,T2,image retrieval identification,detect whether output contains the correct image ID
+P030,T3,table retrieval identification,detect whether output contains the correct table ID
+P031,T1,retrieval-augmented short-form question answering,STRICT and TRUTH prompt modes (p.5)
+P031,T2,factual-conflict question answering,"context accuracy in STRICT mode, world accuracy in TRUTH mode (p.5)"
+P032,T1,document-grounded hallucination detection (binary Grounded vs. Hallucinated),LLM-AggreFact evaluation; three-class output aligned to binary
+P032,T2,evidence-grounded justification generation,G-Eval justification quality scoring
+P033,T1,document question answering (textual RAG),"Text conversion then text retrieval and LLM answer generation; metrics TXT, TAB, FOR, CHA, RO, ALL"
+P033,T2,document visual question answering (visual RAG),"Image chunk retrieval with ColQwen2-v1.0 and VLM answer generation; metrics TXT, TAB, FOR, CHA, RO, ALL"
+P034,T1,binary legal indicator computation (11-question evaluation grid per ban),Output 0 or 1 per indicator; Table 2
+P035,T1,open-domain question answering,"NQ, TriviaQA, PopQA; EM and token-level F1"
+P035,T2,multi-hop question answering,"2WikiMultihopQA, HotpotQA; EM and token-level F1"
+P035,T3,commonsense reasoning,StrategyQA; yes/no EM
+P036,T1,earnings report analysis question answering,"Correctness (1-10, [模型名称已隐藏]-4 judge) and semantic similarity; Table 3"
+P038,T1,question answering,Reading comprehension / QA over Wikipedia paragraphs; includes unanswerable questions
+P039,T1,query-focused summarization / global question answering,125 global questions per dataset generated with [模型名称已隐藏]-4o-mini (p.5)
+P040,T1,open-domain multi-hop question answering,retrieval evaluated with Recall@k; QA with EM/F1
+P041,T1,open-domain multi-hop question answering,"HotpotQA and variants, MuSiQue"
+P041,T2,long-context question answering,TriviaQA
+P042,T1,historical question answering (perspective analysis),"10 questions on Napoleon, 5 neutral and 5 primed-to-bias"
+P043,T1,domain document question answering,Long-answer generation QA evaluated with BLEU/ROUGE-L/METEOR
+P043,T2,informational support evaluation,Whether retrieved context suffices to derive the answer (Table 3)
+P044,T1,medical conversational response generation,"doctor-patient dialogue response generation evaluated with BLEU, ROUGE, BERTScore"
+P045,T1,knowledge-based visual question answering,KB-VQA over Enc-VQA and InfoSeek
+P045,T2,multimodal retrieval (image-to-article retrieval),Recall@k evaluation of Eva-CLIP-8B
+P046,T1,hallucination detection (binary classification of RAG responses),Response-level hallucination detection; accuracy/F1 reported
+P046,T2,multi-hop question answering hallucination detection,HotPotQA-Derived bridge questions requiring two documents
+P047,T1,multimodal cross-document question answering,LLM-as-judge binary accuracy
+P047,T2,document-level retrieval,"Recall@k, MRR@10, nDCG@10"
+P048,T1,creative generation,"FS., ACC., COV. metrics"
+P048,T2,contextual summarization,"COV., ACC. metrics"
+P048,T3,complex reasoning,"ROG., ACC. metrics"
+P048,T4,fact retrieval,"ROG., ACC. metrics"
+P048,T5,text classification,"ACC., REC. metrics; WOS and IFS-REL"
+P049,T1,hallucination detection in RAG responses,"binary classification of faithfulness hallucination (p.6, Eq. 8)"
+P050,T1,open-domain question answering,general-domain QA evaluated with F1
+P050,T2,biomedical question answering,"zero-shot transfer, evaluated with accuracy"
