@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RAG Atlas — обзор корпуса</title>
+<link rel="icon" href="data:,">
 <style>
-:root{color-scheme:light;--bg:#f7f8fb;--surface:#fff;--tone:#f2f4f8;--text:#182134;--muted:#536078;--line:#e5e7eb;--accent:#373f82;--accent-bg:#eceffd;--verified:#17674f;--verified-bg:#e8f5ef;--issue:#87500e;--issue-bg:#fbf0df;--shadow:0 2px 6px #18213406}
-:root[data-theme=dark]{color-scheme:dark;--bg:#151926;--surface:#1c2232;--tone:#222b3e;--text:#edf0fc;--muted:#aab5cd;--line:#354056;--accent:#c5caff;--accent-bg:#303860;--verified:#91dfbd;--verified-bg:#203c35;--issue:#f5cc8e;--issue-bg:#49371f;--shadow:none}
+:root{color-scheme:light;--bg:#F4F7FB;--surface:#FFFFFF;--tone:#F4F7FB;--text:#162A42;--muted:#50647D;--line:#D8E2F0;--accent:#124B8C;--bright:#1D63B8;--accent-bg:#E8F2FE;--verified:#17674f;--verified-bg:#e8f5ef;--issue:#87500e;--issue-bg:#fbf0df;--shadow:0 2px 6px #18213406}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -20,12 +20,17 @@ button:hover:not(:disabled){background:var(--tone)}
 .muted{color:var(--muted)}
 .shell{width:min(1360px,100%);margin-inline:auto;padding-inline:clamp(16px,4vw,56px)}
 .masthead{background:var(--surface);border-bottom:1px solid var(--line)}
-.masthead .shell{height:66px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.masthead .shell{min-height:66px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:10px}
 .brand,.actions{display:flex;align-items:center;gap:10px}
 .brand{font-size:17px;font-weight:750;letter-spacing:-.025em;white-space:nowrap}
+.brand strong{color:var(--accent)}
+.domains{display:flex;flex-wrap:wrap;gap:6px}
+.domains button{text-align:left;font-size:13px}
+.domains button[aria-pressed=true]{background:var(--accent-bg);color:var(--accent);border-color:var(--bright)}
+.domains b{margin-right:5px;font-variant-numeric:tabular-nums}
 .mark{display:grid;place-content:center;background:var(--accent-bg);color:var(--accent);border-radius:9px;width:31px;height:31px}
 .mark::before{content:"";width:14px;height:14px;border:2px solid currentColor;border-radius:3px;box-shadow:inset 0 -3px 0 var(--accent-bg),inset 0 -5px 0 currentColor}
-main{padding-block:clamp(24px,5vw,56px)}
+main{padding-block:clamp(24px,3.8vw,44px)}
 .overview{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:23px}
 h1,h2,h3,p{margin:0}
 h1{font-size:clamp(28px,4vw,43px);line-height:1.1;letter-spacing:-.045em;font-weight:750}
@@ -40,9 +45,10 @@ h3{font-size:14px;margin-bottom:9px}
 .kpi small{display:block;min-height:1.5em;color:var(--muted)}
 .kpi .confirmed{color:var(--verified)}
 .kpi .attention{color:var(--issue)}
-.tabs{display:flex;gap:4px;background:var(--tone);width:fit-content;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
 .tabs button{border-color:transparent;background:transparent;color:var(--muted);padding:7px 13px;font-size:13px}
-.tabs button[aria-pressed=true]{background:var(--surface);border-color:var(--line);color:var(--text);box-shadow:var(--shadow)}
+.tabs button[aria-pressed=true]{background:var(--surface);border-color:var(--line);color:var(--accent);box-shadow:var(--shadow)}
+.badge{margin-left:6px;border-radius:5px;padding:1px 5px;background:var(--accent-bg);color:var(--accent);font-size:11px;font-variant-numeric:tabular-nums}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
 .toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:15px}
 .search{position:relative;display:flex;align-items:center;flex:1 1 260px;max-width:470px}
@@ -54,30 +60,27 @@ h3{font-size:14px;margin-bottom:9px}
 .pill{border-radius:999px;font-size:12px;padding:6px 11px;white-space:nowrap}
 .pill[aria-pressed=true]{color:var(--accent);background:var(--accent-bg);border-color:transparent}
 select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:105px}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.table-scroll{overflow-x:auto}
+table{width:100%;min-width:660px;border-collapse:collapse;table-layout:fixed}
+table.wide{min-width:1090px}
 thead{background:var(--tone);color:var(--muted)}
 th,td{border-top:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:middle;overflow-wrap:anywhere}
 th:first-child,td:first-child{padding-left:17px}
 th{font-size:12px;font-weight:620}
 td{height:51px;font-size:13px}
 tbody tr{cursor:pointer}
-tbody tr:hover,tbody tr:focus-within{background:var(--tone)}
+tbody tr:hover,tbody tr:focus-within,tbody tr[data-selected=true]{background:var(--accent-bg)}
 .cell-label{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .row-button{border:0;background:transparent;padding:0;color:var(--accent);text-align:left;font-weight:650;border-radius:3px}
 .row-button:hover:not(:disabled){background:transparent;text-decoration:underline}
 .row-end{color:var(--muted);text-align:right}
-.state{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.state{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 7px;font-size:11px;color:var(--muted);background:var(--tone)}
 .state::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
-.state.verified{color:var(--verified)}
-.state.issue{color:var(--issue)}
+.state.verified{color:var(--verified);background:var(--verified-bg)}
+.state.issue{color:var(--issue);background:var(--issue-bg)}
+.subnav{display:flex;gap:7px;flex-wrap:wrap;padding:12px 15px 0}
 .comparison{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 15px 14px}
 .comparison select{max-width:100%;min-width:0}
-.passport{padding:clamp(16px,4vw,36px);display:grid;gap:20px}
-.passport details{border:1px solid var(--line);border-radius:9px;padding:10px 14px;overflow-wrap:anywhere}
-.passport details+details{margin-top:7px}
-.passport summary{cursor:pointer;font-weight:650}
-.passport code{font-size:12px}
-.passport li+li{margin-top:7px}
 .delta-good{color:var(--verified);font-weight:650}
 .delta-bad{color:var(--issue);font-weight:650}
 .empty{text-align:center;padding:43px 16px;color:var(--muted);border-top:1px solid var(--line)}
@@ -93,12 +96,13 @@ dialog::backdrop{background:#14203654}
 .drawer-close{font-size:20px;line-height:1;padding:6px 8px}
 .drawer-section{min-width:0}
 blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0 0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;background:var(--tone);padding:12px 14px}
+mark{background:#d4e8fc;color:var(--accent);border-radius:3px;padding:0 2px;font-weight:650}
 dl{margin:0;display:grid;grid-template-columns:minmax(112px,1fr) minmax(0,2fr);font-size:13px}
 dt,dd{margin:0;padding:7px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;white-space:pre-wrap}
 dt{color:var(--muted);padding-right:12px}
 .issue-list{margin:0;padding-left:18px}
 .issue-list li+li{margin-top:8px}
-@media(max-width:850px){.hide-medium{display:none}.search{max-width:none}}
+@media(max-width:850px){.search{max-width:none}.domains{order:3;flex-basis:100%}}
 @media(max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.kpi{padding:12px}.overview{display:block}.actions{gap:5px}.actions button{font-size:12px;padding:6px 8px}.tabs button{font-size:11px;padding:6px 7px}.hide-small{display:none}th,td{padding:8px 6px}th:first-child,td:first-child{padding-left:9px}.pagination{padding:10px}.drawer-head,.drawer-body{padding-inline:16px}}
 @media(prefers-reduced-motion:reduce){dialog[open]{animation:none}}
 </style>
@@ -106,38 +110,37 @@ dt{color:var(--muted);padding-right:12px}
 <body>
 <header class="masthead">
   <div class="shell">
-    <div class="brand"><span class="mark" aria-hidden="true"></span>RAG Atlas</div>
+    <div class="brand"><span class="mark" aria-hidden="true"></span><strong>RAG Atlas</strong></div>
+    <nav class="domains" aria-label="Предметные области">
+      <button type="button" data-domain="solar" aria-pressed="false"><b>01</b> Тонкоплёночные солнечные элементы</button>
+      <button type="button" data-domain="rag" aria-pressed="true"><b>02</b> RAG и поиск по документам</button>
+    </nav>
     <div class="actions">
-      <button id="theme" type="button" aria-pressed="false">Тёмная тема</button>
-      <button id="folder" type="button">Открыть пакет CSV</button>
+      <button id="folder" type="button">Открыть CSV</button>
       <input id="files" type="file" webkitdirectory multiple hidden>
     </div>
   </div>
 </header>
 <main class="shell">
   <div class="overview">
-    <div><h1>Обзор корпуса RAG</h1><p id="bundle" class="muted" aria-live="polite">Загрузка пакета…</p></div>
+    <div><h1 id="domain-title">RAG и поиск по документам</h1><p id="bundle" class="muted" aria-live="polite">Загрузка пакета…</p></div>
   </div>
   <p id="notice" class="notice" role="status" hidden></p>
   <section class="kpis" aria-label="Показатели корпуса">
     <div class="kpi"><p class="kpi-label">Обработанные статьи</p><strong id="paper-count" class="num">—</strong><small id="paper-note"></small></div>
-    <div class="kpi"><p class="kpi-label">Извлечённые результаты</p><strong id="result-count" class="num">—</strong><small>Числовые значения</small></div>
+    <div class="kpi"><p class="kpi-label">Извлечённые результаты</p><strong id="result-count" class="num">—</strong><small id="result-note"></small></div>
     <div class="kpi"><p class="kpi-label">Проверенные цитаты</p><strong id="quote-count" class="num confirmed">—</strong><small id="quote-note">Ожидается отчёт проверки</small></div>
-    <div class="kpi"><p class="kpi-label">Замечания</p><strong id="issue-count" class="num attention">—</strong><small>Записи в issues.csv</small></div>
+    <div class="kpi"><p class="kpi-label">Замечания по правилам</p><strong id="issue-count" class="num attention">—</strong><small id="issue-note"></small></div>
   </section>
-  <nav class="tabs" aria-label="Разделы данных">
-    <button type="button" data-tab="results" aria-pressed="true">Результаты и сравнение</button>
-    <button type="button" data-tab="publications" aria-pressed="false">Публикации</button>
-    <button type="button" data-tab="issues" aria-pressed="false">Проверка и замечания</button>
-    <button type="button" data-tab="passport" aria-pressed="false">Паспорт данных</button>
-  </nav>
+  <nav id="tabs" class="tabs" aria-label="Таблицы"></nav>
   <section id="explorer" class="panel" aria-label="Обозреватель данных">
+    <div id="subnav" class="subnav" hidden></div>
     <div class="toolbar">
-      <label class="search"><input id="q" type="search" aria-label="Поиск" placeholder="Статья, датасет, модель или метрика"></label>
+      <label class="search"><input id="q" type="search" aria-label="Поиск по данным и цитатам" placeholder="Поиск по данным и цитатам"></label>
       <div class="filters" aria-label="Фильтры">
         <button class="pill" type="button" data-filter="all" aria-pressed="true">Все</button>
-        <button class="pill" type="button" data-filter="verified" aria-pressed="false">Проверенные</button>
-        <button class="pill" type="button" data-filter="issues" aria-pressed="false">С замечаниями</button>
+        <button class="pill" type="button" data-filter="verified" aria-pressed="false">Подтверждено</button>
+        <button class="pill" type="button" data-filter="issues" aria-pressed="false">С замечаниями RULE_*</button>
         <select id="paper" aria-label="ID статьи"><option value="">Все статьи</option></select>
         <select id="rule" aria-label="Код правила" hidden><option value="">Все правила</option></select>
       </div>
@@ -147,387 +150,23 @@ dt{color:var(--muted);padding-right:12px}
       <select id="compare-group" aria-label="Контекст сравнения" hidden></select>
       <span id="compare-note" class="muted" hidden>Положительная дельта означает улучшение.</span>
     </div>
-    <table id="grid"><thead></thead><tbody></tbody></table>
+    <div class="table-scroll" tabindex="0" aria-label="Прокручиваемая таблица">
+      <table id="grid"><thead></thead><tbody></tbody></table>
+    </div>
     <p id="empty" class="empty" hidden></p>
     <div class="pagination">
       <span id="range" class="num" aria-live="polite"></span>
       <div class="paging-buttons"><button type="button" id="prev">Назад</button><button type="button" id="next">Далее</button></div>
     </div>
   </section>
-  <section id="passport" class="panel passport" aria-label="Паспорт данных" hidden>
-    <div><h2>Паспорт данных</h2><p class="muted">Семь связанных таблиц CSV. Ссылки на сущности действуют внутри одной публикации.</p></div>
-    <div><h3>Схема загруженного пакета</h3><div id="passport-schema"></div></div>
-    <div><h3>Типы, значения и источники</h3><ul>
-      <li>Идентификаторы и исходные значения — текст. Год, глубина поиска и номер страницы — целые числа. Нумерация страниц PDF начинается с 1.</li>
-      <li><code>raw_value</code> и <code>raw_unit</code> сохраняют исходную запись. <code>normalized_value</code> и <code>normalized_unit</code> содержат число и единицу после нормализации. Пустое поле означает, что значение неизвестно.</li>
-      <li><code>%</code> и <code>fraction</code> сохраняют свою шкалу. Явно указанные секунды переводятся в миллисекунды.</li>
-      <li><code>result_origin</code> различает результаты авторов и заимствованные результаты. <code>source_fragment</code> хранит цитату рядом с локатором источника.</li>
-    </ul></div>
-    <div><h3>Правила проверки</h3><ul>
-      <li><code>RULE_SCALE_BOUNDS</code> · значение вне шкалы или неположительная задержка.</li>
-      <li><code>RULE_AT_K_CONSISTENCY</code> · пропущенная глубина, конфликт значений k или превышение top_k.</li>
-      <li><code>RULE_UNIT_AMBIGUITY</code> · шкала или смысл процентной разницы не установлен.</li>
-      <li><code>RULE_PROVENANCE_COMPLETE</code> · пропущен локатор, ссылка на цитируемую работу или обязательное имя метрики.</li>
-    </ul></div>
-  </section>
 </main>
 <dialog id="detail" aria-labelledby="detail-title">
   <div class="drawer-head">
-    <div><p id="detail-kicker" class="muted num"></p><h2 id="detail-title"></h2></div>
+    <div><p id="detail-kicker" class="muted num"></p><h2 id="detail-title">Путь одного числа</h2></div>
     <form method="dialog"><button class="drawer-close" aria-label="Закрыть карточку">×</button></form>
   </div>
   <div class="drawer-body" id="detail-body"></div>
 </dialog>
-<script>
-"use strict";
-const tables = ["publications", "configurations", "datasets", "tasks", "experiments", "results", "issues"];
-const pageSize = 25;
-const fmt = new Intl.NumberFormat("ru");
-const $ = id => document.getElementById(id);
-const grid = $("grid");
-const dialog = $("detail");
-const tabs = [...document.querySelectorAll("[data-tab]")];
-const pills = [...document.querySelectorAll("[data-filter]")];
-const entityFields = {
-  configurations: "config_id", datasets: "dataset_id", tasks: "task_id", experiments: "experiment_id",
-};
-const headers = {
-  results: [["Статья", 12], ["Метрика", 25], ["Датасет", 17, "hide-medium"], ["Модель", 17, "hide-medium"],
-            ["Значение", 13], ["Источник", 13, "hide-small"], ["", 3]],
-  publications: [["ID", 14], ["Публикация", 43], ["Год", 9, "hide-small"], ["Результаты", 15], ["Статус", 16], ["", 3]],
-  issues: [["Статья", 12], ["Правило", 24], ["Описание", 43], ["Связи", 18, "hide-small"], ["", 3]],
-};
-const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
-  "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;",
-})[c]);
-const key = (paper, id) => JSON.stringify([paper, id]);
-const normalize = value => String(value ?? "").normalize("NFKC").toLowerCase();
-const quote = row => row.source_quote || row.source_fragment || "";
-const scope = row => row.exclusion_reason === "Unprocessed: no scope decision"
-  ? "Не обработана" : row.in_scope === "true" ? "В области" : "Вне области";
-const extracted = row => row.extraction_status === "extracted" && row.metric_value !== "";
-let view = "results", filter = "all", page = 0, pageRows = [], bundle = null, loadVersion = 0, comparing = false;
-
-function parseCsv(text) {
-  const rows = [];
-  let row = [], field = "", quoted = false;
-  text = text.replace(/^\uFEFF/, "");
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (quoted) {
-      if (char === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (char === '"') quoted = false;
-      else field += char;
-    } else if (char === '"' && !field) quoted = true;
-    else if (char === ",") { row.push(field); field = ""; }
-    else if (char === "\n" || char === "\r") {
-      if (char === "\r" && text[i + 1] === "\n") i++;
-      row.push(field);
-      if (row.length > 1 || field) rows.push(row);
-      row = []; field = "";
-    } else field += char;
-  }
-  if (quoted) throw new Error("Незакрытое поле CSV");
-  if (row.length || field) { row.push(field); rows.push(row); }
-  const columns = rows.shift();
-  if (!columns?.includes("publication_id")) throw new Error("Отсутствует заголовок CSV");
-  const records = rows.map(cells => Object.fromEntries(columns.map((column, i) => [column, cells[i] ?? ""])));
-  records.columns = columns;
-  return records;
-}
-
-function comparisonKey(item) {
-  const row = item.row, protocol = item.related.experiments?.evaluation_protocol;
-  if (!extracted(row) || row.duplicate_of || !item.related.datasets || !item.related.tasks || !row.metric_name || !protocol || !row.metric_unit) return "";
-  if (row.result_origin === "cited" && (!row.cited_publication_id || row.cited_publication_id === "unspecified")) return "";
-  return JSON.stringify([row.publication_id, row.dataset_id, row.task_id, row.metric_name, row.metric_k,
-    row.metric_variant, protocol, row.metric_unit, row.aggregation, row.metric_direction, row.result_origin, row.cited_publication_id]);
-}
-
-function baselineDelta(row) {
-  if (!row.baseline_value?.trim() || !row.metric_value?.trim()) return null;
-  if (!["higher_is_better", "lower_is_better"].includes(row.metric_direction)) return null;
-  const value = Number(row.metric_value), baseline = Number(row.baseline_value);
-  return Number.isFinite(value) && Number.isFinite(baseline)
-    ? (row.metric_direction === "lower_is_better" ? baseline - value : value - baseline) : null;
-}
-
-function addTo(index, id, row) {
-  const group = index.get(id);
-  if (group) group.push(row);
-  else index.set(id, [row]);
-}
-
-function evidenceIndex(report, table) {
-  const checks = report?.quote_checks?.[table];
-  return new Map((Array.isArray(checks) ? checks : []).filter(check => Array.isArray(check) && check.length === 5)
-    .map(([paper,id,sourcePage,fragment,matched]) => [key(paper,id), {sourcePage, fragment, matched}]));
-}
-
-function verifiedState(row, checks, id) {
-  const fragment = quote(row).trim();
-  if (!fragment) return null;
-  const check = checks.get(key(row.publication_id, id));
-  if (check && check.sourcePage === (row.source_page || "").trim() && check.fragment === fragment) return check.matched === true;
-  if (row.quote_verified === "true") return true;
-  if (row.quote_verified === "false") return false;
-  return null;
-}
-
-function prepare(data, report) {
-  const publications = new Map(data.publications.map(row => [row.publication_id, row]));
-  const entities = Object.fromEntries(Object.entries(entityFields).map(([table, field]) => [
-    table, new Map(data[table].map(row => [key(row.publication_id, row[field]), row])),
-  ]));
-  const byPaper = new Map(), issuesByPaper = new Map(), issuesByResult = new Map();
-  const issueChecks = evidenceIndex(report, "issues");
-  const resultChecks = evidenceIndex(report, "results");
-  const resultsById = new Map(data.results.map(row => [key(row.publication_id, row.result_id), row]));
-  const issues = data.issues.map(row => {
-    const ids = (row.record_ids || "").split(";").map(id => id.trim()).filter(Boolean);
-    const linked = ids.map(id => resultsById.get(key(row.publication_id, id))).filter(Boolean);
-    const item = {row, ids, verified: verifiedState(row, issueChecks, row.issue_id),
-      search: normalize([publications.get(row.publication_id)?.title, ...Object.values(row),
-        ...linked.flatMap(r => [r.metric_name, entities.datasets.get(key(r.publication_id,r.dataset_id))?.dataset_name,
-          entities.configurations.get(key(r.publication_id,r.config_id))?.generator_model])].join(" "))};
-    addTo(issuesByPaper, row.publication_id, item);
-    for (const id of new Set(ids)) addTo(issuesByResult, key(row.publication_id,id), item);
-    return item;
-  });
-  const results = data.results.map(row => {
-    const paper = publications.get(row.publication_id);
-    const related = Object.fromEntries(Object.entries(entityFields).map(([table, field]) => [
-      table, entities[table].get(key(row.publication_id,row[field])),
-    ]));
-    const item = {row, paper, related, links: issuesByResult.get(key(row.publication_id,row.result_id)) || [],
-      verified: verifiedState(row, resultChecks, row.result_id),
-      search: normalize([paper?.title, paper?.authors, ...Object.values(row),
-        ...Object.values(related).flatMap(entity => Object.values(entity || {}))].join(" "))};
-    addTo(byPaper, row.publication_id, item);
-    item.comparison = comparisonKey(item);
-    return item;
-  });
-  const papers = data.publications.map(row => {
-    const results = byPaper.get(row.publication_id) || [];
-    const links = issuesByPaper.get(row.publication_id) || [];
-    return {row, results, links, verified: results.some(item => item.verified) || links.some(item => item.verified),
-      search: normalize([scope(row), ...Object.values(row), ...results.map(item => item.search)].join(" "))};
-  });
-  return {publications: papers, results, issues};
-}
-
-function showNotice(message = "") {
-  $("notice").textContent = message;
-  $("notice").hidden = !message;
-}
-
-function showBundle(data, report, label) {
-  bundle = prepare(data, report);
-  $("bundle").textContent = label;
-  const pending = data.publications.filter(row => scope(row) === "Не обработана").length;
-  const evidence = [...bundle.results, ...bundle.issues].filter(item => quote(item.row).trim());
-  const checked = evidence.filter(item => item.verified !== null).length;
-  const confirmed = evidence.filter(item => item.verified === true).length;
-  $("paper-count").textContent = fmt.format(data.publications.length - pending);
-  $("paper-note").textContent = `из ${fmt.format(data.publications.length)} в пакете`;
-  $("result-count").textContent = fmt.format(data.results.filter(extracted).length);
-  $("quote-count").textContent = checked ? `${fmt.format(Math.round(1000 * confirmed / evidence.length) / 10)} %` : "—";
-  $("quote-note").textContent = checked ? `${fmt.format(confirmed)} из ${fmt.format(evidence.length)} подтверждены`
-    : evidence.length ? "Требуется отчёт валидации" : "В пакете нет цитат";
-  $("issue-count").textContent = fmt.format(data.issues.length);
-  $("paper").replaceChildren(new Option("Все статьи", ""), ...[...new Set(data.publications.map(row => row.publication_id))]
-    .sort((a,b) => a.localeCompare(b, undefined, {numeric:true})).map(id => new Option(id,id)));
-  $("rule").replaceChildren(new Option("Все правила", ""), ...[...new Set(data.issues.map(row => row.check_name).filter(Boolean))]
-    .sort().map(rule => new Option(rule,rule)));
-  $("passport-schema").innerHTML = tables.map(table =>
-    `<details><summary>${table} · ${fmt.format(data[table].length)}</summary><code>${data[table].columns.map(escapeHtml).join(", ")}</code></details>`).join("");
-  showNotice();
-  page = 0;
-  render();
-}
-
-async function loadBundle(read, label) {
-  const version = ++loadVersion;
-  const data = {};
-  const missing = [];
-  await Promise.all(tables.map(async table => {
-    try { data[table] = parseCsv(await read(table + ".csv")); }
-    catch (error) { missing.push(table + ".csv" + (error.message ? ` (${error.message})` : "")); }
-  }));
-  let report = null;
-  try { report = JSON.parse(await read("validation.json")); } catch { /* CSV-only bundles are supported. */ }
-  if (version !== loadVersion) return;
-  if (missing.length) {
-    if (!bundle) $("bundle").textContent = "Пакет CSV не загружен";
-    showNotice("Не удалось открыть: " + missing.sort().join(", "));
-    render();
-    return;
-  }
-  showBundle(data, report, label);
-}
-
-function stateLabel(item) {
-  if (item.verified === true) return ["Проверен", "verified"];
-  if (item.verified === false) return ["Не подтверждён", "issue"];
-  return [quote(item.row) ? "Не проверен" : "Без цитаты", ""];
-}
-
-function deltaDisplay(delta) {
-  if (delta === null) return "—";
-  const formatted = new Intl.NumberFormat("ru", {maximumSignificantDigits: 7, signDisplay: "exceptZero"});
-  return formatted.format(delta);
-}
-
-function comparisonRows(rows) {
-  const selector = $("compare-group"), previous = selector.value;
-  const groups = new Map();
-  for (const item of rows) if (item.comparison) addTo(groups, item.comparison, item);
-  for (const [id, items] of groups) {
-    if (items.length === 1 && baselineDelta(items[0].row) === null) groups.delete(id);
-  }
-  selector.replaceChildren(...[...groups].map(([id, items]) => {
-    const {row, related} = items[0];
-    const label = [row.publication_id, related.datasets.dataset_name, related.tasks.task_type || row.task_id,
-      row.metric_name, row.metric_variant, row.metric_k && `k=${row.metric_k}`, row.metric_unit,
-      related.experiments.evaluation_protocol].filter(Boolean).join(" · ");
-    return new Option(`${label} (${items.length})`, id);
-  }));
-  if (groups.has(previous)) selector.value = previous;
-  if (!groups.size) selector.add(new Option("Нет сопоставимых результатов", ""));
-  return groups.get(selector.value) || [];
-}
-
-const labelCell = (value, css = "") => `<td class="${css}"><span class="cell-label">${escapeHtml(value || "—")}</span></td>`;
-const buttonCell = value => `<td class="num"><button type="button" class="row-button">${escapeHtml(value || "Открыть")}</button></td>`;
-const endCell = '<td class="row-end" aria-hidden="true">›</td>';
-function rowCells(item) {
-  const row = item.row;
-  if (view === "results") {
-    const [label, tone] = stateLabel(item);
-    const method = item.related.configurations;
-    const model = method?.generator_model || method?.rag_variant;
-    const dataset = item.related.datasets?.dataset_name;
-    const delta = comparing ? baselineDelta(row) : null;
-    const source = comparing ? labelCell(deltaDisplay(delta), `num ${delta > 0 ? "delta-good" : delta < 0 ? "delta-bad" : ""}`)
-      : `<td class="hide-small"><span class="state ${tone}">${label}</span></td>`;
-    return buttonCell(row.publication_id) + labelCell(row.metric_name) + labelCell(dataset, "hide-medium")
-      + labelCell(model, "hide-medium") + labelCell([row.metric_value, row.metric_unit].filter(Boolean).join(" "), "num") + source + endCell;
-  }
-  if (view === "publications") {
-    return buttonCell(row.publication_id) + labelCell(row.title) + labelCell(row.year, "num hide-small")
-      + labelCell(fmt.format(item.results.filter(result => extracted(result.row)).length), "num") + labelCell(scope(row)) + endCell;
-  }
-  return buttonCell(row.publication_id) + labelCell(row.check_name) + labelCell(row.description)
-    + labelCell(fmt.format(item.ids.length), "num hide-small") + endCell;
-}
-function render() {
-  $("passport").hidden = view !== "passport";
-  $("explorer").hidden = view === "passport";
-  if (view === "passport") return;
-  $("comparison").hidden = view !== "results";
-  $("rule").hidden = view !== "issues";
-  $("compare-group").hidden = $("compare-note").hidden = !comparing;
-  const terms = normalize($("q").value).trim().split(/\s+/).filter(Boolean);
-  const paper = $("paper").value;
-  const rule = $("rule").value;
-  let rows = (bundle?.[view] || []).filter(item =>
-    (!paper || item.row.publication_id === paper) &&
-    (view !== "issues" || !rule || item.row.check_name === rule) &&
-    (filter !== "verified" || item.verified === true) &&
-    (filter !== "issues" || view === "issues" || item.links.length > 0) &&
-    terms.every(term => item.search.includes(term)));
-  if (view === "results" && comparing) rows = comparisonRows(rows);
-  page = Math.min(page, Math.max(0, Math.ceil(rows.length / pageSize) - 1));
-  const start = page * pageSize;
-  pageRows = rows.slice(start, start + pageSize);
-  grid.tHead.innerHTML = "<tr>" + headers[view].map(([title, width, css]) => {
-    if (view === "results" && comparing && title === "Источник") { title = "Δ к baseline"; css = ""; }
-    return `<th scope="col" class="${css || ""}" style="width:${width}%">${title}</th>`;
-  }).join("") + "</tr>";
-  grid.tBodies[0].innerHTML = pageRows.map((item,i) => `<tr data-row="${i}">${rowCells(item)}</tr>`).join("");
-  $("empty").hidden = rows.length > 0;
-  $("empty").textContent = bundle
-    ? filter === "verified" && rows.length === 0 ? "Нет подтверждённых цитат по текущим условиям." : "По текущим условиям ничего не найдено."
-    : "Откройте папку с семью таблицами CSV.";
-  $("range").textContent = rows.length ? `${fmt.format(start+1)}–${fmt.format(start+pageRows.length)} из ${fmt.format(rows.length)}` : "0 записей";
-  $("prev").disabled = page === 0;
-  $("next").disabled = start + pageRows.length >= rows.length;
-}
-function select(group, attr, value) {
-  for (const button of group) button.setAttribute("aria-pressed", String(button.dataset[attr] === value));
-}
-function metadata(row, title) {
-  if (!row) return "";
-  const values = Object.entries(row).filter(([,value]) => value !== "" && value != null).map(([field,value]) =>
-    `<dt>${escapeHtml(field)}</dt><dd class="num">${escapeHtml(field === "in_scope" ? scope(row) : value)}</dd>`).join("");
-  return values ? `<section class="drawer-section"><h3>${title}</h3><dl>${values}</dl></section>` : "";
-}
-function openDetail(item) {
-  const row = item.row;
-  $("detail-kicker").textContent = [row.publication_id, row.result_id || row.issue_id].filter(Boolean).join(" · ");
-  $("detail-title").textContent = row.metric_name || row.title || row.check_name || row.publication_id;
-  const value = [row.metric_value,row.metric_unit].filter(Boolean).join(" ");
-  const raw = [row.raw_value,row.raw_unit && !row.raw_value?.includes(row.raw_unit) ? row.raw_unit : ""].filter(Boolean).join(" ");
-  const origin = row.result_origin === "cited" ? "Цитируемый · Cited" : row.result_origin === "primary" ? "Первичный · Primary" : "";
-  const bounds = row.source_bbox || row.bounding_box || row.source_bounding_box || row.bbox;
-  const location = [row.source_page && `стр. ${row.source_page}`, row.source_table, row.source_figure, row.source_section,
-    bounds && `координаты: ${bounds}`].filter(Boolean).join(" · ");
-  const [state,tone] = stateLabel(item);
-  const source = view === "publications" ? "" : `<section class="drawer-section"><h3>Источник в PDF</h3>
-    <p class="num muted">${escapeHtml(location || "Локатор не указан")}</p>
-    <span class="state ${tone}">${state}</span>${quote(row) ? `<blockquote>${escapeHtml(quote(row))}</blockquote>` : ""}</section>`;
-  const links = item.links?.length ? `<section class="drawer-section"><h3>Связанные замечания (${fmt.format(item.links.length)})</h3>
-    <ul class="issue-list">${item.links.map(({row:issue}) => `<li><strong>${escapeHtml(issue.check_name)}</strong> <span class="muted num">${escapeHtml(issue.issue_id)}</span><br>${escapeHtml(issue.description)}</li>`).join("")}</ul></section>`
-    : view === "results" ? '<section class="drawer-section"><h3>Связанные замечания</h3><p class="muted">Нет записей, привязанных к результату.</p></section>' : "";
-  const relatedTitles = {configurations:"Конфигурация", datasets:"Датасет", tasks:"Задача", experiments:"Эксперимент"};
-  $("detail-body").innerHTML = (value || raw ? `<section class="drawer-section"><h3>Значение метрики</h3>
-    ${origin ? `<p class="state">${origin}</p>` : ""}<dl><dt>Исходное</dt><dd class="num">${escapeHtml(raw || "—")}</dd>
-    <dt>Нормализованное</dt><dd class="num">${escapeHtml(value || "—")}</dd><dt>Baseline</dt><dd class="num">${escapeHtml(row.baseline_value || "—")}</dd></dl></section>` : "")
-    + source + links + metadata(row, "Метаданные")
-    + Object.entries(item.related || {}).map(([table, entity]) => metadata(entity, relatedTitles[table])).join("");
-  dialog.showModal();
-}
-for (const button of tabs) button.addEventListener("click", () => {
-  view = button.dataset.tab; select(tabs, "tab", view); page = 0; render();
-});
-for (const button of pills) button.addEventListener("click", () => {
-  filter = button.dataset.filter; select(pills, "filter", filter); page = 0; render();
-});
-for (const id of ["q","paper","rule","compare-group"]) $(id).addEventListener("input", () => { page = 0; render(); });
-$("compare").addEventListener("click", () => {
-  comparing = !comparing; $("compare").setAttribute("aria-pressed", String(comparing)); page = 0; render();
-});
-$("prev").addEventListener("click", () => { page--; render(); });
-$("next").addEventListener("click", () => { page++; render(); });
-grid.tBodies[0].addEventListener("click", event => {
-  const row = event.target.closest("tr[data-row]");
-  if (row) openDetail(pageRows[Number(row.dataset.row)]);
-});
-dialog.addEventListener("click", event => { if (event.target === dialog && event.clientX < dialog.getBoundingClientRect().left) dialog.close(); });
-$("theme").addEventListener("click", () => {
-  const dark = document.documentElement.dataset.theme !== "dark";
-  document.documentElement.dataset.theme = dark ? "dark" : "light";
-  $("theme").setAttribute("aria-pressed", String(dark));
-  $("theme").textContent = dark ? "Светлая тема" : "Тёмная тема";
-});
-$("folder").addEventListener("click", () => $("files").click());
-$("files").addEventListener("change", () => {
-  const files = new Map([...$("files").files].filter(file => file.webkitRelativePath.split("/").length <= 2).map(file => [file.name,file]));
-  if (!files.size) return;
-  const label = [...files.values()][0].webkitRelativePath.split("/")[0] || "Локальный пакет";
-  loadBundle(name => {
-    const file = files.get(name);
-    if (!file) throw new Error("");
-    return file.text();
-  }, label);
-});
-render();
-if (location.protocol === "file:") $("bundle").textContent = "Откройте локальный пакет CSV";
-else loadBundle(async name => {
-  const response = await fetch("data/" + name, {cache:"no-store"});
-  if (!response.ok) throw new Error("");
-  return response.text();
-}, "Корпус публикаций");
-</script>
+<script src="atlas.js"></script>
 </body>
 </html>

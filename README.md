@@ -27,10 +27,10 @@ python -m pytest tests/test_core.py tests/test_schemas.py
 python main.py --input dev --cache out_dev_recovery/cache --output out_dev_rebuild --rebuild-csv-only
 python tools/check_submission.py out_dev_rebuild dev --json-report out_dev_rebuild/validation.json
 python scripts/evaluate.py out_dev_rebuild dev_gold --show-diffs 0
-python scripts/serve_ui.py out_jury_deepseek_v1/csv
+python scripts/serve_ui.py --rag out_jury_deepseek_v1/csv --solar out_solar_dev
 ```
 
-Откройте [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Ищите по статье, датасету, модели или метрике. Нажатие строки открывает источник, метаданные и связанные замечания. Проверенные цитаты определяются по `validation.json` из команды выше. Пакет из семи CSV также открывается напрямую в `app/index.html`; без отчёта цитаты доступны со статусом «Не проверен». Список публикаций показывает статус «Не обработана» для статей, по которым ещё нет решения.
+Откройте [http://127.0.0.1:8000/](http://127.0.0.1:8000/) и переключайте области в шапке. Путь для каждой области — отдельный каталог с семью CSV. Если Solar ещё не скопирован, запустите сервер только с `--rag` и подключите папку Solar через «Открыть CSV», когда она появится. Нажатие на результат открывает карточку «Путь одного числа». Статус цитаты берётся из `validation.json` рядом с CSV и привязан к той же записи, странице и тексту. Без отчёта цитаты остаются доступны без отметки подтверждения.
 
 Сначала используйте пересборку из существующего `cache/`: она не обращается к API. При необходимости повторите обработку только проблемных документов. Например, для одной статьи:
 
