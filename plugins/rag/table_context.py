@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from itertools import pairwise
 from decimal import Decimal
 from functools import lru_cache
 import re
@@ -307,10 +308,25 @@ def _aggregate_cells(lines, metrics):
     return {key: labels[0] for key, labels in indexed.items() if len(labels) == 1 and labels[0]}
 
 
-def link_aggregates(rows, table_layout, pages_norm, datasets) -> None:
-    """Link reported aggregate columns without treating the value as an individual corpus."""
+def _verified_table_value(row, pages_norm):
     from plugins.rag.exporter import norm
 
+    if row["result_origin"] != "primary" or row["extraction_status"] != "extracted":
+        return None
+    key, raw, quote = _source_key(row), row["raw_value"], norm(row["source_fragment"])
+    if not key or not quote or not NUMBER.fullmatch(raw) or not key[0].isdigit():
+        return None
+    page = int(key[0])
+    if not 1 <= page <= len(pages_norm) or quote not in pages_norm[page - 1]:
+        return None
+    literal = number(raw)
+    if literal not in {number(match[0]) for match in NUMBER.finditer(quote)}:
+        return None
+    return (*key, literal)
+
+
+def link_aggregates(rows, table_layout, pages_norm, datasets) -> None:
+    """Link reported aggregate columns without treating the value as an individual corpus."""
     metrics = defaultdict(set)
     for row in rows:
         if key := _source_key(row):
@@ -321,14 +337,9 @@ def link_aggregates(rows, table_layout, pages_norm, datasets) -> None:
     scoped = {}
     next_id = 1
     for row in rows:
-        if row["dataset_id"] or row["result_origin"] != "primary" or row["extraction_status"] != "extracted":
+        if row["dataset_id"] or not (key := _verified_table_value(row, pages_norm)):
             continue
-        key, raw, quote = _source_key(row), row["raw_value"], norm(row["source_fragment"])
-        if (not key or not NUMBER.fullmatch(raw) or not quote or not 1 <= int(key[0]) <= len(pages_norm)
-                or quote not in pages_norm[int(key[0]) - 1]
-                or number(raw) not in {number(match[0]) for match in NUMBER.finditer(quote)}):
-            continue
-        heading = cells.get((*key, number(raw)))
+        heading = cells.get(key)
         if not heading:
             continue
         scope = (*key[:2], heading)
@@ -342,6 +353,147 @@ def link_aggregates(rows, table_layout, pages_norm, datasets) -> None:
                                  dataset_name=heading, dataset_version="",
                                  note=f"Printed aggregate column, PDF page {key[0]}, Table {key[1]}."))
         row["dataset_id"] = scoped[scope]
+
+
+def _compact_name(name):
+    return "".join(character for character in name.casefold() if character.isalnum())
+
+
+def _cycle_datasets(body, anchors, metric_names, dataset_ids):
+    """Identify merged dataset labels from repeated, complete metric row cycles."""
+    metric_rows = []
+    for row in body:
+        metrics = [{label(token.text) for token in row if abs(token.left - left) <= 1.5} for left in anchors]
+        if all(len(names) == 1 and names <= metric_names for names in metrics):
+            metric_rows.append((row[0].baseline, tuple(next(iter(names)) for names in metrics)))
+    if not metric_rows:
+        return {}
+    first = metric_rows[0][1]
+    starts = [i for i, (_, names) in enumerate(metric_rows) if names == first]
+    groups = [metric_rows[start:end] for start, end in pairwise([*starts, len(metric_rows)])]
+    if len(groups) < 2 or len(groups[0]) < 2:
+        return {}
+    sequence = [names for _, names in groups[0]]
+    scopes = {}
+    for group in groups:
+        if [names for _, names in group] != sequence:
+            continue
+        start, stop = group[0][0], group[-1][0]
+        printed = " ".join(token.text for row in body if start <= row[0].baseline <= stop
+                           for token in row if token.right < anchors[0] - 1)
+        if dataset_id := dataset_ids.get(_compact_name(printed)):
+            scopes.update((y, dataset_id) for y, _ in group)
+    return scopes
+
+
+def _table_scheme_cells(lines, tokens, metric_names, dataset_ids):
+    """Index cells under explicit Scheme groups in a joint model/scheme table."""
+    visual = _visual_rows(tokens)
+    starts = [(row[0].baseline, match[1].casefold()) for row in _visual_rows(lines)
+              if (match := CAPTION.match(row[0].text.strip()))]
+    indexed = defaultdict(set)
+    for (begin, table), (end, _) in pairwise([*starts, (float("inf"), "")]):
+        if sum(name == table for _, name in starts) != 1:
+            continue
+        region = [row for row in visual if begin < row[0].baseline < end]
+        for i, row in enumerate(region[:8]):
+            anchors = [token.left for token in row if label(token.text) == "metrics"]
+            if len(anchors) >= 2 and 0 < i < len(region) - 2:
+                break
+        else:
+            continue
+        upper = [token for heading in region[max(0, i - 2):i] for token in heading]
+        headings = region[i + 1]
+        groups = []
+        for left, right in pairwise([*anchors, float("inf")]):
+            roles = {label(token.text) for token in upper if left + 3 < token.left < right}
+            names = [token for token in headings if left + 3 < token.left < right]
+            groups.append((left, right, roles, names))
+        if not any(roles & {"llm", "model", "generator"} for _, _, roles, _ in groups):
+            continue
+        body_rows = region[i + 2:]
+        datasets = _cycle_datasets(body_rows, anchors, metric_names, dataset_ids)
+        for body in body_rows:
+            for left, right, roles, names in groups:
+                column = [token for token in body if left - 1 <= token.left < right - 1]
+                if not column or abs(column[0].left - left) > 3:
+                    continue
+                metric = label(column[0].text)
+                data = column[1:]
+                if metric not in metric_names or len(data) != len(names):
+                    continue
+                scheme = bool("scheme" in roles and not roles & {"llm", "model", "generator"})
+                for token, name in zip(data, names):
+                    raw = token.text
+                    if not NUMBER.fullmatch(raw):
+                        continue
+                    # Marker and heading centers must share the same physical column.
+                    same_column = abs((token.left + token.right - name.left - name.right) / 2) <= 10
+                    candidate = name.text if scheme and same_column else ""
+                    indexed[table, metric, number(raw)].add((candidate, datasets.get(body[0].baseline, "")))
+    return indexed
+
+
+def link_table_schemes(rows, layout, tokens, pages_norm, configurations, datasets) -> None:
+    """Attach a scheme-only configuration when the metric is in a separate scheme block."""
+    by_page = defaultdict(set)
+    for row in rows:
+        if key := _source_key(row):
+            by_page[key[0]].add(key[2])
+    names_to_datasets = defaultdict(set)
+    for row in datasets:
+        names_to_datasets[_compact_name(row["dataset_name"])].add(row["dataset_id"])
+    dataset_ids = {name: next(iter(ids)) for name, ids in names_to_datasets.items() if name and len(ids) == 1}
+    cells = {(str(page), *key): variants for page, lines in layout.items()
+             if str(page) in by_page and page in tokens
+             for key, variants in _table_scheme_cells(lines, tokens[page], by_page[str(page)], dataset_ids).items()}
+
+    configs = {row["config_id"]: row for row in configurations}
+    printed_names = defaultdict(set)
+    for config in configurations:
+        name = config["rag_variant"]
+        if name:
+            printed_names[_compact_name(name)].add(name)
+    proposals = []
+    for row in rows:
+        if not (key := _verified_table_value(row, pages_norm)):
+            continue
+        candidates = cells.get(key, set())
+        compatible = {(variant, dataset) for variant, dataset in candidates if dataset == row["dataset_id"]}
+        choices = compatible if compatible else candidates
+        variants = {variant for variant, _ in choices}
+        if len(variants) != 1 or "" in variants:
+            continue
+        printed = next(iter(variants))
+        matching_datasets = {dataset for _, dataset in choices}
+        dataset_id = next(iter(matching_datasets)) if len(matching_datasets) == 1 else ""
+        slot = (*key, printed, dataset_id or row["dataset_id"])
+        proposals.append((row, slot))
+    claims = Counter(slot for _, slot in proposals)
+    scoped = {}
+    next_id = 1
+    for row, slot in proposals:
+        if claims[slot] != 1:
+            continue
+        page, table, _, _, printed, dataset_id = slot
+        row["dataset_id"] = dataset_id
+        existing = configs.get(row["config_id"], {})
+        if _compact_name(existing.get("rag_variant", "")) == _compact_name(printed) and not existing.get("generator_model"):
+            continue
+        scope = (page, table, printed)
+        if scope not in scoped:
+            while f"CS{next_id}" in configs:
+                next_id += 1
+            config_id = f"CS{next_id}"
+            variants = printed_names[_compact_name(printed)]
+            name = next(iter(variants)) if len(variants) == 1 else printed
+            config = dict(publication_id=row["publication_id"], config_id=config_id, rag_variant=name,
+                          generator_model="", top_k="",
+                          note=f"Printed scheme column `{printed}`, PDF page {page}, Table {table}.")
+            configs[config_id] = config
+            scoped[scope] = config_id
+            configurations.append(config)
+        row["config_id"] = scoped[scope]
 
 
 RECOVERY_FIELDS = ("experiment_id", "task_id", "metric_name", "metric_group", "metric_variant", "metric_k",

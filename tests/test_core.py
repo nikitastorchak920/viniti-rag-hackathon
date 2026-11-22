@@ -327,6 +327,28 @@ class Linking(unittest.TestCase):
         self.assertEqual([row["dataset_id"] for row in rows], ["DSA1", "", ""])
         self.assertEqual(datasets[0]["dataset_name"], "Average")
 
+    def test_scheme_columns_do_not_inherit_neighboring_model_scope(self):
+        from core.pdf_processor import TextLine
+        from plugins.rag.table_context import link_table_schemes
+
+        layout = {1: [TextLine(10, 140, 1, "Table 1: Interleaved results")]}
+        tokens = {1: [TextLine(x, x + 9, y, text) for x, y, text in [
+            (40, 5, "LLM"), (110, 5, "Scheme"),
+            (20, 10, "Metrics"), (90, 10, "Metrics"),
+            (40, 15, "Acme"), (110, 15, "Dense"), (140, 15, "Sparse"),
+            (20, 20, "Accuracy"), (40, 20, ".95"), (90, 20, "Coverage"), (110, 20, ".50"), (140, 20, ".70"),
+        ]]}
+        base = dict(publication_id="P1", source_page="1", source_table="Table 1", dataset_id="D1",
+                    config_id="C01", result_origin="primary", extraction_status="extracted")
+        rows = [dict(base, metric_name="Coverage", raw_value=".50", source_fragment="Coverage .50"),
+                dict(base, metric_name="Accuracy", raw_value=".95", source_fragment="Accuracy .95"),
+                dict(base, metric_name="Coverage", raw_value=".70", source_fragment="Coverage .70"),
+                dict(base, metric_name="Coverage", raw_value=".70", source_fragment=".70")]
+        configs = [dict(publication_id="P1", config_id="C01", rag_variant="Dense", generator_model="Acme")]
+        link_table_schemes(rows, layout, tokens, ["Coverage .50 Accuracy .95 Coverage .70"], configs, [])
+        self.assertEqual([row["config_id"] for row in rows], ["CS1", "C01", "C01", "C01"])
+        self.assertEqual((configs[-1]["rag_variant"], configs[-1]["generator_model"]), ("Dense", ""))
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]

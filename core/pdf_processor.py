@@ -31,6 +31,7 @@ class PdfInfo:
     used_ocr: bool = False
     layout: dict[int, list[TextLine]] = field(default_factory=dict)
     structured_pages: list[str] | None = None
+    layout_tokens: dict[int, list[TextLine]] = field(default_factory=dict)
 
     @property
     def prompt_pages(self) -> list[str]:
@@ -155,7 +156,7 @@ def _inspect_pdf(path, ocr, *, layout_pages, structured) -> PdfInfo:
     import pymupdf  # lazy: keeps --help / rebuild working without the package
 
     path = pathlib.Path(path)
-    layout = {}
+    layout, layout_tokens = {}, {}
     from core.llm_client import log
 
     with pymupdf.open(path) as doc:
@@ -163,15 +164,23 @@ def _inspect_pdf(path, ocr, *, layout_pages, structured) -> PdfInfo:
         if layout_pages:
             for number in sorted(layout_pages & set(range(1, len(doc) + 1))):
                 flags = pymupdf.TEXTFLAGS_DICT & ~pymupdf.TEXT_PRESERVE_IMAGES
-                blocks = doc[number - 1].get_text("dict", flags=flags)["blocks"]
-                lines = []
+                blocks = doc[number - 1].get_text("rawdict", flags=flags)["blocks"]
+                lines, tokens = [], []
                 for block in blocks:
                     for line in block.get("lines", []):
                         spans = line["spans"]
                         if spans and line["dir"][0] > 0.99:
                             left, _, right, _ = line["bbox"]
-                            lines.append(TextLine(left, right, spans[0]["origin"][1], "".join(s["text"] for s in spans)))
+                            chars = [char for span in spans for char in span["chars"]]
+                            text = "".join(char["c"] for char in chars)
+                            lines.append(TextLine(left, right, spans[0]["origin"][1], text))
+                            for match in re.finditer(r"[^\s↑↓]+", text):
+                                start, stop = match.span()
+                                first, last = chars[start], chars[stop - 1]
+                                tokens.append(TextLine(first["bbox"][0], last["bbox"][2],
+                                                       first["origin"][1], match[0]))
                 layout[number] = lines
+                layout_tokens[number] = tokens
         short_pages = [i for i, text in enumerate(pages) if len(text.strip()) < MIN_CHARS_PER_TEXT_PAGE]
         ocr_pages: set[int] = set()
         if ocr and short_pages:
@@ -202,4 +211,4 @@ def _inspect_pdf(path, ocr, *, layout_pages, structured) -> PdfInfo:
             except Exception as exc:  # noqa: BLE001
                 log(f"  [{path.stem}] WARN: structured PDF parsing failed; using raw page text ({exc})")
     return PdfInfo(path=path, n_pages=len(pages), pages=pages, is_scan=is_scan, used_ocr=bool(ocr_pages),
-                   layout=layout, structured_pages=markdown)
+                   layout=layout, structured_pages=markdown, layout_tokens=layout_tokens)

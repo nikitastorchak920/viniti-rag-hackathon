@@ -181,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
                 cache["meta"] = dict(meta, issues=[*meta.get("issues", []), marker])
             pages_norm = None
             table_layout = None
+            layout_tokens = None
             plot_rows = []
             if a.ocr and cache.get("ocr"):
                 from core.ocr import ocr_pages
@@ -199,6 +200,7 @@ def main(argv: list[str] | None = None) -> int:
                     info = inspect_pdf(pdf, layout_pages=table_pages)
                     pages_norm = [exporter.norm(t) for t in info.pages]
                     table_layout = info.layout
+                    layout_tokens = info.layout_tokens
                 except Exception as exc:  # noqa: BLE001
                     log(f"  {pdf.stem}: WARN quote check skipped ({exc})")
                 if a.recover_plot_points and pages_norm is not None and cache.get("meta", {}).get("publication", {}).get("in_scope"):
@@ -212,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
                         log(f"  {pdf.stem}: WARN plot recovery skipped ({exc})")
             try:
                 doc = exporter.build_doc(pdf.stem, cache, pages_norm, log, table_layout=table_layout,
+                                         layout_tokens=layout_tokens,
                                          recover_table_cells=a.recover_table_cells, plot_rows=plot_rows)
             except Exception as exc:  # noqa: BLE001
                 log(f"{pdf.stem}: FAIL - export error {type(exc).__name__}: {exc}")

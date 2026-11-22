@@ -485,7 +485,7 @@ def _fill_ids(rows: list[dict], out: dict, captions=None, row_captions=None, pag
 
 
 def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, table_layout=None,
-              recover_table_cells: bool = False, plot_rows=()) -> dict[str, list[dict]]:
+              layout_tokens=None, recover_table_cells: bool = False, plot_rows=()) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {t: [] for t in TABLES}
     fields = columns()
     meta = cache["meta"]
@@ -764,9 +764,11 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
               native_captions(table_layout or {}), row_captions, pages_norm, model_aliases)
     if table_layout and pages_norm:
-        from plugins.rag.table_context import link_aggregates
+        from plugins.rag.table_context import link_aggregates, link_table_schemes
 
         link_aggregates(rows, table_layout, pages_norm, out["datasets"])
+        if layout_tokens:
+            link_table_schemes(rows, table_layout, layout_tokens, pages_norm, out["configurations"], out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
     _compact_named_parameters(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
