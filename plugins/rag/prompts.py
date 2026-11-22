@@ -142,7 +142,7 @@ def compact_passport_format() -> str:
         "Include at least the first two fields (three for configurations, with an empty string "
         "for an absent generator). Omit empty trailing positions, keep empty interior slots, "
         "and keep entity notes short. Keep publication and table_scopes in their object schema. "
-        "Example: \"datasets\": [[\"DS1\",\"Corpus A\"]].\n"
-        + "\n".join(f"{key}: {', '.join(passport_fields(model, first))}"
+        "Example: \"configurations\": [[\"C1\",\"Baseline\",\"\"]], \"datasets\": [[\"DS1\",\"Corpus A\"]].\n"
+        + "\n".join(f"{key} ({len(first)} to {len(model.model_fields)} positions): {', '.join(passport_fields(model, first))}"
                     for key, (model, first) in PASSPORT_ENTITIES.items())
     )

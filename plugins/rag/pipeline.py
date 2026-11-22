@@ -5,12 +5,16 @@ import pathlib
 import re
 import time
 
-from core.llm_client import GeminiClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
+from core.llm_client import DeepSeekClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
 from core.pdf_processor import inspect_pdf
 from plugins.rag.prompts import (META_USER, RESULT_SYSTEM, SYSTEM, compact_passport_format,
                                  compact_result_format, verify_user, window_user)
 
 CACHE_VERSION = 2
+
+
+class SchemaResponseError(LLMError):
+    """Repeated JSON responses failed the wire schema."""
 
 
 def _gen(client, contents, schema, tag: str) -> dict:
@@ -35,7 +39,7 @@ def _gen(client, contents, schema, tag: str) -> dict:
             errors = exc.errors() if isinstance(exc, ValidationError) else []
             last = str(exc).splitlines()[0][:200] + " " + (str(errors[0].get("loc")) if errors else "")
             log(f"  [{tag}] schema validation failed ({last}); retrying")
-    raise LLMError(f"model output failed schema validation 3x: {last}")
+    raise SchemaResponseError(f"model output failed schema validation 3x: {last}")
 
 
 def _result_schema(client):
@@ -215,8 +219,8 @@ def verify_pass(pdf: pathlib.Path, client, cache_dir: pathlib.Path, max_pages: i
     return True, f"verified {len(todo)} pages, +{added} rows"
 
 
-def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: pathlib.Path, force: bool,
-                     window: int, pdf_mode: str, skip_scans: bool = False, ocr: bool = False) -> tuple[bool | None, str]:
+def process_document(pdf: pathlib.Path, client: DeepSeekClient | None, cache_dir: pathlib.Path, force: bool,
+                     window: int, skip_scans: bool = False, ocr: bool = False) -> tuple[bool | None, str]:
     """Return (ok, message). Only successful model responses are cached; a document is
     'complete' only when the meta pass and every page window succeeded."""
     doc_id = pdf.stem
@@ -226,15 +230,14 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         cache = {}
     if cache.get("complete"):
         return True, "cached"
-    wants_text = pdf_mode != "pdf" or getattr(client, "text_only", False)
     cached_window = cache.get("window")
-    legacy_text = (wants_text and cache.get("mode") == "text" and not cache.get("ocr")
+    legacy_text = (cache.get("mode") == "text" and not cache.get("ocr")
                    and cache.get("text_format", "plain") == "plain"
                    and cache.get("result_plan", "page-v1") == "page-v1"
                    and isinstance(cache.get("meta"), dict)
                    and isinstance(cached_window, int) and cached_window > 0 and bool(cache.get("windows")))
     try:
-        info = inspect_pdf(pdf, ocr=ocr and wants_text, structured=wants_text and not legacy_text)
+        info = inspect_pdf(pdf, ocr=ocr, structured=not legacy_text)
     except Exception as exc:  # noqa: BLE001
         return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
     if info.n_pages == 0:
@@ -242,56 +245,48 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
     if info.is_scan and skip_scans:
         return None, "SKIPPED_SCAN (insufficient page text)"
     if client is None:
-        return False, "GEMINI_API_KEY not set and no complete cache"
-    use_pdf = pdf_mode == "pdf" or (pdf_mode == "auto" and info.is_scan)
-    if getattr(client, "text_only", False):  # DeepSeek: no multimodal input
-        if info.is_scan:
-            return None, "SKIPPED_SCAN (insufficient page text for the text-only backend)"
-        use_pdf = False
-    if not use_pdf and info.is_scan:
-        return False, "no text layer and --pdf-mode text forbids multimodal upload"
-    if legacy_text and (use_pdf or info.used_ocr or cache.get("n_pages") != info.n_pages):
+        return False, "DEEPSEEK_API_KEY not set and no complete cache"
+    if info.is_scan:
+        return None, "SKIPPED_SCAN (insufficient page text for DeepSeek; review OCR)"
+    if legacy_text and (info.used_ocr or cache.get("n_pages") != info.n_pages):
         return False, "legacy page cache no longer matches the PDF; use an isolated cache for a fresh extraction"
     if legacy_text:
         window = cached_window
         log(f"  [{doc_id}] resuming {len(cache['windows'])} saved windows with the original plain-text plan")
-    mode = "pdf" if use_pdf else "text"
-    used_ocr = info.used_ocr and not use_pdf
+    used_ocr = info.used_ocr
     text_format = "markdown-v1" if info.structured_pages is not None else "plain"
     if used_ocr:
         text_format = "markdown-rapidocr-v1" if info.structured_pages is not None else "rapidocr-v1"
-    if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != mode
-                  or (mode == "text" and (bool(cache.get("ocr")) != used_ocr
-                                          or cache.get("text_format", "plain") != text_format))):
+    if cache and (cache.get("n_pages") != info.n_pages or cache.get("mode") != "text"
+                  or bool(cache.get("ocr")) != used_ocr or cache.get("text_format", "plain") != text_format):
         cache = {}
-    result_plan = "page-v1" if use_pdf or legacy_text else "table-v1"
+    result_plan = "page-v1" if legacy_text else "table-v1"
     if (cache.get("result_plan", "page-v1"), cache.get("window", window)) != (result_plan, window):
         cache.pop("windows", None)
         cache.pop("table_splits", None)
     cache.update(version=CACHE_VERSION, n_pages=info.n_pages, is_scan=info.is_scan, ocr=used_ocr,
-                 mode=mode, window=window, result_plan=result_plan,
+                 mode="text", window=window, result_plan=result_plan, text_format=text_format,
                  windows=cache.get("windows", {}), complete=False)
-    if mode == "text":
-        cache["text_format"] = text_format
     from plugins.rag.schemas import CompactPassport, Passport  # lazy: needs pydantic
 
-    uploaded = None
     try:
-        if use_pdf:
-            log(f"  [{doc_id}] scan/multimodal mode: uploading PDF")
-            uploaded = client.upload_pdf(pdf, tag=doc_id)
-        elif used_ocr:
+        if used_ocr:
             log(f"  [{doc_id}] OCR text mode")
 
         def contents(prompt: str, first: int, last: int, text: str | None = None) -> list:
-            if use_pdf:
-                return [uploaded, prompt]
             return ["PAPER TEXT (page markers are PDF page numbers):\n\n" + (text if text is not None else info.marked_text(first, last)), prompt]
 
         if "meta" not in cache:
             log(f"  [{doc_id}] meta pass ({info.n_pages} pages)")
             schema = CompactPassport if getattr(client, "compact_results", False) is True else Passport
-            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), schema, doc_id)
+            source = contents(META_USER, 1, info.n_pages, None)
+            try:
+                cache["meta"] = _gen(client, source, schema, doc_id)
+            except SchemaResponseError:
+                if schema is not CompactPassport:
+                    raise
+                log(f"  [{doc_id}] compact passport rejected; retrying with named fields")
+                cache["meta"] = _gen(client, source, Passport, doc_id)
             save_cache(cache_dir, doc_id, cache)
         in_scope = cache["meta"]["publication"].get("in_scope")
         if in_scope:
@@ -299,7 +294,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
             if legacy_text:
                 page_text = lambda page: info.pages[page - 1]
                 text_contents = contents
-            elif not use_pdf:
+            else:
                 from plugins.rag.table_windows import plan
 
                 tables, residual = plan(info.prompt_pages)
@@ -324,8 +319,6 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                     if text is None:
                         text = "\n\n".join(f"--- PAGE {p} ---\n{page_text(p)}" for p in range(first, last + 1))
                     return contents(prompt, first, last, text)
-            else:
-                text_contents = contents
             for first in range(1, info.n_pages + 1, window):
                 last = min(first + window - 1, info.n_pages)
                 key = f"{first}-{last}"
@@ -341,16 +334,13 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
             return True, f"out of scope ({reason}), {time.time() - t0:.0f}s"
         n = sum(len(w.get("results", [])) for w in cache["windows"].values())
         if not n:
-            source = "OCR text" if used_ocr else mode
+            source = "OCR text" if used_ocr else "text"
             log(f"  [{doc_id}] WARN: in-scope publication yielded 0 raw result rows in {source} mode; review extraction")
         return True, f"{n} raw result rows, {time.time() - t0:.0f}s"
     except LLMError as exc:
         return False, f"{exc} (progress kept in cache; rerun to resume)"
     except Exception as exc:  # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc} (progress kept in cache; rerun to resume)"
-    finally:
-        if uploaded is not None:
-            client.delete_file(uploaded)
 
 
 def run_documents(pdfs: list[pathlib.Path], fn, workers: int) -> list[tuple[str, bool | None, str]]:

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import re
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import ConfigDict, create_model, field_validator
+from pydantic import ConfigDict, Field, create_model, field_validator
 
 from domains.base_schema import ContractModel, ExtractionStatus, ResultOrigin
 from domains.rag.schema import MetricDirection
@@ -102,13 +102,19 @@ def passport_fields(model, first):
     return (*first, *(field for field in model.model_fields if field not in first))
 
 
+def passport_rows(key):
+    model, first = PASSPORT_ENTITIES[key]
+    row = Annotated[list[str | int | float | None], Field(min_length=len(first), max_length=len(model.model_fields))]
+    return list[row]
+
+
 class CompactPassport(WireModel):
     publication: Publication
-    configurations: list[list[str | int | float | None]]
-    datasets: list[list[str | int | float | None]]
-    tasks: list[list[str | int | float | None]]
-    experiments: list[list[str | int | float | None]]
-    issues: list[list[str | int | float | None]]
+    configurations: passport_rows("configurations")
+    datasets: passport_rows("datasets")
+    tasks: passport_rows("tasks")
+    experiments: passport_rows("experiments")
+    issues: passport_rows("issues")
     table_scopes: list[TableScope]
 
     def expanded(self) -> dict:
@@ -117,8 +123,6 @@ class CompactPassport(WireModel):
             fields = passport_fields(model, first)
             items = []
             for row in output[key]:
-                if not len(first) <= len(row) <= len(fields):
-                    raise ValueError(f"{key}: expected {len(first)} to {len(fields)} positions")
                 values = dict.fromkeys(fields, "")
                 if model is MetaIssue:
                     values["source_page"] = 0

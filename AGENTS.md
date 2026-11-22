@@ -2,7 +2,7 @@
 
 ## Priority and ownership
 
-Codex owns the Strict F1 work. The operator reactivated Antigravity for independent tasks through the handoff queue. Previously suspended entries stay suspended unless explicitly reactivated.
+Codex owns the jury demo checkpoint and subsequent Strict F1 work. Keep both handoff files read-only until the operator reopens the queue.
 
 1. Deliver and sign off on a jury-ready MVP before optimizing strict F1.
 2. **OpenAI Codex, Thunderobot 911 laptop** owns code in `core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/` and the pipeline entry point, plus architecture reviews, pytest, the roadmap, and Git checkpoints. It can inspect PDFs and run local tools, OCR, and cache rebuilds where inputs are available.
@@ -40,6 +40,8 @@ Use this protocol for explicitly authorized handoffs. Architecture notes belong 
 
 ## Token economy and data safety
 
+- Use DeepSeek as the sole live extraction backend through `DEEPSEEK_API_KEY`. Run local RapidOCR for pages without sufficient text. Keep the jury demonstration independent of network and API availability by showing the verified dev CSV bundle.
+- Keep the verified demo tag and matching local data snapshot fixed while experimenting. Use separate cache and output directories for trials. Record the tag, validation evidence, artifact paths and recovery command in `TODO.md`.
 - Always test parser, exporter, and UI changes using `main.py --rebuild-csv-only` against the existing `cache/` before asking for live extraction. This spends zero API tokens. Run `python -m pytest tests/test_core.py` for code changes.
 - Live dev retries must target identified failing or low-F1 papers using `--only`. Use `--force` only for affected IDs whose completed cache must be replaced. Resume partial extractions before forcing a restart. The first full extraction on the 90-paper `test/` split requires Phase 1 sign-off and operator approval. Resume test failures by ID.
 - Preserve raw per-document cache version 2 and offline rebuild compatibility. Keep the seven CSVs conformant to `submission_template/schema.json`. Use an empty string for missing source evidence. Never guess.

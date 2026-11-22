@@ -1,5 +1,5 @@
 """Local rule-based fallback (no API): PyMuPDF words + regex. Finds numeric table rows,
-maps them to header cells, builds the same cache format as the Gemini pipeline so that
+maps them to header cells, builds the same cache format as the DeepSeek pipeline so that
 exporter / check_submission / evaluate work unchanged. Image-only PDFs are skipped.
 Heuristic and lossy: meant for validating the pipeline on a tiny VPS, not for submission."""
 from __future__ import annotations

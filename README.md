@@ -1,6 +1,6 @@
 # RAG · извлечение данных из научных PDF
 
-Пайплайн извлекает измеренные результаты через Gemini или DeepSeek, хранит ответы в `cache/<id>.json` версии 2 и экспортирует семь связанных CSV. В локальном корпусе 111 статей: 21 в `dev/` и 90 в `test/`. Правила и метрики проверяются на `dev/`. Полный прогон извлечения на `test/` требует приёмки MVP и подтверждения оператора. План и критерии демонстрации — в [TODO.md](TODO.md).
+Пайплайн извлекает результаты из научных PDF через DeepSeek, хранит ответы в `cache/<id>.json` версии 2 и экспортирует семь связанных CSV. В локальном корпусе 111 статей: 21 в `dev/` и 90 в `test/`. Правила и метрики проверяются на `dev/`. Полный прогон извлечения на `test/` требует приёмки MVP и подтверждения оператора. Для показа используйте [сценарий демонстрации](DEMO.md).
 
 ## Работа на двух ноутбуках
 
@@ -15,21 +15,19 @@ git pull --ff-only origin main
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt -r tools/requirements.txt pytest
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-На Linux активируйте окружение через `source venv/bin/activate`. Режим `--ocr` использует локальный RapidOCR из зависимостей проекта. Для API настройте в локальном `.env` ключ `GEMINI_API_KEY` (также подходит `GOOGLE_API_KEY`) или `DEEPSEEK_API_KEY`. Модели, таймауты и число повторов настраиваются через `.env.example`. Ключи, PDF, кэш и результаты остаются вне Git.
-
-**Приоритетный резерв для прогона жури на 90 статьях** — Gemini с собственным `GEMINI_API_KEY` жури. Без `HTTPS_PROXY` SDK соединяется с Google напрямую. Если сеть жури требует прокси, задайте `HTTPS_PROXY` в окружении процесса. Перед полным прогоном проверьте один разрешённый PDF в той же среде.
+На Linux активируйте окружение через `source venv/bin/activate`. Для живого извлечения задайте `DEEPSEEK_API_KEY` в окружении или локальном `.env`. При необходимости укажите адрес шлюза, модель и лимит ответа по `.env.example`. Для пересборки из кэша и просмотра CSV ключ не нужен. Ключи, PDF, кэш и результаты остаются вне Git.
 
 ## Проверка и демонстрация
 
 ```powershell
-python -m pytest tests/test_core.py
-python main.py --input dev --output out_dev --rebuild-csv-only --ocr
-python tools/check_submission.py out_dev dev --ocr --json-report out_dev/validation.json
-python scripts/evaluate.py out_dev dev_gold --show-diffs 20
-python scripts/serve_ui.py out_dev
+python -m pytest tests/test_core.py tests/test_schemas.py
+python main.py --input dev --cache out_dev_recovery/cache --output out_dev_rebuild --rebuild-csv-only
+python tools/check_submission.py out_dev_rebuild dev --json-report out_dev_rebuild/validation.json
+python scripts/evaluate.py out_dev_rebuild dev_gold --show-diffs 0
+python scripts/serve_ui.py out_jury_deepseek_v1/csv
 ```
 
 Откройте [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Ищите по статье, датасету, модели или метрике. Нажатие строки открывает источник, метаданные и связанные замечания. Проверенные цитаты определяются по `validation.json` из команды выше. Пакет из семи CSV также открывается напрямую в `app/index.html`; без отчёта цитаты доступны со статусом «Не проверен». Список публикаций показывает статус «Не обработана» для статей, по которым ещё нет решения.
@@ -37,10 +35,10 @@ python scripts/serve_ui.py out_dev
 Сначала используйте пересборку из существующего `cache/`: она не обращается к API. При необходимости повторите обработку только проблемных документов. Например, для одной статьи:
 
 ```powershell
-python main.py --input dev --output out_dev_retry --only D021 --ocr --workers 1
+python main.py --input dev --cache out_dev_retry/cache --output out_dev_retry/csv --only D021 --ocr --workers 1
 ```
 
-`--force` используйте для выбранных ID только при замене завершённого кэша. Вход для текстовой модели — Markdown с номерами PDF-страниц и HTML-разметкой таблиц. На страницах с недостаточным текстовым слоем `--ocr` добавляет распознанный текст с координатами. Gemini в режиме `auto` читает PDF, если OCR недоступен или его текст недостаточен. DeepSeek принимает текст и сообщает `SKIPPED_SCAN`, если его недостаточно. После выборочного запуска пересоберите полный `out_dev/`.
+`--force` используйте для выбранных ID только при замене завершённого кэша. DeepSeek получает текст с номерами PDF-страниц и HTML-разметкой таблиц. Для сканов используйте `--ocr`: RapidOCR распознаёт текст локально. Если после OCR текста недостаточно, документ получает статус `SKIPPED_SCAN` в журнале и остаётся не обработанным в выгрузке. После выборочного запуска пересоберите полный пакет.
 
 `main.py` возвращает 1 при неполной обработке. Когда есть успешно обработанные документы, частичный пакет содержит явные заглушки для остальных. `check_submission.py` возвращает 0 при чистой проверке, 1 при структурных ошибках, 2 при открытых замечаниях. Описание таблиц, нормализации и статистика — в [DATASET_PASSPORT.md](DATASET_PASSPORT.md).
 

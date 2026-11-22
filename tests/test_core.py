@@ -604,7 +604,7 @@ class Pipeline(unittest.TestCase):
             with patch.object(pipeline, "inspect_pdf", return_value=info) as inspect, \
                     patch.object(pipeline, "_window", return_value={"results": []}) as extract, \
                     patch.object(pipeline, "_gen") as generate:
-                self.assertTrue(pipeline.process_document(pdf, Mock(text_only=True), root, False, 3, "auto")[0])
+                self.assertTrue(pipeline.process_document(pdf, Mock(), root, False, 3)[0])
             inspect.assert_called_once_with(pdf, ocr=False, structured=False)
             generate.assert_not_called()
             self.assertEqual(extract.call_args.args[3:5], (3, 3))
@@ -753,6 +753,22 @@ class EntityPassport(unittest.TestCase):
         self.assertEqual(result["configurations"][0]["top_k"], "")
         self.assertEqual(result["issues"][0]["source_page"], 2)
 
+    def test_deepseek_uses_named_passport_when_compact_responses_fail_validation(self):
+        from plugins.rag.schemas import CompactPassport, Passport
+
+        limits = CompactPassport.model_json_schema()["properties"]["configurations"]["items"]
+        self.assertEqual(limits["minItems"], 3)
+        pdf = pathlib.Path("P1.pdf")
+        info = pdf_processor.PdfInfo(pdf, 1, [TEXT], is_scan=False)
+        meta = make_cache([], in_scope=False)["meta"]
+        with tempfile.TemporaryDirectory() as tmp, patch.object(pipeline, "inspect_pdf", return_value=info), \
+                patch.object(pipeline, "_gen", side_effect=[pipeline.SchemaResponseError("invalid"), meta]) as generate:
+            cache_dir = pathlib.Path(tmp)
+            ok, _ = pipeline.process_document(pdf, Mock(compact_results=True), cache_dir, False, 3)
+            self.assertTrue(ok)
+            self.assertEqual(llm_client.load_cache(cache_dir, pdf.stem)["meta"], meta)
+        self.assertEqual([call.args[2] for call in generate.call_args_list], [CompactPassport, Passport])
+
     def test_cutoff_requires_same_page_and_table_with_literal_evidence(self):
         scope = {"source_page": 1, "source_table": "Table 1", "metric_cutoffs": [
             {"metric_name": "Recall", "metric_k": "5", "source_fragment": "Recall@5"},
@@ -894,18 +910,18 @@ class OcrFallback(unittest.TestCase):
                     self.assertIn(warning, log.call_args.args[0])
 
     def test_backend_mode_and_zero_rows_warning(self):
-        for text_only, used_ocr in [(False, False), (False, True), (True, False), (True, True)]:
-            with self.subTest(text_only=text_only, used_ocr=used_ocr), tempfile.TemporaryDirectory() as tmp:
+        for used_ocr in (False, True):
+            with self.subTest(used_ocr=used_ocr), tempfile.TemporaryDirectory() as tmp:
                 info = pdf_processor.PdfInfo(self.pdf, 1, [self.recognized if used_ocr else ""],
                                              is_scan=not used_ocr, used_ocr=used_ocr)
-                client = Mock(text_only=text_only)
+                client = Mock()
                 meta = make_cache([])["meta"]
                 cache_dir = pathlib.Path(tmp)
                 with patch.object(pipeline, "inspect_pdf", return_value=info), \
                         patch.object(pipeline, "_gen", side_effect=[meta, {"results": []}]) as generate, \
                         patch.object(pipeline, "log") as log:
-                    ok, message = pipeline.process_document(self.pdf, client, cache_dir, False, 3, "auto", ocr=True)
-                if text_only and not used_ocr:
+                    ok, message = pipeline.process_document(self.pdf, client, cache_dir, False, 3, ocr=True)
+                if not used_ocr:
                     self.assertIsNone(ok)
                     self.assertIn("SKIPPED_SCAN", message)
                     generate.assert_not_called()
@@ -913,15 +929,10 @@ class OcrFallback(unittest.TestCase):
                     self.assertTrue(ok)
                     cache = llm_client.load_cache(cache_dir, self.pdf.stem)
                     self.assertEqual((cache["version"], cache["mode"], cache["ocr"]),
-                                     (2, "text" if used_ocr else "pdf", used_ocr))
+                                     (2, "text", True))
                     first_input = generate.call_args_list[0].args[1][0]
-                    if used_ocr:
-                        self.assertIn(self.recognized, first_input)
-                    else:
-                        self.assertIs(first_input, client.upload_pdf.return_value)
-                        client.delete_file.assert_called_once_with(first_input)
+                    self.assertIn(self.recognized, first_input)
                     self.assertTrue(any("WARN: in-scope publication yielded 0" in c.args[0] for c in log.call_args_list))
-                self.assertEqual(client.upload_pdf.call_count, int(not text_only and not used_ocr))
 
 
 class NetworkRetries(unittest.TestCase):
@@ -946,26 +957,25 @@ class NetworkRetries(unittest.TestCase):
             self.assertEqual(client.generate_json([], "", Window), {"results": []})
         sleep.assert_called_once()
 
-    def test_gemini_retries_remote_protocol_error(self):
-        try:
-            from httpx import RemoteProtocolError
-        except ImportError:
-            self.skipTest("httpx missing")
-        error = RemoteProtocolError("Server disconnected without sending a response")
+    def test_deepseek_retries_remote_disconnect(self):
+        from http.client import RemoteDisconnected
+        from plugins.rag.schemas import Window
+
+        error = RemoteDisconnected("Server disconnected without sending a response")
         wrapped = RuntimeError("transport failed")
         wrapped.__cause__ = error
         self.assertTrue(llm_client.is_transient(error))
         self.assertTrue(llm_client.is_transient(wrapped))
         self.assertFalse(llm_client.is_transient(ValueError("400 invalid request")))
-        client = llm_client.GeminiClient.__new__(llm_client.GeminiClient)
-        client.types, client.client = Mock(), Mock()
-        client.model, client.temperature, client.max_out, client.max_retries = "test", 0, 100, 1
-        client._sleep = Mock()
-        generate = client.client.models.generate_content
-        generate.side_effect = [wrapped, SimpleNamespace(text='{"results": []}')]
-        self.assertEqual(client.generate_json([], "", object), {"results": []})
-        self.assertEqual(generate.call_count, 2)
-        client._sleep.assert_called_once()
+        client = llm_client.DeepSeekClient.__new__(llm_client.DeepSeekClient)
+        client.model, client.temperature, client.freq_penalty = "test", 0, 0
+        client.max_out, client.max_retries, client.base, client.cap = 100, 1, 1, 1
+        client._tok = llm_client.TokenCounter()
+        client._post = Mock(side_effect=[wrapped, {"choices": [{"message": {"content": '{"results": []}'}}]}])
+        with patch.object(llm_client.time, "sleep") as sleep:
+            self.assertEqual(client.generate_json([], "", Window), {"results": []})
+        self.assertEqual(client._post.call_count, 2)
+        sleep.assert_called_once()
 
 
 class EvaluationDiffs(unittest.TestCase):

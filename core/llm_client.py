@@ -1,4 +1,4 @@
-"""Gemini wrapper: structured JSON output, bounded retries, per-document cache."""
+"""DeepSeek JSON client, bounded retries and resumable document cache."""
 from __future__ import annotations
 
 import http.client
@@ -14,7 +14,6 @@ import time
 import urllib.error
 from typing import Any
 
-DEFAULT_MODEL = "gemini-3.8-flash"
 RETRYABLE_CODES = {408, 429, 500, 502, 503, 504}
 
 
@@ -110,118 +109,6 @@ def is_transient(exc: Exception) -> bool:
     return False
 
 
-class GeminiClient:
-    def __init__(self) -> None:
-        load_env()
-        key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        if not key:
-            raise LLMError("GEMINI_API_KEY is not set (see .env.example)")
-        from google import genai
-        from google.genai import types
-
-        self.types = types
-        self._tok = TokenCounter()
-        self.model = os.environ.get("GEMINI_MODEL", "").strip() or DEFAULT_MODEL
-        self.max_retries = int(_f("GEMINI_MAX_RETRIES", 6))
-        self.base = _f("GEMINI_BACKOFF_BASE", 2)
-        self.cap = _f("GEMINI_BACKOFF_MAX", 60)
-        self.max_out = int(_f("GEMINI_MAX_OUTPUT_TOKENS", 65536))
-        self.temperature = _f("GEMINI_TEMPERATURE", 0)
-        timeout_ms = int(_f("GEMINI_TIMEOUT_S", 300) * 1000)
-        self.client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=timeout_ms))
-
-    tokens_in = property(lambda self: self._tok.tokens_in)
-    tokens_out = property(lambda self: self._tok.tokens_out)
-
-    def preflight(self) -> None:
-        """Cheap availability check of the chosen model; clear error on 404/401/403."""
-        try:
-            self.client.models.get(model=self.model)
-        except Exception as exc:  # noqa: BLE001
-            code = _status_code(exc)
-            if code in (400, 401, 403, 404):
-                raise LLMError(f"Gemini model '{self.model}' unavailable (HTTP {code}): check GEMINI_MODEL / GEMINI_API_KEY") from exc
-            log(f"  WARN: preflight skipped ({type(exc).__name__}: {str(exc)[:120]})")
-
-    def _sleep(self, attempt: int, tag: str, reason: str) -> None:
-        delay = min(self.cap, self.base * (2 ** attempt)) * random.uniform(0.5, 1.5)
-        log(f"  [{tag}] retry {attempt + 1}/{self.max_retries} in {delay:.1f}s: {reason}")
-        time.sleep(delay)
-
-    def generate_json(self, contents: list[Any], system: str, schema: Any, tag: str = "") -> dict:
-        """Return parsed JSON dict. Retries transient API errors and truncated/invalid JSON."""
-        cfg = self.types.GenerateContentConfig(
-            system_instruction=system,
-            response_mime_type="application/json",
-            response_schema=schema,
-            temperature=self.temperature,
-            max_output_tokens=self.max_out,
-        )
-        last = "unknown"
-        for attempt in range(self.max_retries + 1):
-            try:
-                resp = self.client.models.generate_content(
-                    model=self.model, contents=contents, config=cfg)
-                um = getattr(resp, "usage_metadata", None)
-                if um is not None:
-                    self._tok.add(getattr(um, "prompt_token_count", 0), getattr(um, "candidates_token_count", 0))
-                try:
-                    fr = getattr(resp.candidates[0].finish_reason, "name", str(resp.candidates[0].finish_reason))
-                except (TypeError, IndexError, AttributeError):
-                    fr = ""
-                if fr == "MAX_TOKENS":
-                    raise TruncatedResponseError("output truncated (finish_reason=MAX_TOKENS): window will be split")
-                text = (resp.text or "").strip()
-                if not text:
-                    raise ValueError("empty response (blocked or no candidates)")
-                data = json.loads(text)
-                if not isinstance(data, dict):
-                    raise ValueError("response is not a JSON object")
-                return data
-            except LLMError:
-                raise
-            except Exception as exc:  # noqa: BLE001
-                last = f"{type(exc).__name__}: {str(exc)[:300]}"
-                retry = is_transient(exc) or isinstance(exc, (ValueError, json.JSONDecodeError))
-                if not retry:
-                    raise LLMError(last) from exc
-                if attempt >= self.max_retries:
-                    break
-                self._sleep(attempt, tag, last)
-        raise LLMError(f"retries exhausted ({self.max_retries}); last error: {last}")
-
-    # ---- Files API (scanned PDFs) ----
-    def upload_pdf(self, path: pathlib.Path, tag: str = "") -> Any:
-        last = "unknown"
-        for attempt in range(self.max_retries + 1):
-            try:
-                f = self.client.files.upload(file=str(path), config={"mime_type": "application/pdf"})
-                for _ in range(60):  # wait until ACTIVE
-                    state = getattr(getattr(f, "state", None), "name", str(getattr(f, "state", "")))
-                    if state in ("ACTIVE", "None", ""):
-                        return f
-                    if state == "FAILED":
-                        raise ValueError("file processing FAILED")
-                    time.sleep(2)
-                    f = self.client.files.get(name=f.name)
-                raise TimeoutError("file stayed in PROCESSING state")
-            except Exception as exc:  # noqa: BLE001
-                last = f"{type(exc).__name__}: {str(exc)[:300]}"
-                if not is_transient(exc) or attempt >= self.max_retries:
-                    if not is_transient(exc):
-                        raise LLMError(last) from exc
-                    break
-                self._sleep(attempt, tag, last)
-        raise LLMError(f"upload failed after retries; last error: {last}")
-
-    def delete_file(self, f: Any) -> None:
-        try:
-            self.client.files.delete(name=f.name)
-        except Exception as exc:  # noqa: BLE001
-            log(f"  WARN: could not delete uploaded file {getattr(f, 'name', '?')}: {exc}")
-
-
-# ---- cache: cache/<doc_id>.json (only successful responses are ever written) ----
 def cache_path(cache_dir: pathlib.Path, doc_id: str) -> pathlib.Path:
     if not SAFE_ID.match(str(doc_id)):
         raise ValueError(f"unsafe document id: {doc_id!r}")
@@ -250,7 +137,6 @@ def save_cache(cache_dir: pathlib.Path, doc_id: str, data: dict) -> None:
 
 # ---- DeepSeek (OpenAI-compatible chat API, stdlib urllib only; text-only) ----
 class DeepSeekClient:
-    text_only = True
     compact_results = True
     tokens_in = property(lambda self: self._tok.tokens_in)
     tokens_out = property(lambda self: self._tok.tokens_out)
@@ -269,8 +155,8 @@ class DeepSeekClient:
         if official and self.model in {"deepseek-v4-flash", "deepseek-v4-flash-vision-exp"}:
             self.model = "deepseek-flash"
         self.max_retries = int(_f("DEEPSEEK_MAX_RETRIES", 6))
-        self.base = _f("GEMINI_BACKOFF_BASE", 2)
-        self.cap = _f("GEMINI_BACKOFF_MAX", 60)
+        self.base = _f("DEEPSEEK_BACKOFF_BASE", 2)
+        self.cap = _f("DEEPSEEK_BACKOFF_MAX", 60)
         self.timeout = _f("DEEPSEEK_TIMEOUT_S", 300)
         default_cap = self.OFFICIAL_MAX_OUTPUT if official else 8192
         self.max_out = max(1, int(_f("DEEPSEEK_MAX_TOKENS", default_cap)))
@@ -374,9 +260,3 @@ class DeepSeekClient:
                 log(f"  [{tag}] retry {attempt + 1}/{self.max_retries} in {delay:.1f}s: {last}")
                 time.sleep(delay)
         raise LLMError(f"retries exhausted ({self.max_retries}); last error: {last}")
-
-    def upload_pdf(self, *a: Any, **k: Any) -> Any:
-        raise LLMError("DeepSeek is text-only: scanned PDFs are not supported")
-
-    def delete_file(self, f: Any) -> None:
-        pass

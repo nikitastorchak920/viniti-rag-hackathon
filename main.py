@@ -32,16 +32,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--recover-plot-points", action="store_true",
                     help="also export calibrated native vector scatter points (works without API calls)")
     ap.add_argument("--window", type=int, default=3, help="pages per result-extraction request (default 3)")
-    ap.add_argument("--pdf-mode", choices=["auto", "text", "pdf"], default="auto",
-                    help="auto: structured text, unreadable scans sent as PDF; pdf: request PDF; text: structured text only")
+    ap.add_argument("--pdf-mode", choices=["auto", "text"], help=argparse.SUPPRESS)
     ap.add_argument("--skip-scans", action="store_true",
-                    help="skip image-only PDFs (status SKIPPED_SCAN); enabled automatically when GEMINI_API_KEY is not set")
+                    help="mark unreadable scans as SKIPPED_SCAN even when running without an API key")
     ap.add_argument("--ocr-json", type=pathlib.Path, default=None, metavar="DIR",
                     help="folder with <id>.json OCR files from the teammate's PC (scanned PDFs); no OCR is run here")
     ap.add_argument("--workers", type=int, default=None,
                     help="parallel documents for LLM mode (default: env WORKERS or 4; 1 = sequential)")
     ap.add_argument("--ocr", action="store_true",
-                    help="use RapidOCR on low-text pages and recheck OCR-cache quotes; Gemini auto mode falls back to PDF")
+                    help="use local RapidOCR on low-text pages and recheck OCR-cache quotes")
     ap.add_argument("--verify-pass", action="store_true",
                     help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
@@ -99,16 +98,12 @@ def main(argv: list[str] | None = None) -> int:
             gc.collect()
     elif not a.rebuild_csv_only:
         import os
-        from core.llm_client import GeminiClient, LLMError, load_env
+        from core.llm_client import DeepSeekClient, LLMError, load_env
 
         load_env()
         client = None
         try:
-            if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
-                client = GeminiClient()
-            elif os.environ.get("DEEPSEEK_API_KEY"):
-                from core.llm_client import DeepSeekClient
-
+            if os.environ.get("DEEPSEEK_API_KEY", "").strip():
                 client = DeepSeekClient()
         except (LLMError, ImportError) as exc:
             log(f"ERROR: {exc}")
@@ -122,14 +117,14 @@ def main(argv: list[str] | None = None) -> int:
             log(f"backend={type(client).__name__} model={client.model} docs={len(pdfs)}")
         else:
             a.skip_scans = True
-            log("WARN: no GEMINI_API_KEY / DEEPSEEK_API_KEY: --skip-scans enabled automatically; only cached documents can be exported")
+            log("WARN: no DEEPSEEK_API_KEY: only cached documents can be exported")
         from plugins.rag.pipeline import process_document, run_documents
 
         workers = a.workers if a.workers is not None else int(os.environ.get("WORKERS") or 4)
         workers = max(1, min(workers, len(pdfs_todo) or 1))
         log(f"workers={workers}")
         for stem, ok, msg in run_documents(
-                pdfs_todo, lambda p: process_document(p, client, a.cache, a.force, max(1, a.window), a.pdf_mode, a.skip_scans, a.ocr),
+                pdfs_todo, lambda p: process_document(p, client, a.cache, a.force, max(1, a.window), a.skip_scans, a.ocr),
                 workers):
             if ok is None:
                 skipped.append(stem)
