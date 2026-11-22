@@ -34,7 +34,7 @@ Codex owns the Strict F1 work. The operator reactivated Antigravity for independ
 Use this protocol for explicitly authorized handoffs. Architecture notes belong in `TODO.md`.
 
 - Codex prepends each task to `handoff/FOR_ANTIGRAVITY.md` with a unique ID, instructions, and acceptance evidence, then commits and pushes it. Keep the ID stable. Issue a new ID for a follow-up.
-- At the start of its work, Antigravity runs `git pull --ff-only origin main` and reads both handoff files. It takes the newest task with no report for that ID. If all tasks have reports, it is idle.
+- At the start of its work, Antigravity runs `git pull --ff-only origin main` and reads both handoff files. It takes the newest active task with no report for that ID. If no active tasks are unanswered, it is idle.
 - Antigravity prepends its English report to `handoff/FROM_ANTIGRAVITY.md`, using the same task ID, tested commit, and status `complete` or `blocked`. It stages that file alone, commits, and pushes to `origin/main`. Both statuses close the queue entry. The report gives the acceptance result separately.
 - At the start of a follow-up, Codex fetches `origin/main` and reads any new reports. After recording the evidence in `TODO.md`, remove the answered or superseded task instructions from the open queue. Preserve the report and Git history. Use a new task ID if further work is needed. The operator can inspect the inbox in GitHub or with a read-only Git command.
 

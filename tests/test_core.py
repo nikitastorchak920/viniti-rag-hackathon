@@ -319,6 +319,24 @@ class Linking(unittest.TestCase):
         self.assertEqual(exporter.source_generator(masked, ["Compared Acme-V3 and Beta-V3."]), "")
         self.assertEqual(exporter.source_generator(masked, ["Compared the Acme-V4 model."]), "")
 
+    def test_parameter_column_and_separate_context_fields(self):
+        from core.pdf_processor import TextLine
+
+        table = {1: [TextLine(x, x + 15, y, text) for x, y, text in [
+            (10, 10, "Table 1: Parameter sweep"),
+            (10, 20, "α"), (80, 20, "Corpus A"), (150, 20, "Corpus B"),
+            (10, 30, "0.5"), (80, 30, "1.2"), (150, 30, "2.3"),
+            (10, 40, "1.0"), (80, 40, "3.4"), (150, 40, "4.5"),
+        ]]}
+        configs = [{"rag_variant": "Route alpha = 1.0"}, {"rag_variant": "Route alpha = 0.7"}]
+        exporter._compact_named_parameters(configs, [], table)
+        self.assertEqual([row["rag_variant"] for row in configs], ["Route alpha1.0", "Route alpha = 0.7"])
+
+        config = {"rag_variant": "Route with News KB w/o rerank", "context_strategy": "retrieve from News KB"}
+        exporter._strip_repeated_context_labels([config], ["Route, the base method, uses this variant."])
+        self.assertEqual(config["rag_variant"], "Route w/o rerank")
+        self.assertIn("Route with News KB w/o rerank", config["note"])
+
     def test_aggregate_link_requires_unique_cell_and_verified_quote(self):
         from core.pdf_processor import TextLine
         from plugins.rag.table_context import link_aggregates

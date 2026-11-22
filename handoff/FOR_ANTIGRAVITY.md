@@ -1,6 +1,6 @@
 # PROMPT FOR ANTIGRAVITY
 
-After `git pull --ff-only origin main`, run the newest task without a matching report in `handoff/FROM_ANTIGRAVITY.md`. Keep credentials, PDFs, caches, and generated bundles local.
+After `git pull --ff-only origin main`, run the newest task that is active and has no matching report in `handoff/FROM_ANTIGRAVITY.md`. Keep credentials, PDFs, caches, and generated bundles local.
 
 ## Open tasks
 

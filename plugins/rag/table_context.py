@@ -89,6 +89,34 @@ def native_captions(layout):
     return {key: next(iter(values)) for key, values in captions.items() if len(values) == 1}
 
 
+def parameter_column_values(layout):
+    """Read row-leading numbers under an explicitly printed Greek parameter symbol."""
+    assignments = set()
+    for lines in layout.values():
+        visual = _visual_rows(lines)
+        table_positions = [i for i, row in enumerate(visual) if CAPTION.match(row[0].text.strip())]
+        for start, stop in pairwise([*table_positions, len(visual)]):
+            for i in range(start + 1, min(start + 9, stop)):
+                heading = visual[i]
+                symbol = heading[0].text.strip()
+                if len(heading) < 3 or not re.fullmatch(r"[\u0370-\u03ff]", symbol):
+                    continue
+                values = set()
+                y = heading[0].baseline
+                for row in visual[i + 1:stop]:
+                    first = row[0]
+                    if first.baseline - y > 30 or abs(first.left - heading[0].left) > 4:
+                        break
+                    value = re.match(r"([+-]?\d+(?:\.\d+)?)(?=\s|$)", first.text.strip())
+                    if not value or len(row) < 3 or not all(NUMBER.search(cell.text) for cell in row[1:]):
+                        break
+                    values.add(value[1])
+                    y = first.baseline
+                if len(values) >= 2:
+                    assignments.update((symbol, value) for value in values)
+    return assignments
+
+
 def _columns(headings, metrics, dataset_labels):
     ids = [dataset_labels.get(label(line.text), "") for line in headings]
     known = [value for value in ids if value]

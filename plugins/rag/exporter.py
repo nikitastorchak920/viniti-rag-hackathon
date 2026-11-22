@@ -14,7 +14,9 @@ from core.validator import RULE_PROVENANCE_COMPLETE, check_result, finding
 from domains.base_schema import ExtractionStatus
 from domains.rag.schema import MetricDirection
 from domains.rag.submission import SUBMISSION_MODELS, submission_row
-from plugins.rag.table_context import dataset_aliases, identity_label, label, mentions, mentions_identity, native_captions
+from plugins.rag.table_context import (
+    dataset_aliases, identity_label, label, mentions, mentions_identity, native_captions, parameter_column_values,
+)
 
 TABLES = tuple(SUBMISSION_MODELS)
 DIRECTIONS = frozenset(get_args(MetricDirection))
@@ -271,10 +273,12 @@ def _expand_excluded_components(configurations, pages_norm):
         config["rag_variant"] = _EXCLUDED_COMPONENT.sub(expand, config["rag_variant"])
 
 
-def _compact_named_parameters(configurations, pages_norm):
+def _compact_named_parameters(configurations, pages_norm, table_layout=None):
     """Keep a symbol and its assigned value together in the configuration label."""
+    raw = parameter_column_values(table_layout or {})
+    raw.update((symbol, value) for page in pages_norm or () for symbol, value in _ASSIGNED_PARAMETER.findall(page))
     assignments = {(unicodedata.name(symbol, "").split()[-1].casefold(), value)
-                   for page in pages_norm or () for symbol, value in _ASSIGNED_PARAMETER.findall(page)
+                   for symbol, value in raw
                    if unicodedata.name(symbol, "").startswith("GREEK SMALL LETTER ")}
 
     def compact(match):
@@ -292,9 +296,32 @@ def _strip_repeated_backbone_modes(configurations, pages_norm):
     for config in configurations:
         name, generator = config["rag_variant"], config.get("generator_model", "")
         mode = re.fullmatch(r"(.+?)[ -]+(base|instruct|chat)", name, re.I)
-        if (mode and label(mode[1]) in variants and label(generator).endswith(f" {mode[2].casefold()}")
-                and any(mentions(label(name), page) for page in evidence)):
-            config["rag_variant"] = mode[1]
+        size = re.fullmatch(r"(base|instruct|chat)[ -]+(\d+(?:\.\d+)?[bm])", name, re.I)
+        canonical = ""
+        if mode and label(generator).endswith(f" {mode[2].casefold()}"):
+            canonical = mode[1]
+        if size and label(generator).endswith(f" {size[2].casefold()} {size[1].casefold()}"):
+            canonical = size[1]
+        if canonical and label(canonical) in variants and any(mentions(label(name), page) for page in evidence):
+            config["rag_variant"] = canonical
+
+
+def _strip_repeated_context_labels(configurations, pages_norm):
+    """Retain retrieval context in its dedicated field when the paper names the underlying method."""
+    for config in configurations:
+        name = config["rag_variant"]
+        annotated = re.fullmatch(r"(\S+)\s+with\s+(.+?)(\s+(?:w/o|without)\s+.+)?", name, re.I)
+        if not annotated:
+            continue
+        method, qualifier, ablation = annotated.groups()
+        if not any(mentions(label(qualifier), label(config.get(field, "")))
+                   for field in ("context_strategy", "retrieval_method")):
+            continue
+        named = re.compile(rf"(?<![\w-]){re.escape(method)}(?=\s*[,;):])", re.I)
+        if not any(named.search(page) for page in pages_norm or ()):
+            continue
+        config["rag_variant"] = method + (ablation or "")
+        config["note"] = " | ".join(filter(None, (config.get("note"), f"Qualified variant label: {name}")))
 
 
 def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -> None:
@@ -812,8 +839,9 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         if layout_tokens:
             link_table_schemes(rows, table_layout, layout_tokens, pages_norm, out["configurations"], out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
-    _compact_named_parameters(out["configurations"], pages_norm)
+    _compact_named_parameters(out["configurations"], pages_norm, table_layout)
     _strip_repeated_backbone_modes(out["configurations"], pages_norm)
+    _strip_repeated_context_labels(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
