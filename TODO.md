@@ -2,6 +2,8 @@
 
 ## Current checkpoint
 
+- **Data contracts:** Tested commit `852cdcd` defines shared, RAG, and thin-film Pydantic v2 models from the VINITI–SFedU presentation. The RAG wire models and seven submission projections derive their fields from the contracts. The wire adapters preserve cache v2 names and compact positions. Domain 1 has an extraction and CSV interface for page-marked text, verified with a simulated LLM response. The repository CLI still processes Domain 2.
+- **Contract gate:** `tests/test_schemas.py` passed 4 tests and `tests/test_core.py` passed 61. The offline rebuild from `out_dev_recovery/cache` completed all 21 dev papers with zero stubs. All seven CSVs in `out_dev_schema_recovery/` matched a rebuild of `9a2964e` byte for byte on the same cache. The scorer confirmed 21/21 scope agreement, 5,305 scored predictions, 860 Strict TP (F1 0.06964), and 1,853 Loose TP (F1 0.15006). The native checker reported zero structural errors and 941 unresolved citations out of 8,188. The default `cache/` rebuilt 17/21 papers, with incomplete or missing entries for D002, D009, D013, and D021. No live API calls or test-corpus runs were made. Operator MVP sign-off is pending.
 - **Owner and queue:** Codex is active. Antigravity is occupied elsewhere. Both handoff queues are read-only until the operator explicitly authorizes changes. On `origin/main`, the newest available Antigravity report is `RECALL-DEV-002` (`96f3c30`). `RECALL-DEV-003` remains suspended.
 - **Tested code and artifacts:** `b6c82cc` records the full dev recovery. The working cache and report are local at `out_dev_recovery/cache` and `out_dev_recovery/latest`. `out_dev_recovery/baseline.json` records the input and original cache hashes. Seventeen old local exports moved to `out_dev_recovery/archive`; the map is in `MOVED.txt`. Historical and jury bundles are preserved. These generated paths are ignored by Git.
 
@@ -24,6 +26,7 @@ Full evidence is in the [metric audit](METRIC_AUDIT.md#итог-на-полно�
 
 ## Notes for Antigravity
 
+- Use the domain models as the source of field names. The RAG submission projection keeps the existing CSV headers and order. The Domain 1 export retains all issue fields, including severity and source table. Domain 1 live extraction and full PDF coverage have yet to be checked.
 - Reuse successful page windows with their saved metadata and entity IDs when resuming a legacy extraction. D009 verified that the old plain-text plan can coexist with the current table-first workflow.
 - The 16,384-token limit is specific to the configured gateway. Compact passports keep the cache format stable and resolved a metadata truncation before result extraction on D002.
 - Verified figure captions establish source location. Point or series identity and configuration require separate evidence. Keep the vector experiment isolated while Strict coverage remains unresolved.
