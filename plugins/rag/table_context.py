@@ -353,6 +353,84 @@ def _verified_table_value(row, pages_norm):
     return (*key, literal)
 
 
+def link_dataset_domains(rows, layout, pages_norm, datasets, configurations):
+    """Attach named domain columns in tables whose caption identifies the parent benchmark."""
+    cells = defaultdict(set)
+    for page, lines in layout.items():
+        visual = _visual_rows(lines)
+        previous = 0
+        for end, caption_row in enumerate(visual):
+            caption = caption_row[0].text
+            marker = CAPTION.match(caption)
+            if not marker:
+                continue
+            section = visual[previous:end]
+            previous = end + 1
+            names = [item for item in datasets
+                     if re.search(rf"\bon\s+{re.escape(item['dataset_name'])}\s+across\s+"
+                                  r"(?:different\s+)?domains\b", caption, re.I)]
+            if len(names) != 1:
+                continue
+            parent = names[0]
+            for i in range(len(section) - 2, 0, -1):
+                headings = section[i - 1]
+                metric_index = i + 1 if label(section[i][0].text) in {"method", "system"} else i
+                if metric_index >= len(section):
+                    continue
+                domains = {label(line.text): line.text for line in headings}
+                if len(domains) < 3 or len(domains) != len(headings):
+                    continue
+                columns = _columns(headings, section[metric_index], domains)
+                if columns and all(domain for _, _, domain in columns):
+                    break
+            else:
+                continue
+            gap = min(right[0] - left[0] for left, right in pairwise(columns))
+            if gap <= 0:
+                continue
+            for body in section[metric_index + 1:]:
+                method = _compact_name(re.sub(r"\s*\(ours\)\s*$", "", body[0].text, flags=re.I))
+                if not method or body[0].right >= columns[0][0] - gap * .4:
+                    continue
+                items = [line for line in body[1:] if NUMBER.fullmatch(line.text.strip())]
+                located = [[line for line in items if abs((line.left + line.right) / 2 - x) < gap * .45]
+                           for x, _, _ in columns]
+                if any(len(values) != 1 for values in located):
+                    continue
+                for (_, metric, domain), (line,) in zip(columns, located):
+                    key = (str(page), marker[1].casefold(), metric, number(line.text.strip()), method)
+                    cells[key].add((parent["dataset_id"], domain))
+    if not cells:
+        return
+    config_names = {row["config_id"]: _compact_name(row["rag_variant"]) for row in configurations}
+    by_id = {row["dataset_id"]: row for row in datasets}
+    scoped = {}
+    next_id = 1
+    for row in rows:
+        method = config_names.get(row["config_id"])
+        evidence = _verified_table_value(row, pages_norm)
+        if not method or not evidence:
+            continue
+        matches = cells.get((*evidence, method), ())
+        if len(matches) != 1:
+            continue
+        parent_id, domain = next(iter(matches))
+        if row["dataset_id"] != parent_id:
+            continue
+        scope = (parent_id, domain)
+        if scope not in scoped:
+            while f"DSD{next_id}" in by_id:
+                next_id += 1
+            dataset_id = f"DSD{next_id}"
+            parent = by_id[parent_id]
+            record = dict(parent, dataset_id=dataset_id, dataset_name=f"{parent['dataset_name']} {domain}",
+                          note=f"Printed domain column \`{domain}\`, PDF page {evidence[0]}, Table {evidence[1]}.")
+            by_id[dataset_id] = record
+            scoped[scope] = dataset_id
+            datasets.append(record)
+        row["dataset_id"] = scoped[scope]
+
+
 def link_aggregates(rows, table_layout, pages_norm, datasets) -> None:
     """Link reported aggregate columns without treating the value as an individual corpus."""
     metrics = defaultdict(set)

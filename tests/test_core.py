@@ -448,6 +448,59 @@ class Linking(unittest.TestCase):
                          ["QA accuracy", "Accuracy", "Accuracy", "Accuracy@5"])
         self.assertEqual((first["raw_value"], first["source_fragment"]), ("0.85", "Method 0.85"))
 
+    def test_role_names_require_a_local_definition(self):
+        rows = [dict(metric_name=name, source_page=page, source_table=table, note="")
+                for name, page, table in [
+                    ("Accuracy", "1", "Table 2(a)"), ("Score", "1", "Table 3"),
+                    ("Score", "1", "Table 4"), ("Accuracy", "2", "Table 5"),
+                ]]
+        pages = [
+            "We used accuracy—based on whether the model response matched the correct answer. "
+            "Table 2: Results. Values represent accuracy scores. "
+            "Table 3: Accuracy and Judge-Score. Score is the score verified by LLM. "
+            "Table 4: Another comparison. LLM evaluation frameworks were compared. "
+            "Performance was evaluated using the accuracy metric.",
+            "The results of the evaluation are summarized in Table 5. Methods compared, measured by accuracy.",
+        ]
+        exporter._name_caption_accuracy(rows, {
+            ("1", "table 2"): "Table 2: Results.",
+            ("1", "table 3"): "Table 3: Accuracy and Judge-Score.",
+            ("1", "table 4"): "Table 4: Another comparison.",
+        }, pages)
+        exporter._name_evaluator_accuracy(rows, pages)
+        self.assertEqual([r["metric_name"] for r in rows],
+                         ["Answer accuracy", "LLM Score", "Score", "Evaluator accuracy"])
+
+    def test_figure_rate_preserves_unknown_correctness_denominator(self):
+        base = dict(metric_name="Attempted", source_page="1", source_figure="Figure 3", metric_unit="%", note="")
+        rows = [base, dict(base, metric_name="Correct"), dict(base, source_figure="Figure 4")]
+        exporter._name_figure_attempts(rows, ["Fig. 3. Comparison showing percent attempts and correct."])
+        self.assertEqual([r["metric_name"] for r in rows], ["Attempt rate", "Correct", "Attempted"])
+
+    def test_domain_columns_disambiguate_only_unique_verified_cells(self):
+        from core.pdf_processor import TextLine
+        from plugins.rag.table_context import link_dataset_domains
+
+        layout = {1: [TextLine(x, x + 10, y, label) for x, y, label in [
+            (114, 10, "News"), (214, 10, "Research"), (314, 10, "Overall"),
+            (10, 15, "Method"),
+            (100, 20, "Acc"), (128, 20, "Score"), (200, 20, "Acc"),
+            (228, 20, "Score"), (300, 20, "Acc"), (328, 20, "Score"),
+            (10, 30, "Dense"), (100, 30, ".20"), (128, 30, ".14"),
+            (200, 30, ".32"), (228, 30, ".14"), (300, 30, ".26"), (328, 30, ".18"),
+            (10, 43, "Table 2: Metrics on Corpus across different domains."),
+        ]]}
+        common = dict(source_page="1", source_table="Table 2", config_id="C1", dataset_id="D1",
+                      result_origin="primary", extraction_status="extracted")
+        rows = [dict(common, metric_name="Acc", raw_value=".32", source_fragment="Dense .32"),
+                dict(common, metric_name="Score", raw_value=".14", source_fragment="Dense .14"),
+                dict(common, metric_name="Acc", raw_value=".26", source_fragment="fabricated .26")]
+        datasets = [dict(dataset_id="D1", dataset_name="Corpus", note="")]
+        link_dataset_domains(rows, layout, ["Dense .32 Dense .14 .26"], datasets,
+                             [dict(config_id="C1", rag_variant="Dense")])
+        self.assertEqual([r["dataset_id"] for r in rows], ["DSD1", "D1", "D1"])
+        self.assertEqual(datasets[-1]["dataset_name"], "Corpus Research")
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]

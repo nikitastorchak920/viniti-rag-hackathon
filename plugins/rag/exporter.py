@@ -24,7 +24,7 @@ STATUSES = frozenset(get_args(ExtractionStatus))
 BOUNDED = re.compile(
     r"(?i)^(accuracy|acc|precision|recall|f1|f-?score|exact match|em|hit(?:s|\s*rate)?|mrr|ndcg|map|"
     r"faithfulness|answer relevan\w*|context (?:precision|recall|relevan\w*)|correctness)(?:\s*@\s*\d+)?$")
-_QUALIFIED_ACCURACY = r"(?:QA|answer|classification|routing|retrieval)\s+accuracy"
+_QUALIFIED_ACCURACY = r"(?:QA|answer|classification|routing|retrieval|rule-based|evaluator)\s+accuracy"
 LOWER = re.compile(r"(?i)latency|loss|error|perplexity|hallucination|cost|time|tokens|wer\b|cer\b|memory")
 HIGHER = re.compile(r"(?i)accuracy|\bacc\b|exact match|\bem\b|f1|f-?score|precision|recall|hit|mrr|ndcg|\bmap\b|"
                     r"rouge|bleu|faithfulness|relevan|correctness|win rate")
@@ -436,6 +436,11 @@ def _expand_metric_abbreviations(rows: list[dict], pages_norm: list[str] | None)
         for full, short in re.findall(r"\b([A-Z][a-z][a-z-]{2,})\s*\(([A-Z][A-Za-z]{1,6})\)", page):
             if full.casefold().startswith(short.casefold()):
                 definitions[label(short)].add(full)
+        for full, short in re.findall(
+            r"\b([A-Za-z]+(?:-[A-Za-z]+)+\s+accuracy)\s*\(([A-Za-z]{2,8})\)", page, re.I
+        ):
+            if "accuracy".startswith(short.casefold()):
+                definitions[label(short)].add(full)
         for short, full in ordered.findall(page):
             split = r",\s*(?:and\s+)?|\s+and\s+"
             names = re.split(split, full)
@@ -472,23 +477,43 @@ def _name_printed_rates(rows, pages_norm):
         row["note"] = " | ".join(filter(None, (row["note"], f"Printed short metric: {original}.")))
 
 
-def _name_caption_accuracy(rows, captions):
-    """Use the accuracy type explicitly named at the start of a table caption."""
+def _name_caption_accuracy(rows, captions, pages_norm=None):
+    """Resolve accuracy and scoring roles from a caption or explicit protocol."""
     qualified = {}
     for scope, caption in captions.items():
         match = re.match(rf"^Table\s+[A-Za-z]?\d+(?:\.\d+)*[A-Za-z]?[.:]\s*"
                          rf"(?:LLM\s+)?({_QUALIFIED_ACCURACY})\b",
                          caption, re.I)
         if match:
-            qualified[scope] = match[1]
+            qualified[scope, "accuracy"] = match[1]
+        page = to_page(scope[0])
+        if not pages_norm or not 1 <= page <= len(pages_norm):
+            continue
+        text = pages_norm[page - 1]
+        definition = re.search(
+            r"\bused accuracy[\s—–-]+based on whether\b[^.!?]{0,100}"
+            r"\b(?:answer|response)\s+(?:matched|matches)\s+the\s+(?:correct|reference|gold)\s+answer\b",
+            text, re.I,
+        )
+        anchor = norm(caption).rstrip("-")
+        start = text.find(anchor)
+        if start < 0:
+            continue
+        nearby = re.split(r"\bTable\s+[A-Za-z]?\d+[.:]", text[start + len(anchor):start + 720], maxsplit=1)[0]
+        if definition and re.search(r"\brepresent accuracy scores\b", anchor + " " + nearby[:160], re.I):
+            qualified.setdefault((scope, "accuracy"), "Answer accuracy")
+        if (re.search(r"\bscore\b", caption, re.I)
+                and re.search(r"\bscore is (?:the )?score (?:verified|judged) by (?:an? )?LLM\b", nearby, re.I)):
+            qualified[scope, "score"] = "LLM Score"
     occupied = {(row["source_page"], label(row["source_table"]), label(row["metric_name"])) for row in rows}
     for row in rows:
-        scope = (row["source_page"], label(row["source_table"]))
-        full = qualified.get(scope)
-        if not full or row["metric_name"].casefold() != "accuracy" or (*scope, label(full)) in occupied:
+        scope = (row["source_page"], label(re.sub(r"\s*\([a-z]\)$", "", row["source_table"], flags=re.I)))
+        original = row["metric_name"]
+        full = qualified.get((scope, original.casefold()))
+        if not full or (*scope, label(full)) in occupied:
             continue
         row["metric_name"] = full
-        row["note"] = " | ".join(filter(None, (row["note"], "Printed short metric: Accuracy.")))
+        row["note"] = " | ".join(filter(None, (row["note"], f"Printed short metric: {original}.")))
 
 
 def _name_efficiency_columns(rows, pages_norm):
@@ -521,6 +546,51 @@ def _name_efficiency_columns(rows, pages_norm):
         if metric in names and scope in referenced:
             row["metric_name"] = names[metric]
             row["note"] = " | ".join(filter(None, (row["note"], f"Printed efficiency column: {original}.")))
+
+
+def _name_figure_attempts(rows, pages_norm):
+    """Identify attempt rates and explicitly conditioned correctness in mixed figures."""
+    captions = {}
+    for page, text in enumerate(pages_norm or (), 1):
+        for match in re.finditer(
+            r"\b(?:fig(?:ure)?\.?)\s+([A-Za-z]?\d+)[.:]\s+([^.!?]{0,260})", text, re.I
+        ):
+            if re.search(r"\bpercent(?:age)?\s+attempts?\s+and\s+correct\b", match[2], re.I):
+                captions[page, match[1].casefold()] = bool(
+                    re.search(r"\b(?:only|among)\s+the\s+attempted\s+questions\b", text, re.I)
+                )
+    for row in rows:
+        printed = row["metric_name"]
+        metric = printed.casefold()
+        if metric not in {"attempted", "correct"} or row["metric_unit"] != "%":
+            continue
+        figure = re.fullmatch(r"(?:fig(?:ure)?\.?)\s+([A-Za-z]?\d+)", row["source_figure"], re.I)
+        if not figure:
+            continue
+        scope = (to_page(row["source_page"]), figure[1].casefold())
+        if scope not in captions or (metric == "correct" and not captions[scope]):
+            continue
+        row["metric_name"] = "Attempt rate" if metric == "attempted" else "Accuracy among attempted questions"
+        row["note"] = " | ".join(filter(None, (row["note"], f"Printed figure metric: {printed}.")))
+
+
+def _name_evaluator_accuracy(rows, pages_norm):
+    """Use evaluator accuracy only in tables tied to an evaluator benchmark."""
+    scopes = set()
+    for page, text in enumerate(pages_norm or (), 1):
+        protocol = " ".join(pages_norm[max(0, page - 2):page])
+        if (not re.search(r"\bLLM evaluation frameworks?\b", protocol, re.I)
+                or not re.search(r"\bper[\s-]*formance was evaluated using the accuracy metric\b", protocol, re.I)):
+            continue
+        tables = {label(name) for name in re.findall(
+            r"\bresults of the evaluation are summarized in (Table [A-Za-z]?\d+)\b", text, re.I
+        )}
+        if len(tables) == 1 and re.search(r"\bmeasured by accuracy\b", text, re.I):
+            scopes.add((str(page), next(iter(tables))))
+    for row in rows:
+        if row["metric_name"].casefold() == "accuracy" and (row["source_page"], label(row["source_table"])) in scopes:
+            row["metric_name"] = "Evaluator accuracy"
+            row["note"] = " | ".join(filter(None, (row["note"], "Printed short metric: Accuracy.")))
 
 
 CUTOFF = re.compile(r"(?i)(?:@\s*|\bk\s*=\s*|\btop[-\s]*)([0-9]+)(?![\w%]|[.,]\d|[-–]\d)")
@@ -919,9 +989,10 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
               captions, row_captions, pages_norm, model_aliases)
     if table_layout and pages_norm:
-        from plugins.rag.table_context import link_aggregates, link_table_configurations
+        from plugins.rag.table_context import link_aggregates, link_dataset_domains, link_table_configurations
 
         link_aggregates(rows, table_layout, pages_norm, out["datasets"])
+        link_dataset_domains(rows, table_layout, pages_norm, out["datasets"], out["configurations"])
         if layout_tokens:
             link_table_configurations(rows, table_layout, layout_tokens, pages_norm, out["configurations"], out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
@@ -930,8 +1001,10 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     _strip_repeated_context_labels(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _name_printed_rates(rows, pages_norm)
-    _name_caption_accuracy(rows, captions)
+    _name_caption_accuracy(rows, captions, pages_norm)
     _name_efficiency_columns(rows, pages_norm)
+    _name_figure_attempts(rows, pages_norm)
+    _name_evaluator_accuracy(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
     groups: dict[tuple, list[dict]] = defaultdict(list)
