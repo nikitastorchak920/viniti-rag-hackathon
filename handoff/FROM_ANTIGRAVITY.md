@@ -21,6 +21,47 @@ Antigravity prepends replies under **Reports** and pushes this file to `origin/m
 
 <!-- Prepend replies here. The template above is not a task response. -->
 
+## DOMAIN1-SOLAR-001
+
+- Status (`complete` or `blocked`): `complete`
+- Base Git commit (from `git rev-parse --short HEAD` before commit): `63ed702`
+- Acceptance check: **PASS — DOMAIN 1 (THIN-FILM SOLAR CELLS) ISOLATED PLUGIN READY FOR TEST SPLIT** (`0` errors in `область_1/tools/check_submission.py`, `3` minor warnings, **`895 / 895` (`100.0%`)** verbatim `pypdf` quotes verified, **`21/21` (`100.0%`) `in_scope` agreement**, **`Loose F1 = 0.915`** (`P=0.908, R=0.922`), **`Medium F1 = 0.812`**, **`Schema-Strict F1 = 0.750`**, **`Strict+Label F1 = 0.324`**; zero modifications to any existing RAG/shared files).
+- Backend & isolation: `DeepSeekClient` (`deepseek-v4-flash`, `DEEPSEEK_MAX_TOKENS=8192`, `--ocr` with Tesseract fallback); separate cache/output folders (`cache_solar/`, `out_solar_dev/`, none committed). Total live extraction tokens across 21 dev PDFs (smoke + 17 + 4): `in=1,046,673`, `out=160,648`. Two offline exporter tuning iterations (`--rebuild-csv-only`) spent **`0` API tokens**.
+
+### 1 · New Isolated Files Created (Zero Overlap with RAG / Codex)
+
+1. `plugins/solar/__init__.py`
+2. `plugins/solar/schemas.py` — Pydantic v2 wire models (`Publication`, `Material`, `Device`, `Layer`, `Measurement`, `MetaIssue`, `Meta`, `CompactMeta`, `Result`, `Window`, `CompactWindow`) accepting both positional arrays and dict rows safely.
+3. `plugins/solar/prompts.py` — Domain 1 scope rules (experimental single-junction thin-film PV only; excludes DFT/SCAPS/MATLAB/Maple/tandem), 11 canonical metrics, reverse/forward measurement separation, no-duplicate-device-per-scan/champion rule, no relative deltas in `results.csv`, absorber-only bandgap, substrate-excluded `layer_order=1..N`.
+4. `plugins/solar/pipeline.py` — `Meta`/`CompactMeta` + `Window`/`CompactWindow` with solar-aware recursive line-splitting `_header`, `verify_pass`, and local `pytesseract` fallback for `--ocr` on image-only pages under `text_only` DeepSeek.
+5. `plugins/solar/exporter.py` — Deterministic CSV exporter enforcing exact 7 CSV schemas (including uppercase `DOI` in `publications.csv`), all 18 `VOCAB` dictionaries, all 6 `NUMERIC` columns, 11 canonical metric synonyms + unit normalization (`Voc mV->V`, `FF 0.71%->71%` + `unit_inconsistency`, `HI` fraction->`%`, `Jsc A/m2->mA/cm2`, `Rs/Rsh kOhm*cm2->Ohm*cm2`, `T80 days/min->h`, `active_area mm2->cm2`, `layer_thickness um->nm`), `Voc_deficit`/`Voc_SQ_ratio` guard, `_fill_ids()` + orphan `device_id` resolution + strict FK scrubbing, exact + prose-to-table `duplicate_of` + `contradiction` detection, `pypdf` quote grounding (`norm()` matching `область_1/tools/check_submission.py`), and 7 physical/logical checks (`jv_consistency`, `voc_limit` restricted to `device_type=="cell"`, `eqe_consistency`, `champion_vs_mean`, `range`, `hysteresis_index`, `missing_conditions`/`comparability`).
+6. `scripts/run_solar.py` — Standalone CLI mirroring `main.py` (`--input`, `--output`, `--cache cache_solar`, `--only`, `--force`, `--rebuild-csv-only`, `--window`, `--pdf-mode`, `--skip-scans`, `--workers`, `--ocr`, `--verify-pass`; prefers `DEEPSEEK_API_KEY`).
+7. `scripts/evaluate_solar.py` — Stdlib-only evaluator against `область_1/dev_gold/` reporting `in_scope`, 7 table row counts, `materials`, `devices`, `Strict+Label`, `Schema-Strict`, `Medium`, `Loose` P/R/F1, loose-to-strict mismatch breakdown, and per-publication F1.
+
+### 2 · Dev Verification & Metrics (`область_1/dev` — 21 PDFs: `D001`–`D022` excl. `D011`)
+
+- **`область_1/tools/check_submission.py out_solar_dev область_1/dev`:**
+  - `таблиц: 7, результатов: 741, ошибок: 0, предупреждений: 3, проверено цитат: 895, не найдено: 0`
+  - Remaining 3 warnings are general abstract/prose statements without a single specific device (`D021` rows 586–587 general PED/RFMS `Voc` ranges, `D022` row 705 abstract upper bound `0.5%`).
+- **`scripts/evaluate_solar.py out_solar_dev область_1/dev_gold` (Iteration 2 offline `--rebuild-csv-only`):**
+  - `in_scope agreement`: **`21/21 = 100.0%`** (`19` included, `2` excluded: `D006` ab initio DFT and `D016` MATLAB/Maple simulation; `0` wrong).
+  - Row counts (pred vs gold): `publications=21/21`, `materials=72/57`, `devices=117/89`, `layers=571/519`, `measurements=82/45`, `results=741/659`, `issues=176/53`.
+  - `materials (class + formula/name)`: `P=0.500 R=0.632 F1=0.558 (tp=36)`
+  - `devices (label + architecture)`: `P=0.291 R=0.382 F1=0.330 (tp=34)`
+  - **`Strict+Label` (`device_label+scan+agg+origin+metric+val`)**: **`P=0.322 R=0.327 F1=0.324 (tp=189, pred=587, gold=578)`** (up from `0.294` baseline; note `316` of `344` loose-to-strict pairs differ only on free-text `device_label` wording, e.g. `A1` vs `A1 (RFMS 1200 nm / PED 0 nm)`).
+  - **`Schema-Strict` (`material_class+scan+agg+origin+metric+val`)**: **`P=0.744 R=0.756 F1=0.750 (tp=437, pred=587, gold=578)`**
+  - **`Medium` (`agg+origin+metric+val`)**: **`P=0.806 R=0.818 F1=0.812 (tp=473, pred=587, gold=578)`** (up from `0.791`)
+  - **`Loose` (`metric+val`)**: **`P=0.908 R=0.922 F1=0.915 (tp=533, pred=587, gold=578)`** (up from `0.877`; every in-scope paper scored `0.755–1.000`, with `D002`/`D007`/`D018` at `1.000`, `D001` at `0.988`, `D012` at `0.960`, `D017` at `0.957`, `D014` at `0.945`, `D019` at `0.938`, `D015` at `0.931`, `D020` at `0.927`, `D021` at `0.922`, `D003` at `0.919`, `D005` at `0.909`).
+- **Offline `область_1/test` readiness check:** `90` PDFs (`1,000` total pages), `89` fully native-text PDFs + `1` PDF (`P018`, 2/13 short pages) covered by `--ocr`. Ready for full test extraction upon operator approval.
+
+### 3 · Integration Notes for Codex (`--domain solar` & `DATASET_PASSPORT.md`)
+
+1. **`main.py` (`--domain {rag,solar}`, default `rag`):**
+   - Add `ap.add_argument("--domain", choices=["rag", "solar"], default="rag")`.
+   - When `a.domain == "solar"`, delegate directly to `scripts.run_solar.main(...)` (or import `plugins.solar.pipeline` + `plugins.solar.exporter` with default `--cache cache_solar`), preserving all existing RAG flags unchanged.
+2. **`DATASET_PASSPORT.md`:**
+   - Add a **Domain 1 (Thin-Film Solar Cells)** section listing the 7 tables (`publications`, `materials`, `devices`, `layers`, `measurements`, `results`, `issues` — noting uppercase `DOI`), the 18 strict `VOCAB` constraints, the 6 `NUMERIC` columns, the 11 canonical PV metrics with normalized units (`%`, `V`, `mA/cm2`, `Ohm*cm2`, `h`), and the 7 deterministic physical checks (`jv_consistency`, `voc_limit` on `cell` only, `eqe_consistency`, `champion_vs_mean`, `range`, `hysteresis_index`, `missing_conditions`/`comparability`).
+
 ## STRICT-DEV-PLOT-001
 
 - Status (`complete` or `blocked`): `complete`
