@@ -140,6 +140,46 @@ class Passport(Meta):
     table_scopes: list[TableScope]
 
 
+PASSPORT_ENTITIES = {
+    "configurations": (Config, ("config_id", "rag_variant", "generator_model")),
+    "datasets": (Dataset, ("dataset_id", "dataset_name")),
+    "tasks": (Task, ("task_id", "task_type")),
+    "experiments": (Experiment, ("experiment_id", "evaluation_protocol")),
+    "issues": (MetaIssue, ("check_name", "description")),
+}
+
+
+def passport_fields(model, first):
+    return (*first, *(field for field in model.model_fields if field not in first))
+
+
+class CompactPassport(BaseModel):
+    publication: Publication
+    configurations: list[list[str | int | float | None]]
+    datasets: list[list[str | int | float | None]]
+    tasks: list[list[str | int | float | None]]
+    experiments: list[list[str | int | float | None]]
+    issues: list[list[str | int | float | None]]
+    table_scopes: list[TableScope]
+
+    def expanded(self) -> dict:
+        output = self.model_dump()
+        for key, (model, first) in PASSPORT_ENTITIES.items():
+            fields = passport_fields(model, first)
+            items = []
+            for row in output[key]:
+                if not len(first) <= len(row) <= len(fields):
+                    raise ValueError(f"{key}: expected {len(first)} to {len(fields)} positions")
+                values = dict.fromkeys(fields, "")
+                if model is MetaIssue:
+                    values["source_page"] = 0
+                values.update((field, to_page_int(value) if field == "source_page" else to_text(value))
+                              for field, value in zip(fields, row))
+                items.append(values)
+            output[key] = items
+        return Passport.model_validate(output).model_dump()
+
+
 class Result(BaseModel):
     experiment_id: str
     config_id: str

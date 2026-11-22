@@ -132,3 +132,17 @@ def compact_result_format() -> str:
         "Positions: " + ", ".join(COMPACT_FIELDS) + '.\n'
         'Example JSON: {"results":[["DS1","C01","Recall","5","0.72","Recall@5 0.72",3]]}'
     )
+
+
+def compact_passport_format() -> str:
+    from plugins.rag.schemas import PASSPORT_ENTITIES, passport_fields
+
+    return (
+        "PASSPORT JSON FORMAT: use arrays of positional arrays for the entity lists below. "
+        "Include at least the first two fields (three for configurations, with an empty string "
+        "for an absent generator). Omit empty trailing positions, keep empty interior slots, "
+        "and keep entity notes short. Keep publication and table_scopes in their object schema. "
+        "Example: \"datasets\": [[\"DS1\",\"Corpus A\"]].\n"
+        + "\n".join(f"{key}: {', '.join(passport_fields(model, first))}"
+                    for key, (model, first) in PASSPORT_ENTITIES.items())
+    )

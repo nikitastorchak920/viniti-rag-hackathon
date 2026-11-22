@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import math
 import re
 
-from plugins.rag.table_context import label, mentions
+from plugins.rag.table_context import identity_label, label, mentions, mentions_identity
 
 
 FIGURE = re.compile(r"^\s*((?:figure|fig\.)\s+([a-z]?\d+)[.:])(?:\s|$)", re.I)
@@ -14,6 +14,7 @@ REFERENCE = re.compile(r"\bfig(?:ure)?s?\.?\s+([a-z]?\d+(?:\s*[-–]\s*[a-z]?\d+
                        r"(?:\s*(?:,|&|and)\s*[a-z]?\d+(?:\s*[-–]\s*[a-z]?\d+)?)*)", re.I)
 NUMERIC = re.compile(r"[-+−]?(?:\d+(?:\.\d+)?|\.\d+)%?")
 RATIO_METRIC = re.compile(r"\b(?:precision|recall|f1|accuracy)\b", re.I)
+EXPLICIT_SETTING = re.compile(r"\b(?:\w+\s*=\s*\d|top[-\s]*\d+)\b", re.I)
 
 
 @dataclass(frozen=True)
@@ -130,6 +131,23 @@ def _dataset(title, datasets):
     return next(iter(best)) if len(best) == 1 else ""
 
 
+def _panel_configuration(title, generator, configurations):
+    """Attach an existing configuration only when its method is printed in the panel."""
+    # A panel can use a parameter whose meaning differs from the cached top_k.
+    if EXPLICIT_SETTING.search(title):
+        return ""
+    text = label(title)
+    candidates = [(len(variant), row["config_id"]) for row in configurations
+                  if (variant := identity_label(row.get("rag_variant") or ""))
+                  and mentions_identity(variant, text)
+                  and identity_label(row.get("generator_model") or "") == identity_label(generator)]
+    if not candidates:
+        return ""
+    longest = max(n for n, _ in candidates)
+    ids = {cid for n, cid in candidates if n == longest}
+    return next(iter(ids)) if len(ids) == 1 else ""
+
+
 def recover_plot_points(pdf, pages, cache) -> list[dict]:
     """Return approximate axis observations without claiming unprinted point-level configurations."""
     import pymupdf
@@ -137,7 +155,8 @@ def recover_plot_points(pdf, pages, cache) -> list[dict]:
 
     panels, rows, seen_series = defaultdict(list), [], set()
     meta = cache["meta"]
-    generators = {canon_space(row.get("generator_model", "")) for row in meta.get("configurations", [])}
+    configurations = meta.get("configurations", [])
+    generators = {canon_space(row.get("generator_model", "")) for row in configurations}
     generators.discard("")
     tasks = defaultdict(set)
     for window in cache.get("windows", {}).values():
@@ -185,8 +204,9 @@ def recover_plot_points(pdf, pages, cache) -> list[dict]:
     for (page_number, figure, caption), group in ordered:
         for experiment, title, dataset, (x, y, points) in group:
             task = next(iter(tasks[dataset])) if len(tasks[dataset]) == 1 else ""
-            named_models = {name for name in generators if mentions(label(name), label(title))}
+            named_models = {name for name in generators if mentions_identity(identity_label(name), label(title))}
             model = next(iter(named_models)) if len(named_models) == 1 else ""
+            config_id = _panel_configuration(title, model, configurations) if len(named_models) <= 1 else ""
             for axis_index, (metric, unit, (slope, intercept)) in enumerate((x, y)):
                 calibrated = [slope * p[axis_index] + intercept for p in points]
                 if unit == "fraction" and any(v < -0.0001 or v > 1.0001 for v in calibrated):
@@ -200,7 +220,8 @@ def recover_plot_points(pdf, pages, cache) -> list[dict]:
                     if math.isfinite(float(value)):
                         rows.append(dict(source_page=page_number, source_figure=f"Figure {figure}", source_fragment=caption,
                                          metric_name=metric, raw_unit=unit, raw_value=f"~{value}", experiment_id=experiment,
-                                         dataset_id=dataset, task_id=task, result_origin="primary", extraction_status="extracted",
+                                         config_id=config_id, dataset_id=dataset, task_id=task,
+                                         result_origin="primary", extraction_status="extracted",
                                          plot_observation=True, plot_generator=model,
                                          note=f"{title} | Vector marker {point_index} at ({point[0]:.3f}, {point[1]:.3f}) pt; approximate value calibrated against axis ticks."))
     return rows

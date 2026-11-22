@@ -7,7 +7,8 @@ import time
 
 from core.llm_client import GeminiClient, LLMError, TruncatedResponseError, load_cache, log, save_cache
 from core.pdf_processor import inspect_pdf
-from plugins.rag.prompts import META_USER, RESULT_SYSTEM, SYSTEM, compact_result_format, verify_user, window_user
+from plugins.rag.prompts import (META_USER, RESULT_SYSTEM, SYSTEM, compact_passport_format,
+                                 compact_result_format, verify_user, window_user)
 
 CACHE_VERSION = 2
 
@@ -15,19 +16,24 @@ CACHE_VERSION = 2
 def _gen(client, contents, schema, tag: str) -> dict:
     """generate_json + strict validation (coerces "3"->3, "false"->False). Never returns unvalidated data."""
     from pydantic import ValidationError
-    from plugins.rag.schemas import CompactWindow
+    from plugins.rag.schemas import CompactPassport, CompactWindow
 
-    compact = schema is CompactWindow
-    system = RESULT_SYSTEM + "\n\n" + compact_result_format() if compact else SYSTEM
+    if schema is CompactWindow:
+        system = RESULT_SYSTEM + "\n\n" + compact_result_format()
+    elif schema is CompactPassport:
+        system = SYSTEM + "\n\n" + compact_passport_format()
+    else:
+        system = SYSTEM
 
     last = ""
     for _ in range(3):
         data = client.generate_json(contents, system, schema, tag=tag)
         try:
             validated = schema.model_validate(data)
-            return validated.expanded() if compact else validated.model_dump()
-        except ValidationError as exc:
-            last = str(exc).splitlines()[0][:200] + " " + (str(exc.errors()[0].get("loc")) if exc.errors() else "")
+            return validated.expanded() if schema in (CompactWindow, CompactPassport) else validated.model_dump()
+        except ValueError as exc:
+            errors = exc.errors() if isinstance(exc, ValidationError) else []
+            last = str(exc).splitlines()[0][:200] + " " + (str(errors[0].get("loc")) if errors else "")
             log(f"  [{tag}] schema validation failed ({last}); retrying")
     raise LLMError(f"model output failed schema validation 3x: {last}")
 
@@ -221,8 +227,14 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
     if cache.get("complete"):
         return True, "cached"
     wants_text = pdf_mode != "pdf" or getattr(client, "text_only", False)
+    cached_window = cache.get("window")
+    legacy_text = (wants_text and cache.get("mode") == "text" and not cache.get("ocr")
+                   and cache.get("text_format", "plain") == "plain"
+                   and cache.get("result_plan", "page-v1") == "page-v1"
+                   and isinstance(cache.get("meta"), dict)
+                   and isinstance(cached_window, int) and cached_window > 0 and bool(cache.get("windows")))
     try:
-        info = inspect_pdf(pdf, ocr=ocr and wants_text, structured=wants_text)
+        info = inspect_pdf(pdf, ocr=ocr and wants_text, structured=wants_text and not legacy_text)
     except Exception as exc:  # noqa: BLE001
         return False, f"cannot read PDF: {type(exc).__name__}: {exc}"
     if info.n_pages == 0:
@@ -238,6 +250,11 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
         use_pdf = False
     if not use_pdf and info.is_scan:
         return False, "no text layer and --pdf-mode text forbids multimodal upload"
+    if legacy_text and (use_pdf or info.used_ocr or cache.get("n_pages") != info.n_pages):
+        return False, "legacy page cache no longer matches the PDF; use an isolated cache for a fresh extraction"
+    if legacy_text:
+        window = cached_window
+        log(f"  [{doc_id}] resuming {len(cache['windows'])} saved windows with the original plain-text plan")
     mode = "pdf" if use_pdf else "text"
     used_ocr = info.used_ocr and not use_pdf
     text_format = "markdown-v1" if info.structured_pages is not None else "plain"
@@ -247,7 +264,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                   or (mode == "text" and (bool(cache.get("ocr")) != used_ocr
                                           or cache.get("text_format", "plain") != text_format))):
         cache = {}
-    result_plan = "page-v1" if use_pdf else "table-v1"
+    result_plan = "page-v1" if use_pdf or legacy_text else "table-v1"
     if (cache.get("result_plan", "page-v1"), cache.get("window", window)) != (result_plan, window):
         cache.pop("windows", None)
         cache.pop("table_splits", None)
@@ -256,7 +273,7 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
                  windows=cache.get("windows", {}), complete=False)
     if mode == "text":
         cache["text_format"] = text_format
-    from plugins.rag.schemas import Passport  # lazy: needs pydantic
+    from plugins.rag.schemas import CompactPassport, Passport  # lazy: needs pydantic
 
     uploaded = None
     try:
@@ -273,12 +290,16 @@ def process_document(pdf: pathlib.Path, client: GeminiClient | None, cache_dir: 
 
         if "meta" not in cache:
             log(f"  [{doc_id}] meta pass ({info.n_pages} pages)")
-            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), Passport, doc_id)
+            schema = CompactPassport if getattr(client, "compact_results", False) is True else Passport
+            cache["meta"] = _gen(client, contents(META_USER, 1, info.n_pages, None), schema, doc_id)
             save_cache(cache_dir, doc_id, cache)
         in_scope = cache["meta"]["publication"].get("in_scope")
         if in_scope:
             page_text = None
-            if not use_pdf:
+            if legacy_text:
+                page_text = lambda page: info.pages[page - 1]
+                text_contents = contents
+            elif not use_pdf:
                 from plugins.rag.table_windows import plan
 
                 tables, residual = plan(info.prompt_pages)

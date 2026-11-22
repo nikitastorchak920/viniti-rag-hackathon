@@ -330,9 +330,12 @@ class DeepSeekClient:
                 u = resp.get("usage") or {}
                 completion_tokens = u.get("completion_tokens") or 0
                 t_in, t_out = self._tok.add(u.get("prompt_tokens", 0), completion_tokens)
-                log(f"  [{tag}] tokens in={u.get('prompt_tokens', 0)} out={completion_tokens} "
-                    f"(total in={t_in} out={t_out})")
                 ch = (resp.get("choices") or [{}])[0]
+                reported_model = str(resp.get("model") or "unreported")[:120]
+                finish_reason = str(ch.get("finish_reason") or "unreported")[:40]
+                log(f"  [{tag}] tokens in={u.get('prompt_tokens', 0)} out={completion_tokens} "
+                    f"(total in={t_in} out={t_out}) "
+                    f"model={reported_model!r} finish={finish_reason!r} cap={self.max_out} attempt={attempt + 1}")
                 if ch.get("finish_reason") == "length":
                     raise TruncatedResponseError("output truncated (finish_reason=length): window will be split")
                 text = ((ch.get("message") or {}).get("content") or "").strip()

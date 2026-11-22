@@ -324,6 +324,47 @@ class Linking(unittest.TestCase):
 
 
 class Pipeline(unittest.TestCase):
+    def test_legacy_cache_resumes_only_missing_pages_with_saved_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            pdf = root / "PAPER.pdf"
+            old = make_cache([result()])
+            old.update(version=2, complete=False, mode="text", window=2, n_pages=3)
+            old["windows"] = {"1-2": {"results": [result()]}}
+            llm_client.save_cache(root, pdf.stem, old)
+            info = pdf_processor.PdfInfo(pdf, 3, ["old input", "old input", "last page"])
+            with patch.object(pipeline, "inspect_pdf", return_value=info) as inspect, \
+                    patch.object(pipeline, "_window", return_value={"results": []}) as extract, \
+                    patch.object(pipeline, "_gen") as generate:
+                self.assertTrue(pipeline.process_document(pdf, Mock(text_only=True), root, False, 3, "auto")[0])
+            inspect.assert_called_once_with(pdf, ocr=False, structured=False)
+            generate.assert_not_called()
+            self.assertEqual(extract.call_args.args[3:5], (3, 3))
+            final = llm_client.load_cache(root, pdf.stem)
+            self.assertTrue(final["complete"])
+            self.assertEqual(final["windows"]["1-2"], old["windows"]["1-2"])
+            self.assertEqual(final["result_plan"], "page-v1")
+
+    def test_plot_context_requires_printed_method_and_no_unmapped_parameter(self):
+        from plugins.rag.plot_recovery import _panel_configuration
+
+        configs = [{"config_id": "C1", "rag_variant": "Sparse search", "generator_model": "Model 2"}]
+        self.assertEqual(_panel_configuration("Corpus — Sparse search / Model-2", "Model 2", configs), "C1")
+        self.assertEqual(_panel_configuration("Corpus — Model-2", "Model 2", configs), "")
+        self.assertEqual(_panel_configuration("Sparse search / Model-2 k=3", "Model 2", configs), "")
+
+    def test_unmapped_dataset_header_does_not_shift_neighbor_columns(self):
+        from core.pdf_processor import TextLine
+        from plugins.rag.table_context import _columns
+
+        heads = [TextLine(i * 100 + 40, i * 100 + 60, 10, name)
+                 for i, name in enumerate(["Alpha", "unmapped", "Beta"])]
+        metrics = [TextLine(i * 100 + x, i * 100 + x + 10, 20, name)
+                   for i in range(3) for x, name in [(25, "EM"), (65, "F1")]]
+        result = _columns(heads, metrics, {"alpha": "A", "beta": "B"})
+        self.assertEqual([(name, ds) for _, name, ds in result],
+                         [("em", "A"), ("f1", "A"), ("em", ""), ("f1", ""), ("em", "B"), ("f1", "B")])
+
     def test_slice_overlap_keeps_distinct_conditions(self):
         from plugins.rag import pipeline
 
@@ -427,6 +468,23 @@ class TableWindows(unittest.TestCase):
 
 
 class EntityPassport(unittest.TestCase):
+    def test_compact_passport_expands_to_the_cache_schema(self):
+        from plugins.rag.schemas import CompactPassport, Passport
+
+        compact = CompactPassport.model_validate({
+            "publication": dict(make_cache([])["meta"]["publication"], doi="", authors=""),
+            "configurations": [["C1", "Method", "Generator"]],
+            "datasets": [["D1", "Corpus"]],
+            "tasks": [], "experiments": [],
+            "issues": [["ambiguous", "Check the source", 2]],
+            "table_scopes": [],
+        })
+        result = compact.expanded()
+        self.assertEqual(result, Passport.model_validate(result).model_dump())
+        self.assertEqual(result["configurations"][0]["generator_model"], "Generator")
+        self.assertEqual(result["configurations"][0]["top_k"], "")
+        self.assertEqual(result["issues"][0]["source_page"], 2)
+
     def test_cutoff_requires_same_page_and_table_with_literal_evidence(self):
         scope = {"source_page": 1, "source_table": "Table 1", "metric_cutoffs": [
             {"metric_name": "Recall", "metric_k": "5", "source_fragment": "Recall@5"},

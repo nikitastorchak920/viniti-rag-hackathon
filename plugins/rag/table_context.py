@@ -90,7 +90,8 @@ def native_captions(layout):
 
 def _columns(headings, metrics, dataset_labels):
     ids = [dataset_labels.get(label(line.text), "") for line in headings]
-    if len(ids) < 2 or not all(ids) or len(ids) != len(set(ids)):
+    known = [value for value in ids if value]
+    if len(known) < 2 or len(known) != len(set(known)):
         return []
     # Column groups must have repeated metric headers, with each dataset centered above its group.
     for width in range(len(metrics) // len(ids), 0, -1):
