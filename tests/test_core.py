@@ -401,6 +401,19 @@ class Linking(unittest.TestCase):
         link_table_configurations(rows, layout, tokens, ["Accuracy .91 .86 Coverage .52"], configs, [])
         self.assertEqual([row["config_id"] for row in rows], ["C02", "C01", "C01"])
 
+    def test_ordered_metric_legend_expands_only_unambiguous_names(self):
+        rows = [{"metric_name": metric, "note": "", "raw_value": "12.5", "source_fragment": "printed evidence"}
+                for metric in ("FAL", "Late", "UNC.", "OTHER")]
+        exporter._expand_metric_abbreviations(rows, [
+            "FAL, LATE, and UNC. denote false alerts, delayed responses, and unclear-answer rates, respectively.",
+            "LATE and ANS denote late retrieval and accepted answers, respectively.",
+            "OTHER and BAD denote an incomplete list, respectively.",
+        ])
+        self.assertEqual([row["metric_name"] for row in rows],
+                         ["false alerts rate", "Late", "unclear-answer rate", "OTHER"])
+        self.assertTrue(all(row["raw_value"] == "12.5" and row["source_fragment"] == "printed evidence"
+                            for row in rows))
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]

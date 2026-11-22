@@ -424,15 +424,30 @@ def _passport_cutoffs(meta: dict, pages_norm: list[str] | None) -> dict:
 
 
 def _expand_metric_abbreviations(rows: list[dict], pages_norm: list[str] | None) -> None:
-    """Restore one-word metric expansions only when explicitly defined in this PDF."""
+    """Restore unique metric expansions explicitly defined in this PDF."""
     definitions = defaultdict(set)
+    ordered = re.compile(
+        r"(?<!\w)([A-Z][A-Z0-9]{1,9}\.?(?:(?:,\s*(?:and\s+)?|\s+and\s+)"
+        r"[A-Z][A-Z0-9]{1,9}\.?){1,5})\s+(?:denote|stand for)\s+"
+        r"([A-Za-z][A-Za-z ,‐‑–-]{2,180}?),?\s+respectively\b"
+    )
     for page in pages_norm or ():
         for full, short in re.findall(r"\b([A-Z][a-z][a-z-]{2,})\s*\(([A-Z][A-Za-z]{1,6})\)", page):
             if full.casefold().startswith(short.casefold()):
-                definitions[short.casefold()].add(full)
+                definitions[label(short)].add(full)
+        for short, full in ordered.findall(page):
+            split = r",\s*(?:and\s+)?|\s+and\s+"
+            names = re.split(split, full)
+            aliases = re.split(split, short)
+            if len(aliases) != len(names) or len(set(map(label, aliases))) != len(aliases):
+                continue
+            if names[-1].endswith(" rates") and all(not name.endswith((" rate", " rates")) for name in names[:-1]):
+                names = [name + " rate" for name in names[:-1]] + [names[-1][:-1]]
+            for alias, name in zip(aliases, names):
+                definitions[label(alias)].add(name)
     for row in rows:
         original = row["metric_name"]
-        possible = definitions[original.casefold()]
+        possible = definitions[label(original)]
         if len(possible) == 1:
             row["metric_name"] = next(iter(possible))
             row["note"] = (row["note"] + " | " if row["note"] else "") + f"Printed metric abbreviation: {original}."
