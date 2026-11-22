@@ -435,6 +435,19 @@ class Linking(unittest.TestCase):
                          ["retrieval and generation steps per query", "relative time per query", "Step", "Time"])
         self.assertTrue(all(r["metric_value"] == "1.00" for r in rows))
 
+    def test_accuracy_uses_the_matching_table_caption_only(self):
+        first = dict(metric_name="Accuracy", source_page="2", source_table="Table 3", note="",
+                     raw_value="0.85", source_fragment="Method 0.85")
+        rows = [first, dict(first, source_table="Table 4"), dict(first, source_page="3"),
+                dict(first, metric_name="Accuracy@5")]
+        exporter._name_caption_accuracy(rows, {
+            ("2", "table 3"): "Table 3: LLM QA accuracy by method.",
+            ("2", "table 4"): "Table 4: Results compared against QA accuracy.",
+        })
+        self.assertEqual([row["metric_name"] for row in rows],
+                         ["QA accuracy", "Accuracy", "Accuracy", "Accuracy@5"])
+        self.assertEqual((first["raw_value"], first["source_fragment"]), ("0.85", "Method 0.85"))
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]

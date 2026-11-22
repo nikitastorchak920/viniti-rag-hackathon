@@ -24,6 +24,7 @@ STATUSES = frozenset(get_args(ExtractionStatus))
 BOUNDED = re.compile(
     r"(?i)^(accuracy|acc|precision|recall|f1|f-?score|exact match|em|hit(?:s|\s*rate)?|mrr|ndcg|map|"
     r"faithfulness|answer relevan\w*|context (?:precision|recall|relevan\w*)|correctness)(?:\s*@\s*\d+)?$")
+_QUALIFIED_ACCURACY = r"(?:QA|answer|classification|routing|retrieval)\s+accuracy"
 LOWER = re.compile(r"(?i)latency|loss|error|perplexity|hallucination|cost|time|tokens|wer\b|cer\b|memory")
 HIGHER = re.compile(r"(?i)accuracy|\bacc\b|exact match|\bem\b|f1|f-?score|precision|recall|hit|mrr|ndcg|\bmap\b|"
                     r"rouge|bleu|faithfulness|relevan|correctness|win rate")
@@ -471,6 +472,25 @@ def _name_printed_rates(rows, pages_norm):
         row["note"] = " | ".join(filter(None, (row["note"], f"Printed short metric: {original}.")))
 
 
+def _name_caption_accuracy(rows, captions):
+    """Use the accuracy type explicitly named at the start of a table caption."""
+    qualified = {}
+    for scope, caption in captions.items():
+        match = re.match(rf"^Table\s+[A-Za-z]?\d+(?:\.\d+)*[A-Za-z]?[.:]\s*"
+                         rf"(?:LLM\s+)?({_QUALIFIED_ACCURACY})\b",
+                         caption, re.I)
+        if match:
+            qualified[scope] = match[1]
+    occupied = {(row["source_page"], label(row["source_table"]), label(row["metric_name"])) for row in rows}
+    for row in rows:
+        scope = (row["source_page"], label(row["source_table"]))
+        full = qualified.get(scope)
+        if not full or row["metric_name"].casefold() != "accuracy" or (*scope, label(full)) in occupied:
+            continue
+        row["metric_name"] = full
+        row["note"] = " | ".join(filter(None, (row["note"], "Printed short metric: Accuracy.")))
+
+
 def _name_efficiency_columns(rows, pages_norm):
     """Describe paired efficiency headings when the source defines both measurements."""
     definition = re.compile(
@@ -895,8 +915,9 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
             validations.append((row, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict))
     if cells:
         relink(rows, cells)
+    captions = native_captions(table_layout or {})
     _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
-              native_captions(table_layout or {}), row_captions, pages_norm, model_aliases)
+              captions, row_captions, pages_norm, model_aliases)
     if table_layout and pages_norm:
         from plugins.rag.table_context import link_aggregates, link_table_configurations
 
@@ -909,6 +930,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     _strip_repeated_context_labels(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _name_printed_rates(rows, pages_norm)
+    _name_caption_accuracy(rows, captions)
     _name_efficiency_columns(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
@@ -948,7 +970,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     topk = {c["config_id"]: c["top_k"] for c in out["configurations"] if c["top_k"]}
     for r, explicit_k, cutoffs, provenance, nonnumeric, baseline_conflict in validations:
         issues.extend(check_result(r, printed_cutoffs=cutoffs, explicit_k=explicit_k, top_k=topk.get(r["config_id"], ""),
-                                   bounded=bool(BOUNDED.match(r["metric_name"])),
+                                   bounded=bool(BOUNDED.match(r["metric_name"])
+                                                or re.fullmatch(_QUALIFIED_ACCURACY, r["metric_name"], re.I)),
                                    difference=bool(DELTA.search(r["metric_name"])), provenance=provenance,
                                    baseline_conflict=baseline_conflict))
         if nonnumeric:
