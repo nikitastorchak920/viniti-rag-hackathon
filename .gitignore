@@ -13,6 +13,7 @@ cache_local/
 /*.pdf
 /dev_metrics_21.csv
 /dev_metrics_21.txt
+/dev_metrics_current.txt
 out_*/
 submission/
 *.json
