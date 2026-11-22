@@ -136,6 +136,7 @@ def _table_candidates(lines, dataset_labels, configurations, metrics):
         caption = label(" ".join(line.text for row in prefix for line in row))
         declared_metrics = {name for name in metrics if mentions(name, caption)}
         columns, single, row_group = [], False, ""
+        anchor_left = None
         last_y = rows[start][0].baseline
         for i in range(start + 1, end):
             row = rows[i]
@@ -145,8 +146,10 @@ def _table_candidates(lines, dataset_labels, configurations, metrics):
                 columns = header
                 single = False
                 row_group = ""
+                anchor_left = None
             elif len(declared_metrics) == 1 and label(row[0].text) in {"method", "model", "configuration", "system"}:
                 columns, row_group = [], ""
+                anchor_left = None
                 ids = [dataset_labels.get(label(line.text), "") for line in row[1:]]
                 if len({value for value in ids if value}) >= 2:
                     metric = next(iter(declared_metrics))
@@ -169,11 +172,20 @@ def _table_candidates(lines, dataset_labels, configurations, metrics):
             if any(len(values) != 1 for values in aligned):
                 if single and not numeric and len(row) == 1:
                     row_group, _ = _method(label(left), caption, configurations, anchor_model=False)
+                    anchor_left = row[0].left if row_group else None
                 continue
             row_label = label(left)
-            if single and row_group and (left.startswith("+") or left in {"-", "–", "—"}):
+            continuation = left.startswith("+") or left in {"-", "–", "—"}
+            if single and row_group and continuation and anchor_left is not None and row[0].left >= anchor_left:
                 row_label = f"{row_group} {row_label}".strip()
-            variant, config_ids = _method(row_label, caption, configurations, anchor_model=not single)
+            elif single and not continuation:
+                # A body row can also be the parent of subsequent indented modifiers.
+                row_group, anchor_left = row_label, row[0].left
+            if single and continuation and row_label != label(left):
+                exact = [configuration for configuration in configurations if configuration[1] == row_label]
+                variant, config_ids = _method(row_label, caption, exact, anchor_model=False)
+            else:
+                variant, config_ids = _method(row_label, caption, configurations, anchor_model=not single)
             if not config_ids:
                 continue
             for (_, metric, dataset_id), ((value, printed),) in zip(columns, aligned):

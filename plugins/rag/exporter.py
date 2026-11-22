@@ -189,6 +189,8 @@ _MODEL_DECLARATION = re.compile(
     r"\(\s*(?P<identifier>[\w.]+(?:-[\w.]+)+)\s*\)"
 )
 _AUTHOR_LABEL = re.compile(r"(?i)\s*(?:\(\s*ours\s*\)|\[\s*ours\s*\])$")
+_ACRONYM_DEFINITION = re.compile(r"\b((?:[A-Za-z][A-Za-z-]* ){2,5})\(([A-Z]{2,5})\)")
+_EXCLUDED_COMPONENT = re.compile(r"(?i:\bw/o |\bwithout )([A-Z]{2,5})\b")
 
 
 def _model_parts(name: str) -> tuple[str, ...]:
@@ -219,6 +221,25 @@ def dataset_display_name(name: str, version: str) -> str:
         return name
     suffix = re.escape(version)
     return re.sub(rf"(?:\s+{suffix}|\s*\({suffix}\)|\s*\[{suffix}\])$", "", name, flags=re.I).strip() or name
+
+
+def _expand_excluded_components(configurations, pages_norm):
+    """Expand a negated component acronym only through an explicit paper definition."""
+    names = defaultdict(set)
+    for page in pages_norm or ():
+        for text, short in _ACRONYM_DEFINITION.findall(page):
+            words = text.split()[-len(short):]
+            if "".join(word[0].upper() for word in words) == short:
+                names[short].add(" ".join(words).casefold())
+
+    def expand(match):
+        choices = names[match[1]]
+        if len(choices) != 1:
+            return match[0]
+        return match[0][:-len(match[1])] + next(iter(choices))
+
+    for config in configurations:
+        config["rag_variant"] = _EXCLUDED_COMPONENT.sub(expand, config["rag_variant"])
 
 
 def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -> None:
@@ -684,6 +705,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         relink(rows, cells)
     _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
               native_captions(table_layout or {}), row_captions, pages_norm, model_aliases)
+    _expand_excluded_components(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----

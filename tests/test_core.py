@@ -259,6 +259,29 @@ class Linking(unittest.TestCase):
                          [("DS2", "C01"), ("DS1", "C03"), ("DS1", "C02"), ("DS1", "C02")])
         self.assertTrue(all(r["metric_value"] == "0.34" for r in doc["results"]))
 
+    def test_indented_option_keeps_parent_configuration_and_checks_its_definition(self):
+        from core.pdf_processor import TextLine
+
+        layout = {1: [TextLine(x, x + 20, y, name) for x, y, name in [
+            (10, 10, "Table 1: EM over two corpora."),
+            (10, 20, "Method"), (100, 20, "Corpus A"), (200, 20, "Corpus B"),
+            (10, 30, "Dense"), (100, 30, "0.12"), (200, 30, "0.24"),
+            (18, 40, "+ Filter w/o RC"), (100, 40, "0.31"), (200, 40, "0.45"),
+            (10, 50, "Sparse"), (100, 50, "0.31"), (200, 50, "0.45"),
+        ]]}
+        configs = [{"config_id": cid, "rag_variant": name} for cid, name in
+                   [("C1", "Dense"), ("C2", "Dense + Filter w/o RC"), ("C3", "Sparse")]]
+        datasets = [{"dataset_id": cid, "dataset_name": name} for cid, name in
+                    [("D1", "Corpus A"), ("D2", "Corpus B")]]
+        rows = [result(raw_value="0.45", source_fragment="0.45", config_id="C2", dataset_id="D1")]
+        cache = make_cache(rows, configs=configs, datasets=datasets)
+        doc = exporter.build_doc("P1", cache, ["rank cutoff (RC). 0.45", ""], Mock(), table_layout=layout)
+        self.assertEqual(doc["results"][0]["dataset_id"], "D2")
+        self.assertEqual(doc["configurations"][1]["rag_variant"], "Dense + Filter w/o rank cutoff")
+        conflict = exporter.build_doc("P1", cache, ["rank cutoff (RC). reranker confidence (RC). 0.45", ""],
+                                      Mock(), table_layout=layout)
+        self.assertEqual(conflict["configurations"][1]["rag_variant"], "Dense + Filter w/o RC")
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]
