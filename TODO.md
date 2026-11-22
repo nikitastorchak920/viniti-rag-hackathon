@@ -2,6 +2,7 @@
 
 ## Current checkpoint
 
+- **Strict linkage iteration 5:** `out_dev_strict_links_5/` reached 1,061 Strict TP and P/R/F1 0.20000/0.05471/0.08592 on the same 5,305 predictions. It adds 29 matches over `114b8d7` (+23 D009, +6 D012) with zero strict losses. Loose remains 1,853 TP at 0.34929/0.09555/0.15006. The full dev rebuild had 21/21 coverage, zero structural errors and zero API calls. Both suites passed (71 tests).
 - **Strict linkage iteration 4:** `out_dev_strict_links_4/` scored 1,032 Strict TP on 5,305 predictions, P/R/F1 0.19453/0.05322/0.08357. Compared with `62d6db1`, 36 matches were added in D011 with zero losses. Loose P/R/F1 stayed at 0.34929/0.09555/0.15006, 1,853 TP. All 21 papers and zero structural errors, 70 tests passed, zero API calls. The frozen cache and exact result quotations were preserved. At this row count, the F1 0.100 milestone needs 203 additional Strict TP.
 - **Strict linkage iteration 3:** The first milestone passed on the same 21-paper frozen cache. `out_dev_strict_links_3/` reached 996 Strict TP and P/R/F1 0.18775/0.05136/0.08066, with 27 new matches and zero losses over iteration 2 (`a9b47ef`). Total gain from the baseline is 136. Loose stayed at 1,853 TP and P/R/F1 0.34929/0.09555/0.15006, with 5,305 scored predictions. The native checker found zero structural errors. Both regression suites passed (69 tests), with zero API calls.
 - **Strict linkage iteration 2:** Tested over iteration 1 (`6396420`) on the same 21 complete caches. `out_dev_strict_links_2/` reached 969 Strict TP, P/R/F1 0.18266/0.04997/0.07847, with 47 new matches and zero losses (+35 D006, +12 D009). Loose P/R/F1 stayed at 0.34929/0.09555/0.15006 with 1,853 TP. Structural errors 0, 68 tests passed, zero API calls. The first milestone needs 19 more Strict TP at the current prediction count.
@@ -19,13 +20,13 @@
 |---|---|---:|---:|---|---:|---|
 | D009 recovery checkpoint | 19/21 complete | 4,687 | 814 | 0.04198/0.17367/0.06761 | 1,674 | 0.08632/0.35716/0.13904 |
 | Frozen full dev baseline | 21/21 complete | 5,305 | 860 | 0.04435/0.16211/0.06964 | 1,853 | 0.09555/0.34929/0.15006 |
-| Latest full dev export, linkage iteration 4 | 21/21 complete | 5,305 | 1,032 | 0.05322/0.19453/0.08357 | 1,853 | 0.09555/0.34929/0.15006 |
+| Latest full dev export, linkage iteration 5 | 21/21 complete | 5,305 | 1,061 | 0.05471/0.20000/0.08592 | 1,853 | 0.09555/0.34929/0.15006 |
 
 - **Paper status:** D009 resumed from page 7 using its existing entity IDs and both saved windows. It now has 146 Strict and 324 Loose TP. D002's first passport hit the 16,384-token limit. A compact passport completed at the same limit with 3,113 output tokens. D002 is complete with 0 Strict and 57 Loose TP. D013 completed with 46 Strict and 122 Loose TP. The final export has zero stubs, 21/21 scope agreement, and zero structural errors. Both snapshots use the same 19,392 gold observations.
 - **Constraints:** Keep RapidOCR at 200 dpi (9/9 on the checked scan row set; 150 dpi gave 8/9). Retain the current gateway's 16,384-token output cap. Keep the configured model, cache v2, seven CSV schemas, and evaluator unchanged. Prefer offline checks. Keep figure recovery opt-in, the frontend untouched, and the 111-paper test corpus out of dev experiments.
 - **Handoff preparation verification:** 61 tests passed. Re-evaluation of the existing local export confirmed 860 Strict and 1,853 Loose TP. The ignore rules cover secrets, raw PDFs, local cache archives, generated reports and out bundles. Nothing under `handoff/` was edited in this checkpoint.
 - **Active blockers:** 492 citations need review after OCR. D014 accounts for 11,760 gold observations and still has zero Strict TP. Ambiguous point correspondences and unknown configuration fields block default vector adoption. D002 still needs source-backed Strict entity links. Operator MVP sign-off is pending.
-- **Exact next step:** Measure the vector variant against `out_dev_strict_links_4/` and count the rows whose full configurations the PDF actually supports. Read the independent plot audit when available. D013 page 8 stays first for manual citation review.
+- **Exact next step:** Recover source-backed parameter names and numeric values from single-symbol table columns. Score this against `out_dev_strict_links_5/`, especially D009 Table 11. The isolated vector run still adds 10,135 Loose TP and zero Strict TP. Read Antigravity's source evidence when available. D013 page 8 stays first for manual citation review.
 
 Full evidence is in the [metric audit](METRIC_AUDIT.md#итог-на-полном-dev) and [benchmark log](handoff/STRICT_F1_STATE.md#recovery-plan-execution--21-complete-papers).
 

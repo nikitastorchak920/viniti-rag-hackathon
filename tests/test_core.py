@@ -307,6 +307,18 @@ class Linking(unittest.TestCase):
         self.assertEqual(doc["configurations"][0]["rag_variant"], "Alpha only")
         self.assertEqual(doc["results"][0]["source_fragment"], raw["source_fragment"])
 
+    def test_model_modes_and_redactions_need_printed_evidence(self):
+        configs = [{"rag_variant": "Route", "generator_model": "Acme 2B"},
+                   {"rag_variant": "Route-Base", "generator_model": "Acme 2B Base"},
+                   {"rag_variant": "Route-Chat", "generator_model": "Acme 2B Instruct"}]
+        exporter._strip_repeated_backbone_modes(configs, ["The table shows Route-Base and Route-Chat."])
+        self.assertEqual([row["rag_variant"] for row in configs], ["Route", "Route", "Route-Chat"])
+
+        masked = "[模型名称已隐藏]-V3"
+        self.assertEqual(exporter.source_generator(masked, ["Compared the Acme-V3 model."]), "Acme-V3")
+        self.assertEqual(exporter.source_generator(masked, ["Compared Acme-V3 and Beta-V3."]), "")
+        self.assertEqual(exporter.source_generator(masked, ["Compared the Acme-V4 model."]), "")
+
     def test_aggregate_link_requires_unique_cell_and_verified_quote(self):
         from core.pdf_processor import TextLine
         from plugins.rag.table_context import link_aggregates

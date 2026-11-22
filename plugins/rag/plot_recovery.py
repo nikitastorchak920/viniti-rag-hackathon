@@ -151,12 +151,13 @@ def _panel_configuration(title, generator, configurations):
 def recover_plot_points(pdf, pages, cache) -> list[dict]:
     """Return approximate axis observations without claiming unprinted point-level configurations."""
     import pymupdf
-    from plugins.rag.exporter import canon_space
+    from plugins.rag.exporter import source_generator
 
     panels, rows, seen_series = defaultdict(list), [], set()
     meta = cache["meta"]
-    configurations = meta.get("configurations", [])
-    generators = {canon_space(row.get("generator_model", "")) for row in configurations}
+    configurations = [dict(row, generator_model=source_generator(row.get("generator_model", ""), pages))
+                      for row in meta.get("configurations", [])]
+    generators = {row["generator_model"] for row in configurations}
     generators.discard("")
     tasks = defaultdict(set)
     for window in cache.get("windows", {}).values():

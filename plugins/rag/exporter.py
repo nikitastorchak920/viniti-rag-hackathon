@@ -14,7 +14,7 @@ from core.validator import RULE_PROVENANCE_COMPLETE, check_result, finding
 from domains.base_schema import ExtractionStatus
 from domains.rag.schema import MetricDirection
 from domains.rag.submission import SUBMISSION_MODELS, submission_row
-from plugins.rag.table_context import dataset_aliases, identity_label, label, mentions_identity, native_captions
+from plugins.rag.table_context import dataset_aliases, identity_label, label, mentions, mentions_identity, native_captions
 
 TABLES = tuple(SUBMISSION_MODELS)
 DIRECTIONS = frozenset(get_args(MetricDirection))
@@ -179,9 +179,35 @@ def strip_names(variant: str, *names: str) -> str:
 
 
 def canon_space(t: str) -> str:
+    t = _clean_space(t)
+    return _MASKED_VENDOR.sub("GPT", t)  # legacy text-layer cleanup outside generator identifiers
+
+
+def _clean_space(t: str) -> str:
     t = unicodedata.normalize("NFKC", t or "")
-    t = re.sub(r"\[?模型名称已隐藏\]?", "GPT", t)  # masked vendor token in some PDF text layers
     return re.sub(r"\s+", " ", re.sub(r"[‐‑‒–]", "-", t)).strip()
+
+
+_MASKED_VENDOR = re.compile(r"\[?模型名称已隐藏\]?")
+_MASKED_TOKEN = re.compile(r"[\w.-]*\[?模型名称已隐藏\]?[\w.-]*")
+
+
+def source_generator(name, pages_norm):
+    """Resolve each masked token against complete, uniquely matching PDF identifiers."""
+    name = _clean_space(name)
+
+    def resolve(match):
+        parts = _MASKED_VENDOR.split(match[0])
+        if len(parts) != 2 or not any(parts):
+            return match[0]
+        prefix, suffix = map(re.escape, parts)
+        pattern = re.compile(rf"(?<![\w-]){prefix}[A-Za-z][A-Za-z0-9]*{suffix}(?![\w-]|\.\d)", re.I)
+        candidates = {_model_parts(found[0]): found[0]
+                      for page in pages_norm or () for found in pattern.finditer(page)}
+        return next(iter(candidates.values())) if len(candidates) == 1 else match[0]
+
+    resolved = _MASKED_TOKEN.sub(resolve, name)
+    return "" if _MASKED_VENDOR.search(resolved) else resolved
 
 
 _MODEL_DECLARATION = re.compile(
@@ -257,6 +283,18 @@ def _compact_named_parameters(configurations, pages_norm):
 
     for config in configurations:
         config["rag_variant"] = _NAMED_PARAMETER.sub(compact, config["rag_variant"])
+
+
+def _strip_repeated_backbone_modes(configurations, pages_norm):
+    """Keep a repeated checkpoint mode in the generator identifier once."""
+    variants = {label(row["rag_variant"]) for row in configurations}
+    evidence = tuple(label(page) for page in pages_norm or ())
+    for config in configurations:
+        name, generator = config["rag_variant"], config.get("generator_model", "")
+        mode = re.fullmatch(r"(.+?)[ -]+(base|instruct|chat)", name, re.I)
+        if (mode and label(mode[1]) in variants and label(generator).endswith(f" {mode[2].casefold()}")
+                and any(mentions(label(name), page) for page in evidence)):
+            config["rag_variant"] = mode[1]
 
 
 def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -> None:
@@ -582,8 +620,12 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
             sourced_rows.append(point)
         plot_rows = sourced_rows
     for c in cfg_in:
-        for f in ("generator_model", "retriever_model", "embedding_model", "reranker_model"):
+        for f in ("retriever_model", "embedding_model", "reranker_model"):
             c[f] = canon_space(c.get(f, ""))
+        raw_generator = _clean_space(c.get("generator_model", ""))
+        c["generator_model"] = source_generator(raw_generator, pages_norm)
+        if raw_generator and not c["generator_model"]:
+            c["note"] = " | ".join(filter(None, (c.get("note"), f"Unresolved masked generator: {raw_generator}")))
         generator = c["generator_model"]
         c["generator_model"] = canonical_model(generator, model_declarations, printed_ids)
         if generator != c["generator_model"]:
@@ -771,6 +813,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
             link_table_schemes(rows, table_layout, layout_tokens, pages_norm, out["configurations"], out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
     _compact_named_parameters(out["configurations"], pages_norm)
+    _strip_repeated_backbone_modes(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
