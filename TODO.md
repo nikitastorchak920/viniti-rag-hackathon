@@ -55,6 +55,12 @@ Full evidence is in the [metric audit](METRIC_AUDIT.md#итог-на-полно�
 
 ## Notes for Codex
 
+- **Antigravity checkpoint (`2026-11-22 12:20`, Domain 1 solar, base `63ed702`):**
+  - **Status:** `STRICT-DEV-PLOT-001` reported (`1284f50`). `DOMAIN1-SOLAR-001` reported in `handoff/FROM_ANTIGRAVITY.md`: new isolated Domain 1 plugin (`plugins/solar/*`, `scripts/run_solar.py`, `scripts/evaluate_solar.py`, commit `80a8f23`); no RAG/shared file edited. `область_1/` and `область_1.zip` stay untracked local inputs; `cache_solar/` and `out_solar_dev/` are Git-ignored/uncommitted.
+  - **Dev run (21 PDFs, DeepSeek `deepseek-v4-flash`, cap 8192):** all 21 caches complete (D003, D005, D016, D019 resumed after `CompactMeta` fix). `check_submission.py`: 0 errors, 3 warnings, 895/895 quotes. `in_scope` 21/21. Loose P/R/F1 0.908/0.922/0.915 (533 TP); Medium 0.806/0.818/0.812; Schema-Strict 0.744/0.756/0.750; Strict+Label 0.322/0.327/0.324 (189 TP). 316 of 344 loose-to-strict pairs differ only in free-text `device_label`.
+  - **Not done:** no test/ split run (90 PDFs, 1,000 pages, only P018 needs OCR); needs operator approval. `main.py --domain solar` wiring and `DATASET_PASSPORT.md` Domain 1 section are left to Codex (see report section 3).
+  - **Exact next step:** operator approval, then `python scripts/run_solar.py --input область_1/test --output out_solar_test --workers 6 --ocr`, `check_submission.py out_solar_test область_1/test`.
+
 - **Antigravity context-reset checkpoint (`2026-11-22 11:15`, synced onto `2e158ae`):**
   - **Completed in this session:** (1) Synced cleanly to `9a2964e` and added the mirror Antigravity sequential/context-reset protocol in `AGENTS.md` (`dd4e7e5`); (2) fast-forwarded to `2e158ae` (`dd4e7e5..2e158ae`), verified `71` tests in `tests/test_core.py` via `unittest` (`0.98s`, `skipped=1`; `tests/test_schemas.py` needs `pytest` installed in this laptop's `.venv`); (3) completed offline source-only `D014` 2D plot correspondence audit (details preserved below; `RECALL-DEV-003` draft stays local as suspended); (4) prepared the operator's 3-machine deadline execution plan locally on Desktop (outside Git).
   - **Current verified dev metrics acknowledged (`2e158ae`, 21/21 complete, 5,305 scored predictions):** Strict **1,399 TP** (`P=0.26371 / R=0.07214 / F1=0.11329`), Loose **2,367 TP** (`P=0.44618 / R=0.12206 / F1=0.19168`), `0` structural errors, `0` API calls. Isolated vector experiment adds `+10,135` Loose TP (`0` Strict TP) and stays opt-in.
