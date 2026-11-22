@@ -113,6 +113,15 @@ function verifiedState(row, checks, id) {
   return null;
 }
 
+function quoteSummary(report, data, id) {
+  if (report?.domain && report.domain !== id) return null;
+  if (!Object.entries(data).every(([table, rows]) => report?.rows?.[table] === rows.length)) return null;
+  const {requested, matched} = report?.quotes || {};
+  if (!Number.isSafeInteger(requested) || !Number.isSafeInteger(matched)
+      || requested <= 0 || matched < 0 || matched > requested) return null;
+  return {requested, matched};
+}
+
 function deltaDisplay(delta) {
   if (delta === null) return "—";
   const formatted = new Intl.NumberFormat("ru", {maximumSignificantDigits: 7, signDisplay: "exceptZero"});
@@ -202,7 +211,7 @@ function prepare(data, report, id, label) {
   const evidence = [...results, ...issues].filter(item => quote(item.row).trim());
   return {id, label, items, evidence: evidence.length, checked: evidence.filter(item => item.verified !== null).length,
     verified: evidence.filter(item => item.verified === true).length, rules: issues.filter(item => item.rule).length,
-    published: data.publications.filter(row => scope(row) !== "Не обработана").length,
+    quoteSummary: quoteSummary(report, data, id), published: data.publications.filter(row => scope(row) !== "Не обработана").length,
     extracted: data.results.filter(extracted).length, resultsById};
 }
 
@@ -257,9 +266,13 @@ function showBundle(next, message) {
   $("paper-note").textContent = next ? "из " + number(next.items.publications.length) + " в пакете" : "";
   $("result-count").textContent = number(next?.extracted);
   $("result-note").textContent = next ? "из " + number(next.items.results.length) + " строк в пакете" : "";
-  $("quote-count").textContent = next?.checked ? percent.format(next.verified / next.evidence) : "—";
-  $("quote-note").textContent = next?.checked ? number(next.verified) + " из " + number(next.evidence) + " подтверждены"
-    : next?.evidence ? "Нет отчёта по этим цитатам" : "В пакете нет цитат для проверки";
+  const summary = next?.quoteSummary;
+  const total = next?.checked ? next.evidence : summary?.requested;
+  const matched = next?.checked ? next.verified : summary?.matched;
+  $("quote-count").textContent = total ? percent.format(matched / total) : "—";
+  $("quote-note").textContent = total ? number(matched) + " из " + number(total) + " подтверждены"
+    + (!next.checked ? " · сводный отчёт" : "")
+    : next?.evidence ? "Нет отчёта по этим цитатам" : next ? "В пакете нет цитат для проверки" : "";
   $("issue-count").textContent = number(next?.rules);
   $("issue-note").textContent = next ? "всего замечаний: " + number(next.items.issues.length) : "";
   $("paper").replaceChildren(new Option("Все статьи", ""), ...(next?.items.publications || [])
