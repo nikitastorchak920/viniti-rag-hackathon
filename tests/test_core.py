@@ -282,6 +282,35 @@ class Linking(unittest.TestCase):
                                       Mock(), table_layout=layout)
         self.assertEqual(conflict["configurations"][1]["rag_variant"], "Dense + Filter w/o RC")
 
+    def test_edition_name_requires_same_program_year_and_track_initials(self):
+        expand = exporter._expand_track_edition
+        self.assertEqual(expand("Program IR24", ["Program 2024 Information Retrieval track."]),
+                         "Program Information Retrieval 2024")
+        self.assertEqual(expand("Program IR24", ["Program 2023 Information Retrieval track."]), "Program IR24")
+        self.assertEqual(expand("Program IR24", [
+            "Program 2024 Information Retrieval track. Program 2024 Image Recognition track.",
+        ]), "Program IR24")
+
+    def test_aggregate_link_requires_unique_cell_and_verified_quote(self):
+        from core.pdf_processor import TextLine
+        from plugins.rag.table_context import link_aggregates
+
+        layout = {1: [TextLine(x, x + 20, y, text) for x, y, text in [
+            (10, 10, "Table 1: EM / F1 results"),
+            (10, 20, "Method"), (100, 20, "Corpus A"), (180, 20, "Corpus B"), (260, 20, "Average"),
+            (10, 30, "A"), (100, 30, ".31 / .44"), (180, 30, ".50 / .82"), (260, 30, ".40 / .63"),
+            (10, 40, "B"), (100, 40, ".41 / .72"), (180, 40, ".40 / .85"), (260, 40, ".40 / .78"),
+        ]]}
+        base = dict(publication_id="P1", source_page="1", source_table="Table 1", dataset_id="",
+                    result_origin="primary", extraction_status="extracted")
+        rows = [dict(base, metric_name="F1", raw_value=".63", source_fragment=".40 / .63"),
+                dict(base, metric_name="EM", raw_value=".40", source_fragment=".40 / .63"),
+                dict(base, metric_name="F1", raw_value=".78", source_fragment="unverified .78")]
+        datasets = []
+        link_aggregates(rows, layout, [".40 / .63 .40 / .78"], datasets)
+        self.assertEqual([row["dataset_id"] for row in rows], ["DSA1", "", ""])
+        self.assertEqual(datasets[0]["dataset_name"], "Average")
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]

@@ -247,7 +247,8 @@ def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -
     families = defaultdict(list)
     name_counts = defaultdict(int)
     for row in datasets:
-        row["dataset_name"] = dataset_display_name(row["dataset_name"], row["dataset_version"])
+        name = dataset_display_name(row["dataset_name"], row["dataset_version"])
+        row["dataset_name"] = _expand_track_edition(name, pages_norm)
         name = row["dataset_name"]
         name_counts[name.casefold()] += 1
         parts = re.split(r"\s+[-/]\s+", name, maxsplit=1)
@@ -266,6 +267,22 @@ def _canonicalize_datasets(datasets: list[dict], pages_norm: list[str] | None) -
         for row, child in members:
             row["dataset_name"] = child
             row["note"] = (row["note"] + " | " if row["note"] else "") + f"Dataset family: {parent}"
+
+
+def _expand_track_edition(name, pages_norm):
+    """Resolve a short track edition using a matching program, year and printed expansion."""
+    short = re.fullmatch(r"(.+) ([A-Z]{2,5})([0-9]{2})", name)
+    if not short:
+        return name
+    program, initials, edition = short.groups()
+    pattern = re.compile(rf"(?<!\w){re.escape(program)}\s+([12][0-9]{{3}})\s+"
+                         r"([A-Za-z]+(?:[ -][A-Za-z]+){1,4})\s+track\b", re.I)
+    matches = {(year, track.casefold()): track for page in pages_norm or () for year, track in pattern.findall(page)
+               if year.endswith(edition) and "".join(x[0].upper() for x in re.split("[- ]", track)) == initials}
+    if len(matches) != 1:
+        return name
+    (year, _), track = next(iter(matches.items()))
+    return f"{program} {track} {year}"
 
 
 def canon_metric(name: str) -> str:
@@ -705,6 +722,10 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         relink(rows, cells)
     _fill_ids([row for row in rows if row["result_id"] not in plot_ids], out,
               native_captions(table_layout or {}), row_captions, pages_norm, model_aliases)
+    if table_layout and pages_norm:
+        from plugins.rag.table_context import link_aggregates
+
+        link_aggregates(rows, table_layout, pages_norm, out["datasets"])
     _expand_excluded_components(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)

@@ -231,6 +231,119 @@ def relink(rows, cells) -> None:
             row["config_id"] = next(iter(cell.configs))
 
 
+_AGGREGATE_LABELS = {"average", "avg", "mean", "overall"}
+_NUMBER_PAIR = re.compile(rf"\s*({NUMBER.pattern})\s*/\s*({NUMBER.pattern})\s*")
+
+
+def _aggregate_columns(header, next_rows, caption, metrics):
+    aggregate = [line for line in header if label(line.text) in _AGGREGATE_LABELS]
+    if len(aggregate) != 1 or len(header) < 4 or aggregate[0] != header[-1]:
+        return None
+    printed = aggregate[0].text.strip()
+    # Two-row grouped tables repeat the metric sequence under each corpus.
+    for offset, row in enumerate(next_rows[:2], 1):
+        slots = [line for line in row if label(line.text) in metrics]
+        for count in (len(header), len(header) - 1):
+            width, remainder = divmod(len(slots), count)
+            names = [label(line.text) for line in slots]
+            groups = header[-count:]
+            if (width and not remainder and len(set(names[:width])) == width
+                    and names == names[:width] * count
+                    and all(slots[i * width].left - 8 <= (group.left + group.right) / 2
+                            <= slots[(i + 1) * width - 1].right + 8
+                            for i, group in enumerate(groups))):
+                return offset, printed, [(line, (name,), i >= len(slots) - width)
+                                          for i, (line, name) in enumerate(zip(slots, names))]
+    # Compact tables put several values in one cell and declare their order in the caption.
+    pair = re.findall(r"\b([A-Za-z][\w@]*)\s*/\s*([A-Za-z][\w@]*)\b", caption)
+    metric_pairs = {tuple(map(label, names)) for names in pair
+                    if len(set(map(label, names))) == 2 and all(label(name) in metrics for name in names)}
+    if len(metric_pairs) == 1:
+        names = next(iter(metric_pairs))
+        return 0, printed, [(line, names, line == aggregate[0]) for line in header[1:]]
+    return None
+
+
+def _aggregate_cells(lines, metrics):
+    indexed = defaultdict(list)
+    visual = _visual_rows(lines)
+    captions = [(i, match[1].casefold()) for i, row in enumerate(visual)
+                if (match := CAPTION.match(row[0].text.strip()))]
+    for j, (start, table) in enumerate(captions):
+        if sum(name == table for _, name in captions) != 1:
+            continue
+        end = captions[j + 1][0] if j + 1 < len(captions) else len(visual)
+        for i in range(start + 1, min(start + 10, end)):
+            caption = " ".join(cell.text for row in visual[start:i] for cell in row)
+            if header := _aggregate_columns(visual[i], visual[i + 1:end], caption, metrics):
+                break
+        else:
+            continue
+        offset, printed, columns = header
+        centers = [(line.left + line.right) / 2 for line, _, _ in columns]
+        gap = min(b - a for a, b in zip(centers, centers[1:]))
+        previous_y = visual[i + offset][0].baseline
+        for row in visual[i + offset + 1:end]:
+            y = row[0].baseline
+            if y - previous_y > 30:
+                break
+            previous_y = y
+            if row[0].right >= centers[0] - gap * .4:
+                continue
+            cells = defaultdict(list)
+            for cell in row[1:]:
+                center = (cell.left + cell.right) / 2
+                for x, (_, names, is_aggregate) in zip(centers, columns):
+                    if abs(center - x) >= gap * .45:
+                        continue
+                    raw = cell.text.strip()
+                    if len(names) == 1 and NUMBER.fullmatch(raw):
+                        cells[x].append((names[0], number(raw), is_aggregate))
+                    if len(names) == 2 and (pair := _NUMBER_PAIR.fullmatch(raw)):
+                        cells[x].extend((name, number(value), is_aggregate) for name, value in zip(names, pair.groups()))
+            complete = all(len(cells[x]) == len(names) for x, (_, names, _) in zip(centers, columns))
+            for metric, value, is_aggregate in (item for values in cells.values() for item in values):
+                indexed[table, metric, value].append(printed if complete and is_aggregate else "")
+    return {key: labels[0] for key, labels in indexed.items() if len(labels) == 1 and labels[0]}
+
+
+def link_aggregates(rows, table_layout, pages_norm, datasets) -> None:
+    """Link reported aggregate columns without treating the value as an individual corpus."""
+    from plugins.rag.exporter import norm
+
+    metrics = defaultdict(set)
+    for row in rows:
+        if key := _source_key(row):
+            metrics[key[0]].add(key[2])
+    cells = {(str(page), *key): heading for page, lines in table_layout.items() if str(page) in metrics
+             for key, heading in _aggregate_cells(lines, metrics[str(page)]).items()}
+    used = {row["dataset_id"] for row in datasets}
+    scoped = {}
+    next_id = 1
+    for row in rows:
+        if row["dataset_id"] or row["result_origin"] != "primary" or row["extraction_status"] != "extracted":
+            continue
+        key, raw, quote = _source_key(row), row["raw_value"], norm(row["source_fragment"])
+        if (not key or not NUMBER.fullmatch(raw) or not quote or not 1 <= int(key[0]) <= len(pages_norm)
+                or quote not in pages_norm[int(key[0]) - 1]
+                or number(raw) not in {number(match[0]) for match in NUMBER.finditer(quote)}):
+            continue
+        heading = cells.get((*key, number(raw)))
+        if not heading:
+            continue
+        scope = (*key[:2], heading)
+        if scope not in scoped:
+            while f"DSA{next_id}" in used:
+                next_id += 1
+            dataset_id = f"DSA{next_id}"
+            used.add(dataset_id)
+            scoped[scope] = dataset_id
+            datasets.append(dict(publication_id=row["publication_id"], dataset_id=dataset_id,
+                                 dataset_name=heading, dataset_version="",
+                                 note=f"Printed aggregate column, PDF page {key[0]}, Table {key[1]}."))
+        row["dataset_id"] = scoped[scope]
+
+
 RECOVERY_FIELDS = ("experiment_id", "task_id", "metric_name", "metric_group", "metric_variant", "metric_k",
                    "metric_direction", "raw_unit", "aggregation", "sample_size", "source_section")
 
