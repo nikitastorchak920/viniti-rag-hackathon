@@ -1,5 +1,9 @@
 # Strict F1 checkpoint state
 
+## Metric audit · Saved rows from incomplete caches
+
+The same Stage 3 export over the frozen Stage 2 cache gained 101 Strict and 150 Loose TP after including saved windows from one incomplete paper. This moved the corpus from 3,994 to 4,183 scored predictions, Strict F1 from 0.05713 to 0.06524, and Loose F1 from 0.11545 to 0.12725. The candidate has 18 fully processed papers, one partial paper, and two unresolved scope decisions. The checker reported zero structural errors and 476 review findings. The run used zero API tokens and took 8.2 seconds. The default export and raw cache status remain compatible. See [the audit and execution prompt](../METRIC_AUDIT.md).
+
 ## Stage 3 · Entity passport and source-backed normalization
 
 The metadata pass now emits page and table scopes alongside paper entities. The exporter resolves model and dataset spellings against printed evidence, removes generic author markers from method labels, and checks metric cutoff declarations against the cited page. It separates the parsed cutoff from the printed metric display label and preserves the existing CSV convention and evaluator.

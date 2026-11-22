@@ -688,6 +688,30 @@ class VectorPlots(unittest.TestCase):
 
 
 class SubmissionCompliance(unittest.TestCase):
+    def test_partial_cache_export_requires_opt_in_and_keeps_cache_incomplete(self):
+        import check_submission as cs
+        from core.validator import PARTIAL_EXTRACTION
+        from main import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            source, cache_dir, output = root / "input", root / "cache", root / "out"
+            source.mkdir()
+            (source / "PART.pdf").touch()
+            cache = make_cache([result()])
+            cache.update(version=2, complete=False, mode="pdf")
+            llm_client.save_cache(cache_dir, "PART", cache)
+            args = ["--input", str(source), "--output", str(output), "--cache", str(cache_dir), "--rebuild-csv-only"]
+            self.assertEqual(main(args), 1)
+            self.assertEqual(evaluate.read(output, "results"), [])
+            self.assertEqual(main([*args, "--include-partial-cache"]), 1)
+            self.assertEqual(len(evaluate.read(output, "results")), 1)
+            self.assertIn(PARTIAL_EXTRACTION, {row["check_name"] for row in evaluate.read(output, "issues")})
+            report = cs.validate(output)
+            self.assertEqual(report["errors"], [])
+            self.assertTrue(any("partial extraction" in warning for warning in report["warnings"]))
+            self.assertEqual(llm_client.load_cache(cache_dir, "PART"), cache)
+
     def test_cache_rebuild_can_repair_ocr_quote_without_api(self):
         from main import main
 

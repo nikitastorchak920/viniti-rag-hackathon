@@ -8,6 +8,8 @@
 
 ## Reference measurements
 
+- The [metric audit](METRIC_AUDIT.md) established the next priorities. The optional partial-cache export recovered 101 Strict and 150 Loose TP on the same local snapshot, with an explicit incomplete status and zero API calls.
+
 - Domain 2 at `b5cb065`: 4,922 scored predictions and 19,392 gold observations. Strict R/P/F1 **0.030/0.118/0.048** (579 TP). Loose R/P/F1 **0.089/0.350/0.142** (1,721 TP).
 - Latest verified full-cache reference, [RECALL-DEV-002](handoff/FROM_ANTIGRAVITY.md#recall-dev-002): 4,945 predictions, Strict R/P/F1 **0.038/0.150/0.061** (741 TP), Loose R/P/F1 **0.096/0.375/0.152** (1,854 TP). Compare local runs using the same input PDFs and available cache. Earlier experiments are in [the checkpoint log](handoff/STRICT_F1_STATE.md).
 
@@ -29,3 +31,10 @@
 - [x] **3.2 Source-backed normalization.** Resolve entity typography and explicit model identifiers, read metric cutoffs separately from display labels, and inherit context when the local source is unambiguous. On the same cache, Strict TP rose from 525 to 668 and Strict F1 from 0.04490 to 0.05713. The fresh-paper variant scored 607 Strict TP and remains an isolated comparison. Both bundles passed structural validation. [Detailed results](handoff/STRICT_F1_STATE.md#stage-3--entity-passport-and-source-backed-normalization)
 
 The local measurements cover 18 complete caches against all 21 gold papers. D002, D009 and D013 remain unresolved in the local snapshot. The accepted jury bundle and test corpus remain outside this pilot.
+
+## Next priorities from the metric audit
+
+- [ ] Restore complete cache coverage and preserve compatible per-document progress across extraction retries.
+- [ ] Verify chart provenance and source-supported series context. Evaluate vector recovery separately from the default bundle.
+- [ ] Reduce confirmed dataset, generator and variant mismatches with source evidence on a frozen cache.
+- [ ] Run controlled gateway and OCR experiments after measuring the dominant coverage and context losses.

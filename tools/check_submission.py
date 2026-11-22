@@ -19,6 +19,7 @@ sys.path.insert(0, str(DEFAULT_SCHEMA.parents[1]))
 
 from core.ocr import DEFAULT_DPI, recognize_page  # noqa: E402
 from core.pdf_processor import MIN_CHARS_PER_TEXT_PAGE  # noqa: E402
+from core.validator import PARTIAL_EXTRACTION  # noqa: E402
 
 NUMBERS = {
     'publications': {'year'},
@@ -168,6 +169,9 @@ def validate(folder, pdfdir=None, schema_path=DEFAULT_SCHEMA, template=False, pa
     for field, table in [('experiment_id', 'experiments'), ('config_id', 'configurations'), ('dataset_id', 'datasets'), ('task_id', 'tasks'), ('duplicate_of', 'results')]:
         reference('results', field, table)
     reference('issues', 'record_ids', 'results', many=True)
+    for issue in data['issues']:
+        if issue['check_name'] == PARTIAL_EXTRACTION:
+            warn(issue['publication_id'], 'partial extraction; full document coverage is unresolved')
     for row in data['results']:
         loc = f'results:{row["_line"]}'
         if not row['metric_name']: err(loc, 'metric_name is empty')

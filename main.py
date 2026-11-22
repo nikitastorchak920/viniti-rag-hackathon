@@ -25,6 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", nargs="+", metavar="ID", help="document ids to process, e.g. D001 D002")
     ap.add_argument("--force", action="store_true", help="ignore cache and re-query the API")
     ap.add_argument("--rebuild-csv-only", action="store_true", help="no API calls: rebuild CSV from cache")
+    ap.add_argument("--include-partial-cache", action="store_true",
+                    help="export successful windows from incomplete caches with an explicit review marker")
     ap.add_argument("--recover-table-cells", action=argparse.BooleanOptionalAction, default=True,
                     help="export uniquely identified missing native PDF table cells (enabled by default, no API calls)")
     ap.add_argument("--recover-plot-points", action="store_true",
@@ -44,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="second LLM audit of dense/thin pages (cache-backed, resumable) to recover missed table rows; needs API key")
     ap.add_argument("--local", action="store_true", help="no API: rule-based local extraction (text PDFs only; heuristic)")
     a = ap.parse_args(argv)
+    if a.include_partial_cache and not a.rebuild_csv_only:
+        ap.error("--include-partial-cache requires --rebuild-csv-only")
     if a.cache is None:
         a.cache = pathlib.Path("cache_local" if a.local else "cache")
 
@@ -141,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     writer = exporter.TableWriter(a.output)
     built = 0
     stubs: list[str] = []
+    partials: list[str] = []
 
     def stub(pid: str) -> None:
         stubs.append(pid)
@@ -152,11 +157,26 @@ def main(argv: list[str] | None = None) -> int:
                 stub(pdf.stem)
                 continue
             cache = load_cache(a.cache, pdf.stem)
-            if not cache.get("complete"):
-                log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
-                failed.append(pdf.stem)
-                stub(pdf.stem)
-                continue
+            partial = not cache.get("complete")
+            if partial:
+                meta, windows = cache.get("meta") or {}, cache.get("windows") or {}
+                if not (a.include_partial_cache and cache.get("version") == 2
+                        and isinstance(meta, dict) and isinstance(windows, dict)
+                        and isinstance(meta.get("publication"), dict)
+                        and meta.get("publication", {}).get("in_scope") is True
+                        and all(isinstance(window, dict) for window in windows.values())
+                        and any(window.get("results") for window in windows.values())):
+                    log(f"{pdf.stem}: FAIL - no complete cache (run without --rebuild-csv-only)")
+                    failed.append(pdf.stem)
+                    stub(pdf.stem)
+                    continue
+                from core.validator import PARTIAL_EXTRACTION
+
+                marker = {"check_name": PARTIAL_EXTRACTION,
+                          "description": f"Partial extraction. The cache has {len(windows)} saved result windows "
+                                         "and the full paper was not processed.",
+                          "source_page": 0, "source_fragment": ""}
+                cache["meta"] = dict(meta, issues=[*meta.get("issues", []), marker])
             pages_norm = None
             table_layout = None
             plot_rows = []
@@ -206,6 +226,8 @@ def main(argv: list[str] | None = None) -> int:
                     continue
             writer.write_doc(doc)
             built += 1
+            if partial:
+                partials.append(pdf.stem)
             del doc, cache, pages_norm
             gc.collect()
     finally:
@@ -217,11 +239,13 @@ def main(argv: list[str] | None = None) -> int:
     log(f"wrote {a.output}/ docs={built} stubs={len(stubs)} " + " ".join(f"{t}={writer.counts[t]}" for t in exporter.TABLES))
     if stubs:
         log(f"NOT PROCESSED (stub rows in publications.csv): {', '.join(stubs)}")
+    if partials:
+        log(f"PARTIAL EXTRACTION (saved result windows only): {', '.join(partials)}")
     if skipped:
         log(f"SKIPPED_SCAN: {len(skipped)} document(s): {', '.join(skipped)}")
     if failed:
         log(f"INCOMPLETE: {len(failed)} document(s) failed: {', '.join(failed)}")
-    if stubs or failed:
+    if stubs or failed or partials:
         return 1
     return 0
 
