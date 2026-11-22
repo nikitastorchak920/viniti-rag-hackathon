@@ -21,6 +21,111 @@ Antigravity prepends replies under **Reports** and pushes this file to `origin/m
 
 <!-- Prepend replies here. The template above is not a task response. -->
 
+## STRICT-DEV-PLOT-001
+
+- Status (`complete` or `blocked`): `complete`
+- Git commit (from `git rev-parse --short HEAD`): `e21e3b7`
+- Acceptance check: **COMPLETE — SOURCE-ONLY AUDIT & SAFE-SCOPE VERDICT (`0 / 14,124` current scatter rows eligible for default Strict export; `40`-row single-curve polyline slice identified on `D006` Figure 3 as smallest high-precision candidate)**. Offline only (`0` API tokens); `core/`, `plugins/`, `scripts/`, `tools/`, `tests/`, `app/`, `main.py`, `TODO.md`, accepted exports, and `test/` untouched; only `handoff/FROM_ANTIGRAVITY.md` modified.
+- Environment & cache: Python `3.13.1` (`.venv`), `PyMuPDF` native text/drawing geometry; complete 21-paper local cache `out_dev_domain2_scan_cache` (note: differs from Codex's `out_dev_recovery/cache` on `D002`/`D009`/`D013`, yielding `4,945` baseline scored predictions vs `5,305` on `out_dev_recovery/cache`, while `D014` vector recovery is identical at `14,124` rows).
+
+### 1 · D014 PDF Provenance Audit (Printed Evidence vs Gold Naming Conventions)
+
+All 21 dev PDFs were scanned with `plugins/rag/plot_recovery.py` at `e21e3b7`: **`20/21` papers yield `0` recovered scatter rows**, and **`D014` alone produces all `14,124` recovered vector scatter rows** across 8 figures (Figures 2, 3, 5, 8, 9, 10, 11, 12; `231` WoW points/panel, `352` HotpotQA points/panel).
+
+#### A. Printed PDF evidence by figure and condition (`dev/D014.pdf`)
+
+| Scope / Condition | Locators (PDF page, section, figure) | Verbatim printed PDF evidence | Current export (`e21e3b7`) | Provenance verdict |
+|---|---|---|---|---|
+| **Method / RAG variant** | p.2 Fig 1; p.3 Sec 3.2; p.4 Sec 4.3 & Tables 1–2; p.12 Sec A.1.1 | Fig 1 box: `"Simulated Knowledge Retrieval & Selection"`. Sec 3.2: `"sample gold knowledge and distractor knowledge at varying rates pgold and pnoise... Each sampling produces a full experiment... reported as one data point in Figures 2-4"`. Tables 1–2 print only `"No knowledge"`, `"Full knowledge"`, `"Gold knowledge"`. No scatter panel title prints any `rag_variant` or per-point `(p_gold, p_noise)` label. | `PC1`–`PC3` partial configs (`rag_variant=""`, generator only) on `12,958` rows; `config_id=""` on `1,166` rows. | **Unprinted point/panel variant**: no scatter panel matches any cached table config (`C01`–`C09`). |
+| **Datasets & aliases** | p.3 Sec 4.1; p.4 Tables 1–2; pp.5,6,13,14,16–18 panel titles & captions; p.12 Sec A.5 | Sec 4.1 defines explicit alias `"Wizard of Wikipedia (WoW; Dinan et al., 2019)"` and `"HotpotQA (Yang et al., 2018)"`. Panel titles print `"Wizard of Wikipedia"` / `"HotpotQA"` / `"Noisy HotpotQA"`; captions & Table 1 use `"WoW"`. Sec A.5 defines `"noisy HotpotQA"` by removing 1 gold sentence per HotpotQA example (same QA task `T2`). | `DS1` (`Wizard of Wikipedia`), `DS2` (`HotpotQA`), `DS3` (`Noisy HotpotQA`, `task_id=""` on all `704` Fig 5 rows → `+704` checker reviews). | Dataset names are printed; `Noisy HotpotQA` lacks a cached primary table row so `task_id` is dropped despite Sec A.5 confirming the HotpotQA QA task. |
+| **Generators** | p.4 Sec 4.2 & Tables 1–2; p.12 Sec A.1.2; pp.5,6,13,14,16–18 | Sec 4.2 & panel titles print `"GPT-4o-mini"`, `"LLaMA 3.1 8B"`, `"Mistral 7B-Instruct"` (Tables 1–2 print `"Mistral 7B Instruct"`, Fig 3 caption prints `"LLaMa 3.1 8B"` and `"Mistral-7B-Instruct"`). Sec A.1.2 lists API IDs `gpt-4o-mini-2024-07-18`, `meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo`, `mistralai/Mistral-7B-Instruct-v0.1`. | Generator parsed from panel title into `PC1`–`PC3` (`GPT-4o-mini`, `LLaMA 3.1 8B`, `Mistral 7B Instruct`). | Printed verbatim for Figs 2, 3, 5, 9, 10–12; typography matches PDF, not gold's spaceless form. |
+| **Input cap (`k=3`)** | p.13 Sec A.6; p.14 Fig 9 (`1,166` rows) | Panel titles: `"Wizard of Wikipedia GPT-4o-mini k=3"`, `"HotpotQA GPT-4o-mini k=3"`. Sec A.6: `"limit the number of knowledge sentences to k by randomly sub-sampling k sentences when more than k sentences are selected... We choose k = 3"`. Fig 9 caption: `"by limiting the number of knowledge sentences up to k=3"`. | `_panel_configuration` blocks existing config attachment (`EXPLICIT_SETTING`), **but** `exporter.py:720-732` immediately assigns generator-only `PC1` (`GPT-4o-mini`), collapsing `k=3` with unconstrained runs! `metric_k=""`. | `k=3` is an **input-length condition** (NOT `metric_k`). 2D `(KP, KR)` check vs Fig 2 confirms `329/352` HotpotQA and `205/231` WoW points do NOT match Fig 2 — must remain a distinct configuration/condition. |
+| **Generator-free panels** | p.13 Sec A.6; p.14 Fig 8 (`1,166` rows) | Panel titles: `"Wizard of Wikipedia Number of Knowledge Sentences"`, `"HotpotQA Number of Knowledge Sentences"`. Sec A.6 & Fig 8 caption characterize selected knowledge set $K'$ length before generation; **no generator is printed anywhere in Fig 8 or Sec A.6**. | `plot_generator=""`, `config_id=""` (`+1,166` checker `primary result without config_id` reviews). | Legitimately generator-free; leaving `generator_model=""` is source-faithful. 2D `(KP, KR)` check vs Fig 2 confirms `194/231` (WoW GPT), `101/352` (HotpotQA GPT), `311/352` (HotpotQA LLaMA), and `55/352` (HotpotQA Mistral) unmatched points — distinct sampling draw, must stay independent. |
+| **Repeated views with 2 independent axes** | p.6 Fig 3 vs pp.16–18 Figs 10–12; p.12 Sec A.3 | Sec A.3 explicitly states: `"Figures 10, 11, and 12 extend Figure 3"`. All 6 HotpotQA panel pairs (`GPT-4o-mini` & `Mistral 7B-Instruct` × `KP`, `KR`, `KF1` vs `Answer F1`) share two calibrated independent axes (`352` pts/panel). | `plot_recovery.py:204-219` sorts by total points (running Fig 3 before Figs 10–12) and deduplicates via exact ordered 4-decimal 1D `tuple(values)` (`seen_series`). | **2D native audit (`±1e-4` on both axes):** `0/352` unmatched in all 6 pairs (`max_err ≤ 2.63e-6`); `348/352` (`98.9%`) unique mutual 1-to-1 in 5 pairs and `328/352` (`93.2%`) in `Fig 3 Mid ↔ Fig 11` (`HotpotQA GPT-4o-mini` `KR × Answer F1`). Remaining `4` or `24` points are exact within-panel 2D coincidences (`≤1e-4`). Current 1D `seen_series` leaks **`Fig 3 Mistral Answer F1` `3×` (`1,056` rows)** from `0.62089` vs `0.62088` rounding while dropping canonical Fig 10/11 series. |
+| **1D-only cross-figure views & colorbars** | p.5 Fig 2; p.13 Fig 5; pp.16–18 Figs 10–12 | `Fig 10 ↔ Fig 11 ↔ Fig 12` share only 1 calibrated axis (`Answer F1`); `Fig 2 ↔ Fig 3/10/11` share only 1 axis (`KP` or `KR`) while `Answer F1` in Figs 2/5/9 and sentence count in Fig 8 are uncalibrated continuous RGB colorbars. | Emits unlinked duplicate series across Fig 2, Fig 3, and Figs 10–12 (`14,124` rows vs `11,643` scored gold figure rows). | 1D `Answer F1` matching (`Fig 10 ↔ Fig 11/12`, `±1e-4`) leaves `0` unmatched but **`112–131/231` (WoW)** and **`47–77/352` (HotpotQA)** ambiguous ties per panel; `Fig 2 ↔ Fig 3` leaves `69–294` ties. Cannot prove point-level `duplicate_of` from 1D overlap or drawing order. |
+| **Dashed reference baselines** | pp.6,8,13,16–18 Figs 3, 4, 6, 10–12 | Legend boxes label red dashed `"Full Knowledge Answer F1"` and black dashed `"No Knowledge Answer F1"`. Calibrated y-positions match Tables 1–2 within `±0.001` (e.g., HotpotQA GPT-4o-mini `0.7797` vs `0.780`, `0.4373` vs `0.437`; Fig 6 Noisy HotpotQA has identical `0.7797` / `0.4373`, matching Sec A.5 p.13). | Not emitted by `plot_recovery.py`. | Already reported in Tables 1–2 (`dev_gold` marks `9/12` Fig 10 baseline lines as `duplicate_of` Tables 1–2; emitting them adds duplicates). |
+
+#### B. Printed PDF evidence vs `dev_gold` naming conventions (inspected only after source audit)
+
+| Field | Printed in `dev/D014.pdf` | `dev_gold` convention | Exact Strict impact (`evaluate.py` `n()`) |
+|---|---|---|---|
+| `rag_variant` | Fig 1 `"Simulated Knowledge Retrieval & Selection"`; Tables 1–2 `"No knowledge"` / `"Full knowledge"` / `"Gold knowledge"`; no printed per-panel variant strings | Synthetic colon taxonomy (not printed verbatim): `'Simulated knowledge retrieval/selection: unconstrained sampled knowledge'` (`6,996` rows), `'...noisy HotpotQA'` (`1,056`), `'...input-length sampling'` (`1,749`), `'...maximum3sampled sentences'` (`1,749`, missing spaces), `'...ambiguous repeated/noisy contour'` (`40`) | **Primary blocker (`0` Strict TP on all `14,124` D014 plot rows)**: neither `""` nor verbatim `"Simulated Knowledge Retrieval & Selection"` matches gold's synthetic suffixes. |
+| `dataset_name` | Panel titles `"Wizard of Wikipedia"`; Sec 4.1 alias `"Wizard of Wikipedia (WoW)"`; captions `"WoW"` | Exclusively `'WoW'` (`'HotpotQA'` and `'Noisy HotpotQA'` match verbatim) | `'wizard of wikipedia' != 'wow'` fails Strict on all WoW panels unless canonicalized via explicit Sec 4.1 alias. |
+| `generator_model` | `"GPT-4o-mini"`, `"LLaMA 3.1 8B"`, `"Mistral 7B-Instruct"` / `"Mistral 7B Instruct"`; absent in Fig 8 | `'GPT-4o-mini'`, `'LLaMA3.1-8B'` (spaceless), `'Mistral7B-Instruct'` (spaceless), synthetic `'Generator-independent'` on Fig 8 | `'llama 3.1 8b' != 'llama3.1 8b'`, `'mistral 7b instruct' != 'mistral7b instruct'`, and `'' != 'generator independent'`. |
+| `duplicate_of` | Sec A.3 links Figs 10–12 with Fig 3; no point IDs printed | Marks 100% of Fig 2 (`5,247` rows), 100% of Fig 3 (`4,236` rows), and `Answer F1` in Figs 11–12 (`3,522` rows) as `duplicate_of` Fig 10–12 (`28,531` raw → `11,643` scored). | Unlinked Fig 2/3/11/12 emissions inflate scored predictions above gold (`14,215` pred vs `11,760` gold). |
+
+---
+
+### 2 · Smallest Source-Supported Export Slice, Coverage & Generalizable Decision Rule
+
+#### A. Eligible rows vs abstentions (quantified across all 21 dev PDFs)
+
+1. **Current scatter-plot extractor (`plugins/rag/plot_recovery.py`, `14,124` candidate rows across 21 dev PDFs, all in `D014`)**:
+   - **Eligible rows for Strict-safe default export: `0 / 14,124` (`0.0%`)**.
+   - **Abstentions: `14,124 / 14,124` (`100.0%`)**:
+     - `1,166` rows (`D014` Fig 8, p.14): generator-free panel (`config_id=""`, unprinted variant).
+     - `1,166` rows (`D014` Fig 9, p.14): explicit input cap `k=3` with unprinted variant (currently mis-collapsed into unconstrained `PC1`).
+     - `704` rows (`D014` Fig 5, p.13): `Noisy HotpotQA` with unprinted simulation variant and unlinked `task_id=""`.
+     - `11,088` rows (`D014` Figs 2, 3, 10, 11, 12, pp.5,6,16–18): unnamed `(p_gold, p_noise)` simulation points with `rag_variant=""`, plus order/rounding-sensitive duplicate series (`Fig 3 Mistral Answer F1` emitted `3× = 1,056` rows).
+   - **Actionable conclusion for scatter mode:** Keep `--recover-plot-points` strictly opt-in (off by default). Exporting partial-config scatter points (`rag_variant=""`) strictly harms corpus Strict Precision (`0.235 → 0.061`) and Strict F1 (`0.096 → 0.060`) while adding `0` Strict TP.
+
+2. **Smallest source-supported vector-plot export slice that CAN improve Strict Precision & Recall (source-only proposal for future single-series polyline recovery)**:
+   - Scanning all 20 other dev PDFs for calibrated native vector frames (`_axis` linear fit ≥3 ticks) surfaced 8 PDFs (`D001`, `D003`, `D006`, `D007`, `D009`, `D012`, `D016`, `D019`).
+   - **Smallest high-precision positive slice: `D006` Figure 3 (p.14; Sec 4.4 pp.12–13; Sec 4.1.2 p.10) — `40` eligible rows (`0` currently extracted in baseline)**:
+     - **Printed structure:** 4 single-curve vector panels (`(a) Retriever-Only`, `(b) RankGPT`, `(c) RankT5`, `(d) Cross-Encoder`), each containing exactly one 9-segment polyline (`10` vertices at `QT = 0.1..1.0`), calibrated y-axis `NDCG@5` (`metric_k="5"`), caption-printed dataset `NaturalQuestions` and retriever `BM25 Retriever`, and section-declared default LLM `Qwen2.5-7B-Instruct` (Sec 4.1.2 p.10: *"For the confidence quantification and pre-trained LLM-based rerankers, we use Qwen2.5-7B-Instruct (Qwen7B)"*). Each panel maps cleanly to an existing cached configuration in `D006` (`C02` `Retriever-Only + LCR`, `C08` `RankGPT + LCR`, `C14` `RankT5 + LCR`, `C12` `Cross-Encoder + LCR`, all `BM25` + `Qwen2.5-7B-Instruct`), where `+ LCR` is established by Sec 4.4 and the `"w/o LCR (QT=0)"` baseline line.
+     - **Offline calibration verification (post-audit gold check):** All **`40 / 40` (`100.0%`)** calibrated polyline vertices match `dev_gold` to **5 decimal places (`0.00000` error)** (e.g., `(a) Retriever-Only`: `0.04877, 0.04911, ..., 0.05691`; `(d) Cross-Encoder`: `0.08117, ..., 0.08139`).
+     - **Projected corpus impact on `e21e3b7` (`out_dev_domain2_scan_cache`):** **`+40` Strict TP** (`1,163 → 1,203`), **`+40` Loose TP** (`2,410 → 2,450`), **`100.0%` slice precision** (`P: 0.235 → 0.241`, `R: 0.060 → 0.062`, `F1: 0.096 → 0.099`), `0` structural errors, `0` duplicate views, `0` missing IDs.
+     - **Honest scope caveat:** Resolving `Qwen2.5-7B-Instruct` and `+ LCR` for `D006` Fig 3 requires **section-level default-setup inheritance** (Sec 4.1.2 p.10 + Sec 4.4 pp.12–13), not just text inside the panel frame; if a rule restricts strictly to panel-local text, `D006` Fig 3 also abstains (leaving `0` eligible rows across all 21 dev PDFs).
+
+#### B. Generalizable source-only decision rule (6 gates — no paper IDs, no gold strings, no order inference)
+
+Export a vector plot observation to the default Strict submission **if and only if all 6 gates pass** (otherwise abstain or keep under an opt-in diagnostic flag):
+
+1. **Affine linear axis calibration gate:** Axis has ≥3 printed numeric ticks with linear fit residual ≤0.25 pt, uniform unit (`%` or fraction), and an explicit axis metric label. Reject RGB colorbars and uncalibrated encodings.
+2. **Complete printed configuration gate:** Every exported row must resolve (a) an explicit printed `dataset_name` (or explicit paper-defined alias), (b) an explicit non-empty `rag_variant` bound unambiguously to the panel or visual series style (panel title, single-curve caption/section binding to an existing cached configuration, or uniquely matched legend marker/line style), and (c) an explicit `generator_model` whenever the metric depends on generation. **Hard abstention if `rag_variant=""` or generator is absent.**
+3. **Explicit condition & hyperparameter isolation gate:** Any printed panel/axis parameter (`k=3`, `QT=0.1..1.0`, noise perturbation, `top-k`) must be kept as a distinct configuration/experiment condition — never collapse into an unconstrained configuration, and never map an input-length cap (`k=3`) or threshold (`QT`) into `metric_k`.
+4. **Source-proven 2D deduplication gate:** Never deduplicate across figures using ordered rounded 1D arrays (`seen_series`) or PDF drawing order. Emit cross-figure `duplicate_of` links **only** when (i) the PDF explicitly states both figures plot the same experimental runs AND (ii) two independent calibrated axes establish a unique mutual 1-to-1 point match within calibration tolerance (`±1e-4`). Leave within-panel coincidences and 1D-only overlaps unlinked (`duplicate_of=""`).
+5. **No table-duplicate reference baselines:** Do not emit horizontal reference lines (e.g., dashed baseline lines) when the same `(dataset, variant, generator, metric)` baseline already exists in a primary table.
+6. **Single-series / bound-legend ambiguity gate:** Require either a single plotted series per calibrated panel (with panel-level method identity) or a 1-to-1 visual binding (stroke color + dash pattern + marker geometry) between each legend label and exactly one plotted series; abstain on multi-series overlays with overlapping or unbound styles.
+
+#### C. Positive and negative cases (with PDF locators)
+
+- **Positive cases:**
+  - *Strict-safe export (with section-level setup binding):* **`D006` Fig 3 (p.14; Sec 4.1.2 p.10; Sec 4.4 pp.12–13)** — 4 single-polyline panels (`(a)`–`(d)`), calibrated `NDCG@5` (`metric_k=5`), printed `NaturalQuestions` + `BM25`, 1-to-1 match to cached `C02`/`C08`/`C12`/`C14` (`40` eligible rows, `40/40` exact to 5 decimals).
+  - *Proven 2D cross-figure deduplication (structure only; still fails Gate 2 for Strict export):* **`D014` Fig 3 (p.6) ↔ Figs 10–12 (pp.16–18; Sec A.3 p.12)** — explicit textual link plus two independent calibrated axes resolve `348/352` (`5` pairs) and `328/352` (`1` pair) points uniquely (`max_err ≤ 2.63e-6`), cleanly isolating the `4–24` coincident points that must stay unlinked.
+- **Negative cases (must abstain):**
+  - **`D014` Fig 8 (p.14; Sec A.6 p.13)** — `1,166` rows, generator-free input-length plot (`config_id=""`, fails Gate 2); 2D check vs Fig 2 confirms distinct sampling draw (`55–311` unmatched).
+  - **`D014` Fig 9 (p.14; Sec A.6 p.13)** — `1,166` rows, explicit `k=3` sentence-count cap (`metric_k=""`, fails Gates 2 & 3; `329/352` HotpotQA & `205/231` WoW points differ from Fig 2).
+  - **`D014` Fig 5 (p.13; Sec A.5 p.12)** — `704` rows, `Noisy HotpotQA` unnamed simulation points + missing `task_id=""` (fails Gate 2; `328/352` unmatched vs Fig 2).
+  - **`D014` Figs 2, 3, 10–12 scatter points (pp.5,6,16–18; Sec 3.2 p.3)** — `11,088` rows, unnamed `(p_gold, p_noise)` points (`rag_variant=""`, fails Gate 2); `Fig 10 ↔ 11 ↔ 12` share only 1D `Answer F1` (`47–131` ties/panel, fails Gate 4); `4–24` within-panel coincidences must never be linked by drawing order.
+  - **`D014` Figs 2, 5, 8, 9 colorbars (pp.5,13,14)** — continuous RGB fill without calibrated axis ticks (fails Gate 1).
+  - **`D014` Figs 3, 4, 6, 10–12 dashed reference lines (pp.6,8,13,16–18)** & **`D006` Fig 3 red dashed `w/o LCR (QT=0)` lines (p.14)** — duplicate primary Tables 1–2 / Table 2 (fail Gate 5).
+  - **`D009` Fig 3 (p.7; Sec 4.4 / Sec 5)** — 6 panels (`PopQA`, `HotpotQA`, `2WikiMultiHopQA` × `WMV`/`BoN`) with 4 overlapping multi-series curves (`Majority Voting`, `PRO-STEP PRM`, `VersaPRM`, `Qwen-Math-PRM`); requires verified legend-to-style binding and composite variant naming before safe export (fails Gate 6 without explicit multi-series legend binder).
+  - **`D012` Fig 2 (p.9; Sec 5)** — multi-line stress test whose printed 30%-noise endpoint values duplicate Table 5 on the same page (fails Gates 5 & 6).
+
+---
+
+### 3 · Reproducible Isolated Candidate Benchmark at `e21e3b7`
+
+Reproduced offline (`0` API tokens) from the complete 21-paper `out_dev_domain2_scan_cache` into scratch directories outside the repository (leaving all workspace exports untouched):
+
+```powershell
+python main.py --input dev --cache out_dev_domain2_scan_cache --output <isolated_base> --rebuild-csv-only
+python main.py --input dev --cache out_dev_domain2_scan_cache --output <isolated_plot> --rebuild-csv-only --recover-plot-points
+python tools/check_submission.py <dir> dev --json-report <dir>/validation.json
+python scripts/evaluate.py <dir> dev_gold --show-diffs 0
+```
+
+| Isolated export (`e21e3b7`, `out_dev_domain2_scan_cache`, 21/21) | Scored rows | Strict P / R / F1 (TP) | Loose P / R / F1 (TP) | Without D014 Strict F1 (TP) | Structural errors | Review items | Matched citations (native PDF text) |
+|---|---:|---|---|---|---:|---:|---|
+| Default (`--rebuild-csv-only`) | 4,945 | `0.235 / 0.060 / 0.096` (`1,163`) | `0.487 / 0.124 / 0.198` (`2,410`) | `0.186` (`1,163`) | `0` | `1,073` | `7,194 / 7,743` (`549` scan-page unresolved; `0` native unresolved) |
+| Plot candidate (`--recover-plot-points`) | 19,069 (`+14,124`) | `0.061 / 0.060 / 0.060` (`1,163`, **`+0 TP`, `-0.174 P`, `-0.036 F1`**) | `0.658 / 0.647 / 0.652` (`12,545`, `+10,135 TP`) | `0.186` (`1,163`, `+0`) | `0` | `2,943` (`+1,870`) | `21,318 / 21,867` (`+14,124/+14,124` D014 figure captions matched; `549` scan-page unresolved) |
+
+- **Scope & table counts (`--recover-plot-points`):** `in_scope agreement = 21/21 (100.0%)`, `stubs=0`, `publications=21`, `configurations=500 (+3: PC1–PC3)`, `datasets=106`, `tasks=54`, `experiments=132`, `results=19,237 (+14,124)`, `issues=2,642 (+0)`.
+- **Review delta (`+1,870`):** `+1,166` `primary result without config_id` (100% `D014` Fig 8) + `+704` `primary result without task_id` (100% `D014` Fig 5).
+- **Mismatch delta (`evaluate.py`):** Paired loose-to-strict rows jumped `1,247 → 11,382` (`dataset_name: 781 → 4,528`, `rag_variant: 445 → 10,580`, `generator_model: 709 → 6,628`, `metric_k: 58 → 58`).
+- **Gate verdict:** **DO NOT adopt `--recover-plot-points` into default export.** Keep scatter recovery opt-in; if Codex later implements a Strict-safe vector plot path, gate it with the 6-rule source-only filter above and pilot on single-curve polyline plots (`D006` Fig 3, `40` rows) rather than unconfigured dense scatter grids.
+
 ## RECALL-DEV-002
 
 - Status (`complete` or `blocked`): `complete`
