@@ -453,6 +453,56 @@ def _expand_metric_abbreviations(rows: list[dict], pages_norm: list[str] | None)
             row["note"] = (row["note"] + " | " if row["note"] else "") + f"Printed metric abbreviation: {original}."
 
 
+def _name_printed_rates(rows, pages_norm):
+    """Complete shortened percentage headings with explicitly printed rate names."""
+    candidates = {label(row["metric_name"]) for row in rows if row["metric_unit"] == "%"}
+    candidates = {name for name in candidates if " " in name and not name.endswith((" rate", " rates"))}
+    source = [label(page) for page in pages_norm or ()]
+    rates = {name for name in candidates if any(mentions(f"{name} rate", page) for page in source)}
+    headers = {(row["source_page"], label(row["source_table"]), label(row["metric_name"])) for row in rows}
+    for row in rows:
+        original = row["metric_name"]
+        name = label(original)
+        if row["metric_unit"] != "%" or not row["source_table"] or name not in rates:
+            continue
+        if (row["source_page"], label(row["source_table"]), f"{name} rate") in headers:
+            continue
+        row["metric_name"] = original + " rate"
+        row["note"] = " | ".join(filter(None, (row["note"], f"Printed short metric: {original}.")))
+
+
+def _name_efficiency_columns(rows, pages_norm):
+    """Describe paired efficiency headings when the source defines both measurements."""
+    definition = re.compile(
+        r"\bretrieval[\s-]*and[\s-]*generat(?:e|ion)\s+steps\b[^.!?]{0,150}"
+        r"\b(?:each\s+query|per\s+query)\s+relative\s+to\b", re.I
+    )
+    if not any(definition.search(page) for page in pages_norm or ()):
+        return
+    names = {"step": "retrieval and generation steps per query", "time": "relative time per query"}
+    reference_rows = defaultdict(set)
+    unitful_scopes = set()
+    for row in rows:
+        page = to_page(row["source_page"])
+        metric = row["metric_name"].casefold()
+        if (metric in names and row["source_table"]
+                and 1 <= page <= len(pages_norm) and re.search(r"\bstep\s+time\b", pages_norm[page - 1], re.I)):
+            scope = (page, label(row["source_table"]))
+            if row["raw_unit"] or row["metric_unit"]:
+                unitful_scopes.add(scope)
+                continue
+            if row["config_id"] and row["metric_value"] and Decimal(row["metric_value"]) == 1:
+                reference_rows[scope, row["dataset_id"], row["config_id"], row["experiment_id"]].add(metric)
+    referenced = {scope for (scope, *_), metrics in reference_rows.items() if metrics == names.keys()} - unitful_scopes
+    for row in rows:
+        original = row["metric_name"]
+        metric = original.casefold()
+        scope = (to_page(row["source_page"]), label(row["source_table"]))
+        if metric in names and scope in referenced:
+            row["metric_name"] = names[metric]
+            row["note"] = " | ".join(filter(None, (row["note"], f"Printed efficiency column: {original}.")))
+
+
 CUTOFF = re.compile(r"(?i)(?:@\s*|\bk\s*=\s*|\btop[-\s]*)([0-9]+)(?![\w%]|[.,]\d|[-–]\d)")
 
 
@@ -858,6 +908,8 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     _strip_repeated_backbone_modes(out["configurations"], pages_norm)
     _strip_repeated_context_labels(out["configurations"], pages_norm)
     _expand_metric_abbreviations(rows, pages_norm)
+    _name_printed_rates(rows, pages_norm)
+    _name_efficiency_columns(rows, pages_norm)
     _canonicalize_datasets(out["datasets"], pages_norm)
     # ---- duplicates / contradictions ----
     groups: dict[tuple, list[dict]] = defaultdict(list)

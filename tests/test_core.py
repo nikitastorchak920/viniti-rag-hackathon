@@ -414,6 +414,27 @@ class Linking(unittest.TestCase):
         self.assertTrue(all(row["raw_value"] == "12.5" and row["source_fragment"] == "printed evidence"
                             for row in rows))
 
+    def test_full_rate_and_relative_efficiency_names_keep_their_scopes(self):
+        base = dict(source_page="1", source_table="Table 1", metric_unit="%", raw_unit="%",
+                    note="", config_id="C1", dataset_id="D1", experiment_id="E1", metric_value="1.00")
+        rates = [dict(base, metric_name="Valid Answer"),
+                 dict(base, metric_name="Other Signal"),
+                 dict(base, metric_name="Valid Answer", metric_unit="fraction")]
+        exporter._name_printed_rates(rates, ["The valid-answer rate is measured independently."])
+        self.assertEqual([r["metric_name"] for r in rates], ["Valid Answer rate", "Other Signal", "Valid Answer"])
+
+        step = dict(base, metric_name="Step", raw_unit="", metric_unit="")
+        time = dict(step, metric_name="Time")
+        other_step = dict(step, source_table="Table 2")
+        exact_time = dict(time, source_table="Table 2", raw_unit="s", metric_unit="s")
+        rows = [step, time, other_step, exact_time]
+        exporter._name_efficiency_columns(rows, [
+            "Step Time. We measure retrieval-and-generation steps and time for each query relative to the baseline."
+        ])
+        self.assertEqual([r["metric_name"] for r in rows],
+                         ["retrieval and generation steps per query", "relative time per query", "Step", "Time"])
+        self.assertTrue(all(r["metric_value"] == "1.00" for r in rows))
+
     def test_multikey_link(self):
         rs = [result(source_fragment="Vanilla RAG Llama 3.1 8B HotpotQA 0.204"),
               result(source_fragment="Retriever-Only MuSiQue 0.100", raw_value="0.100")]
