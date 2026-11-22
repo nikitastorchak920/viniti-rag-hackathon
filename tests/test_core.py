@@ -71,6 +71,22 @@ class Normalization(unittest.TestCase):
         config = next(c for c in doc["configurations"] if c["config_id"] == config_id)
         self.assertEqual((config["generator_model"], config["rag_variant"], config["top_k"]), ("Printed Gen", "", ""))
 
+    def test_plot_panel_conditions_preserve_distinct_partial_configurations(self):
+        points = [
+            result(source_table="", source_figure="Figure 1", source_fragment="Figure 1:",
+                   plot_observation=True, plot_generator="Printed Gen"),
+            result(source_table="", source_figure="Figure 2", source_fragment="Figure 2:",
+                   plot_observation=True, plot_generator="Printed Gen", plot_conditions=("k=3",)),
+        ]
+        doc = exporter.build_doc("P1", make_cache([]), ["Figure 1:\nFigure 2:", ""], Mock(), plot_rows=points)
+        rows = {row["source_figure"]: row for row in doc["results"]}
+        self.assertNotEqual(rows["Figure 1"]["config_id"], rows["Figure 2"]["config_id"])
+        configs = {config["config_id"]: config for config in doc["configurations"]}
+        for row in rows.values():
+            config = configs[row["config_id"]]
+            self.assertEqual((config["generator_model"], config["top_k"], row["metric_k"]), ("Printed Gen", "", ""))
+        self.assertIn("k=3 (PDF page 1, Figure 2)", configs[rows["Figure 2"]["config_id"]]["note"])
+
     def test_dataset_version_suffix_is_removed_after_linking(self):
         datasets = [
             {"dataset_id": "DS1", "dataset_name": "ExampleQA v1.2", "dataset_version": "v1.2"},
@@ -95,10 +111,20 @@ class Normalization(unittest.TestCase):
         rows = doc["results"]
         self.assertEqual(rows[0]["source_fragment"], "model Recall 1.2")
         self.assertEqual(rows[0]["metric_value"], "1.2")
-        self.assertEqual(rows[1]["source_fragment"], "Model Score 1")
+        self.assertEqual(rows[1]["source_fragment"], "")
         self.assertEqual(rows[2]["source_page"], "1")
         for row in rows[1:]:
             self.assertIn("quote not verified in OCR text", row["note"])
+
+    def test_ocr_table_quote_with_different_value_is_logged_without_discarding_result(self):
+        cache = make_cache([result(raw_value="0.83", source_fragment="Cohort A 0.65")])
+        cache["ocr"] = True
+        doc = exporter.build_doc("P1", cache, ["Cohort A 0.65", ""], Mock())
+        row = doc["results"][0]
+        self.assertEqual((row["raw_value"], row["source_page"], row["source_table"], row["source_fragment"]),
+                         ("0.83", "1", "Table 1", ""))
+        self.assertTrue(any(issue["record_ids"] == row["result_id"] and "Cohort A 0.65" in issue["description"]
+                            and issue["source_fragment"] == "" for issue in doc["issues"]))
 
     def test_ocr_repair_preserves_result_identity(self):
         cache = make_cache([result(config_id="C01", dataset_id="DS1", source_fragment=prefix + " Model 0.204")

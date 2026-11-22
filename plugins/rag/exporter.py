@@ -146,7 +146,7 @@ def _subfragment(frag: str, raw: str, page: int, pages_norm: list[str]) -> tuple
     return best
 
 
-def _ground_ocr(frag: str, raw: str, page_text: str) -> tuple[str, str]:
+def _ground_ocr(frag: str, raw: str, page_text: str, *, require_value: bool = False) -> tuple[str, str]:
     """Only accept same-page text. A shorter quote must keep the metric's literal number and context."""
     quote = norm(frag)
     raw = norm(raw)
@@ -155,7 +155,7 @@ def _ground_ocr(frag: str, raw: str, page_text: str) -> tuple[str, str]:
         exact = re.escape(quote[:literal.start()]) + value.pattern + re.escape(quote[literal.end():])
         if re.search(exact, page_text):
             return frag, "ok"
-    elif quote and quote in page_text:
+    elif not require_value and quote and quote in page_text:
         return frag, "ok"
     if not raw or not re.search(r"\d", raw):
         return frag, "unverified"
@@ -757,6 +757,7 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
             row["note"] = (row.get("note", "") + " | " if row.get("note") else "") + "; ".join(extra)
 
     idmap: dict[str, dict[str, str]] = {k: {} for k in ("config_id", "dataset_id", "task_id", "experiment_id")}
+    partial_plot_ids: set[str] = set()
 
     def merge_entities(items: list[dict], key: str) -> list[dict]:
         """Drop later entities identical (ignoring id/note, case/space-insensitive) to an earlier one; map their ids."""
@@ -764,6 +765,9 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         out_: list[dict] = []
         names = {"generator_model", "retriever_model", "embedding_model", "reranker_model", "dataset_name"}
         for it in items:
+            if key == "config_id" and it.get(key) in partial_plot_ids:
+                out_.append(it)
+                continue
             sig = tuple(sorted((k, identity_label(str(v or "")) if k in names else canon_space(str(v or "")).casefold())
                                for k, v in it.items()
                                if k not in (key, "note", "publication_id")))
@@ -784,21 +788,29 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
     if plot_rows:
         # A generator printed on a panel is evidence for a partial configuration only.
         declared_ids = {c.get("config_id") for c in cfg_in}
-        partial_by_model = {}
+        partial_configurations = {}
         sourced_rows = []
         next_id = 0
         for point in plot_rows:
             model = point.get("plot_generator")
             if model and not point.get("config_id"):
-                if model not in partial_by_model:
+                conditions = tuple(point.get("plot_conditions") or ())
+                # A panel-level condition is scoped to its own figure. It is not a metric cutoff.
+                figure_scope = (point["source_page"], point["source_figure"]) if conditions else ()
+                scope = (model, conditions, figure_scope)
+                if scope not in partial_configurations:
                     next_id += 1
                     while f"PC{next_id}" in declared_ids:
                         next_id += 1
                     config_id = f"PC{next_id}"
-                    partial_by_model[model] = config_id
-                    cfg_in.append({"config_id": config_id, "generator_model": model,
-                                   "note": "Only the generator is specified by the plot panel. Point-level retrieval settings are not identified."})
-                point = dict(point, config_id=partial_by_model[model])
+                    partial_plot_ids.add(config_id)
+                    partial_configurations[scope] = config_id
+                    note = "Partial configuration from the plot panel. Point-level retrieval settings are not identified."
+                    if conditions:
+                        note += (f" Printed panel conditions: {', '.join(conditions)} "
+                                 f"(PDF page {figure_scope[0]}, {figure_scope[1]}).")
+                    cfg_in.append({"config_id": config_id, "generator_model": model, "note": note})
+                point = dict(point, config_id=partial_configurations[scope])
             sourced_rows.append(point)
         plot_rows = sourced_rows
     for c in cfg_in:
@@ -1019,11 +1031,22 @@ def build_doc(doc_id: str, cache: dict, pages_norm: list[str] | None, log, *, ta
         # Keep linking and duplicate detection based on the original extraction evidence.
         for row in rows:
             if row["source_fragment"]:
-                quote, status = _ground_ocr(row["source_fragment"], row["raw_value"], ocr_pages_norm[int(row["source_page"]) - 1])
+                original = row["source_fragment"]
+                table = row["source_table"]
+                quote, status = _ground_ocr(original, row["raw_value"], ocr_pages_norm[int(row["source_page"]) - 1],
+                                            require_value=bool(table and not row["source_figure"]))
                 row["source_fragment"] = quote
                 fstat[status] += 1
                 if status == "unverified":
                     row["note"] = (row["note"] + " | " if row["note"] else "") + "quote not verified in OCR text"
+                    if table or row["source_figure"]:
+                        row["source_fragment"] = ""
+                        locator = table or row["source_figure"]
+                        issues.append(finding(
+                            row, RULE_PROVENANCE_COMPLETE,
+                            f"Unverified OCR quotation for {locator}; check the original image. "
+                            f"Cached fragment: {original!r}."
+                        ))
     if fstat:
         log(f"  {doc_id}: quote check {dict(fstat)}")
     for g in groups.values():

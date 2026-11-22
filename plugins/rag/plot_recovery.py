@@ -208,6 +208,7 @@ def recover_plot_points(pdf, pages, cache) -> list[dict]:
             named_models = {name for name in generators if mentions_identity(identity_label(name), label(title))}
             model = next(iter(named_models)) if len(named_models) == 1 else ""
             config_id = _panel_configuration(title, model, configurations) if len(named_models) <= 1 else ""
+            conditions = tuple(match.group() for match in EXPLICIT_SETTING.finditer(title))
             for axis_index, (metric, unit, (slope, intercept)) in enumerate((x, y)):
                 calibrated = [slope * p[axis_index] + intercept for p in points]
                 if unit == "fraction" and any(v < -0.0001 or v > 1.0001 for v in calibrated):
@@ -224,5 +225,6 @@ def recover_plot_points(pdf, pages, cache) -> list[dict]:
                                          config_id=config_id, dataset_id=dataset, task_id=task,
                                          result_origin="primary", extraction_status="extracted",
                                          plot_observation=True, plot_generator=model,
+                                         plot_conditions=conditions,
                                          note=f"{title} | Vector marker {point_index} at ({point[0]:.3f}, {point[1]:.3f}) pt; approximate value calibrated against axis ticks."))
     return rows
